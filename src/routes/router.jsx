@@ -10,11 +10,20 @@ import DashboardLayout from "../layouts/dashboard.layout";
 // Director pages
 import DirectorDashboard from "../pages/Director/Dashboard";
 import DirectorPrerequisites from "../pages/Director/Prerequisites";
+import DirectorStudentLoad from "../pages/Director/StudentLoad";
+import DirectorStudentList from "../pages/Director/StudentList";
+import DirectorTutorList from "../pages/Director/TutorList";
+import DirectorRegisterTutor from "../pages/Director/RegisterTutor";
+import DirectorAssignTutor from "../pages/Director/AssignTutor";
+import DirectorProposalReview from "../pages/Director/ProposalReview";
+import DirectorProposalDetail from "../pages/Director/ProposalDetail";
+import DirectorThesisDefense from "../pages/Director/ThesisDefense";
 
 // Student pages
-import StudentDashboard from "../pages/Student/Dashboard";
+import StudentDashboard from "../pages/Student/Dashboard.student";
 import StudentPrerequisites from "../pages/Student/Prerequisites";
 import StudentAnteproyecto from "../pages/Student/Anteproyecto";
+import StudentActivities from "../pages/Student/Activities";
 
 // Tutor pages
 import TutorDashboard from "../pages/Tutor/Dashboard";
@@ -43,6 +52,14 @@ function RouterPages() {
                     <Route element={<DashboardLayout />}>
                         <Route index element={<DirectorDashboard />} />
                         <Route path="dashboard" element={<DirectorDashboard />} />
+                        <Route path="student-load" element={<DirectorStudentLoad />} />
+                        <Route path="students" element={<DirectorStudentList />} />
+                        <Route path="tutors" element={<DirectorTutorList />} />
+                        <Route path="tutors/create" element={<DirectorRegisterTutor />} />
+                        <Route path="tutors/assign" element={<DirectorAssignTutor />} />
+                        <Route path="proposals" element={<DirectorProposalReview />} />
+                        <Route path="proposals/detail/:id" element={<DirectorProposalDetail />} />
+                        <Route path="defense" element={<DirectorThesisDefense />} />
                         <Route path="prerequisites" element={<DirectorPrerequisites />} />
                     </Route>
                 </Route>
@@ -54,6 +71,7 @@ function RouterPages() {
                         <Route path="dashboard" element={<StudentDashboard />} />
                         <Route path="prerequisites" element={<StudentPrerequisites />} />
                         <Route path="anteproyecto" element={<StudentAnteproyecto />} />
+                        <Route path="activities" element={<StudentActivities />} />
                     </Route>
                 </Route>
 

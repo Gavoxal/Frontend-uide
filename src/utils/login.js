@@ -41,5 +41,15 @@ export function LoginService(user, passwd) {
     };
   }
 
+  // Usuario director
+  if (user === "director" && passwd === "director123") {
+    return {
+      name: "Director",
+      lastName: "Carrera",
+      role: "director",
+      image: "",
+    };
+  }
+
   return null; // Login fallido
 }

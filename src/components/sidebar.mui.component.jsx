@@ -6,6 +6,7 @@ import {
     ListItemIcon,
     ListItemText,
     Divider,
+    Collapse,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import DashboardIcon from "@mui/icons-material/Dashboard";
@@ -16,6 +17,9 @@ import PersonIcon from "@mui/icons-material/Person";
 import LogoutIcon from "@mui/icons-material/Logout";
 import SchoolIcon from "@mui/icons-material/School";
 import GavelIcon from "@mui/icons-material/Gavel";
+import ExpandLess from "@mui/icons-material/ExpandLess";
+import ExpandMore from "@mui/icons-material/ExpandMore";
+import { useState } from "react";
 import { getDataUser } from "../storage/user.model.jsx";
 import uideImage from "../assets/uide3.svg";
 
@@ -26,7 +30,15 @@ const MENU_BY_ROLE = {
         { icon: <PeopleIcon />, label: "Estudiantes", path: "/director/students" },
         { icon: <ChecklistIcon />, label: "Prerrequisitos", path: "/director/prerequisites" },
         { icon: <AssignmentIcon />, label: "Propuestas", path: "/director/proposals" },
-        { icon: <SchoolIcon />, label: "Tutores", path: "/director/tutors" },
+        {
+            icon: <SchoolIcon />,
+            label: "Tutores",
+            path: "/director/tutors",
+            children: [
+                { label: "Listado", path: "/director/tutors" },
+                { label: "Asignar Tutor", path: "/director/tutors/assign" }
+            ]
+        },
         { icon: <GavelIcon />, label: "Defensas", path: "/director/defenses" },
     ],
     student: [
@@ -112,11 +124,10 @@ function SidebarMui({ onNavigate, currentPage, isExpanded, toggleSidebar }) {
                 {menuItems.map((item, index) => (
                     <MenuItem
                         key={index}
-                        icon={item.icon}
-                        label={item.label}
+                        item={item}
                         isExpanded={isExpanded}
-                        active={currentPage.includes(item.path)}
-                        onClick={() => onNavigate(item.path)}
+                        currentPage={currentPage}
+                        onNavigate={onNavigate}
                     />
                 ))}
             </List>
@@ -126,17 +137,17 @@ function SidebarMui({ onNavigate, currentPage, isExpanded, toggleSidebar }) {
             {/* BOTTOM */}
             <Box sx={{ mt: "auto", width: "100%" }}>
                 <MenuItem
-                    icon={<PersonIcon />}
-                    label="Perfil"
+                    item={{ icon: <PersonIcon />, label: "Perfil", path: "/perfil" }}
                     isExpanded={isExpanded}
-                    active={currentPage.includes("/perfil")}
+                    currentPage={currentPage}
+                    onNavigate={onNavigate}
                 />
 
                 <MenuItem
-                    icon={<LogoutIcon />}
-                    label="Salir"
+                    item={{ icon: <LogoutIcon />, label: "Salir", path: "/ingreso" }}
                     isExpanded={isExpanded}
-                    onClick={() => onNavigate("/ingreso")}
+                    currentPage={currentPage}
+                    onNavigate={onNavigate}
                 />
             </Box>
         </Box>
@@ -145,33 +156,76 @@ function SidebarMui({ onNavigate, currentPage, isExpanded, toggleSidebar }) {
 
 export default SidebarMui;
 
-function MenuItem({ icon, label, isExpanded, active, onClick }) {
+function MenuItem({ item, isExpanded, currentPage, onNavigate }) {
+    const hasChildren = item.children && item.children.length > 0;
+    const [open, setOpen] = useState(false);
+    const active = currentPage.includes(item.path);
+
+    const handleClick = () => {
+        if (hasChildren) {
+            setOpen(!open);
+        } else {
+            onNavigate(item.path);
+        }
+    };
+
     return (
-        <ListItem
-            onClick={onClick}
-            sx={{
-                cursor: "pointer",
-                px: isExpanded ? 2 : 0,
-                justifyContent: isExpanded ? "flex-start" : "center",
-                backgroundColor: active ? "rgba(255,255,255,0.15)" : "transparent",
-                borderRadius: 1,
-                mb: 1,
-                "&:hover": {
-                    backgroundColor: "rgba(255,255,255,0.25)",
-                },
-            }}
-        >
-            <ListItemIcon
+        <>
+            <ListItem
+                onClick={handleClick}
                 sx={{
-                    color: "white",
-                    minWidth: isExpanded ? 40 : "auto",
-                    justifyContent: "center",
+                    cursor: "pointer",
+                    px: isExpanded ? 2 : 0,
+                    justifyContent: isExpanded ? "flex-start" : "center",
+                    backgroundColor: active && !hasChildren ? "rgba(255,255,255,0.15)" : "transparent",
+                    borderRadius: 1,
+                    mb: 1,
+                    "&:hover": {
+                        backgroundColor: "rgba(255,255,255,0.25)",
+                    },
                 }}
             >
-                {icon}
-            </ListItemIcon>
+                <ListItemIcon
+                    sx={{
+                        color: "white",
+                        minWidth: isExpanded ? 40 : "auto",
+                        justifyContent: "center",
+                    }}
+                >
+                    {item.icon}
+                </ListItemIcon>
 
-            {isExpanded && <ListItemText primary={label} sx={{ color: "white" }} />}
-        </ListItem>
+                {isExpanded && (
+                    <>
+                        <ListItemText primary={item.label} sx={{ color: "white" }} />
+                        {hasChildren ? (open ? <ExpandLess sx={{ color: 'white' }} /> : <ExpandMore sx={{ color: 'white' }} />) : null}
+                    </>
+                )}
+            </ListItem>
+
+            {hasChildren && isExpanded && (
+                <Collapse in={open} timeout="auto" unmountOnExit>
+                    <List component="div" disablePadding>
+                        {item.children.map((child, index) => (
+                            <ListItem
+                                key={index}
+                                onClick={() => onNavigate(child.path)}
+                                sx={{
+                                    pl: 4,
+                                    cursor: "pointer",
+                                    backgroundColor: currentPage === child.path ? "rgba(255,255,255,0.3)" : "transparent",
+                                    "&:hover": { backgroundColor: "rgba(255,255,255,0.2)" },
+                                }}
+                            >
+                                <ListItemText
+                                    primary={child.label}
+                                    primaryTypographyProps={{ fontSize: '0.9rem', color: '#e0e0e0' }}
+                                />
+                            </ListItem>
+                        ))}
+                    </List>
+                </Collapse>
+            )}
+        </>
     );
 }

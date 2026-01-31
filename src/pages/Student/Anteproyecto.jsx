@@ -1,169 +1,169 @@
 import { useState } from 'react';
-import { Box, Typography, Card, CardContent, Button, Grid, Alert } from '@mui/material';
+import { Box, Typography, Card, CardContent, Button, Grid, TextField, MenuItem, Select, FormControl, InputLabel, Alert } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
-import FileUpload from '../../components/file.mui.component.jsx';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 
 function StudentAnteproyecto() {
-    const [anteproyectoFile, setAnteproyectoFile] = useState(null);
-    const [manualFile, setManualFile] = useState(null);
-    const [planPruebasFile, setPlanPruebasFile] = useState(null);
-    const [hasChanges, setHasChanges] = useState(false);
+    const [formData, setFormData] = useState({
+        title: '',
+        objectives: '',
+        researchLine: '',
+        file: null
+    });
+    const [submitted, setSubmitted] = useState(false);
 
-    const handleFileSelect = (file, type) => {
-        const fileData = {
-            name: file.name,
-            size: `${(file.size / 1024).toFixed(2)} KB`,
-            file: file,
-        };
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
 
-        switch (type) {
-            case 'anteproyecto':
-                setAnteproyectoFile(fileData);
-                break;
-            case 'manual':
-                setManualFile(fileData);
-                break;
-            case 'planPruebas':
-                setPlanPruebasFile(fileData);
-                break;
+    const handleFileChange = (e) => {
+        if (e.target.files[0]) {
+            setFormData({ ...formData, file: e.target.files[0] });
         }
-        setHasChanges(true);
     };
 
-    const handleRemoveFile = (type) => {
-        switch (type) {
-            case 'anteproyecto':
-                setAnteproyectoFile(null);
-                break;
-            case 'manual':
-                setManualFile(null);
-                break;
-            case 'planPruebas':
-                setPlanPruebasFile(null);
-                break;
+    const handleSubmit = () => {
+        if (!formData.title || !formData.objectives || !formData.researchLine || !formData.file) {
+            alert("Por favor complete todos los campos y suba el archivo.");
+            return;
         }
-        setHasChanges(true);
+        // Mock submission
+        console.log("Enviando propuesta:", formData);
+        setSubmitted(true);
     };
 
-    const handleSave = () => {
-        // Aquí se enviarían los archivos al backend
-        console.log('Guardando archivos:', {
-            anteproyecto: anteproyectoFile?.file,
-            manual: manualFile?.file,
-            planPruebas: planPruebasFile?.file,
-        });
-        setHasChanges(false);
-        // Mostrar mensaje de éxito
-    };
+    if (submitted) {
+        return (
+            <Box sx={{ maxWidth: 800, mx: 'auto', mt: 4 }}>
+                <Alert severity="success" sx={{ mb: 2 }}>
+                    Tu propuesta de tema ha sido enviada correctamente y está pendiente de aprobación por el Director.
+                </Alert>
+                <Card>
+                    <CardContent>
+                        <Typography variant="h6" gutterBottom>Resumen de la Postulación</Typography>
+                        <Typography variant="subtitle2" color="text.secondary">Título</Typography>
+                        <Typography paragraph>{formData.title}</Typography>
+                        <Typography variant="subtitle2" color="text.secondary">Línea de Investigación</Typography>
+                        <Typography paragraph>{formData.researchLine}</Typography>
+                        <Button variant="outlined" onClick={() => setSubmitted(false)}>Editar Postulación</Button>
+                    </CardContent>
+                </Card>
+            </Box>
+        );
+    }
 
     return (
         <Box>
-            {/* Encabezado */}
             <Box sx={{ mb: 4 }}>
                 <Typography variant="h4" fontWeight="bold" gutterBottom>
-                    Anteproyecto y Documentación
+                    Postulación de Tema de Tesis
                 </Typography>
                 <Typography variant="body1" color="text.secondary">
-                    Sube los documentos requeridos para tu trabajo de titulación
+                    Ingresa los detalles de tu propuesta de trabajo de titulación (RF-004)
                 </Typography>
             </Box>
 
-            {/* Información */}
-            <Alert severity="info" sx={{ mb: 3 }}>
-                Debes subir tu anteproyecto aprobado y los documentos complementarios. Solo se aceptan archivos en formato PDF.
-            </Alert>
-
-            {/* Formulario de carga */}
             <Grid container spacing={3}>
-                {/* Anteproyecto */}
-                <Grid item xs={12}>
+                <Grid item xs={12} md={8}>
                     <Card>
                         <CardContent>
                             <Typography variant="h6" fontWeight="bold" gutterBottom>
-                                Anteproyecto
+                                Detalles del Proyecto
                             </Typography>
-                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                                Documento principal del anteproyecto aprobado por el director
-                            </Typography>
-                            <FileUpload
-                                onFileSelect={(file) => handleFileSelect(file, 'anteproyecto')}
-                                uploadedFile={anteproyectoFile}
-                                onRemoveFile={() => handleRemoveFile('anteproyecto')}
-                            />
+
+                            <Box sx={{ mt: 3, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                                <TextField
+                                    label="Título de la Tesis"
+                                    name="title"
+                                    value={formData.title}
+                                    onChange={handleChange}
+                                    fullWidth
+                                    required
+                                    placeholder="Ej: Implementación de un modelo de Machine Learning para..."
+                                />
+
+                                <FormControl fullWidth required>
+                                    <InputLabel>Línea de Investigación</InputLabel>
+                                    <Select
+                                        name="researchLine"
+                                        value={formData.researchLine}
+                                        label="Línea de Investigación"
+                                        onChange={handleChange}
+                                    >
+                                        <MenuItem value="Inteligencia Artificial">Inteligencia Artificial</MenuItem>
+                                        <MenuItem value="Ciberseguridad">Ciberseguridad</MenuItem>
+                                        <MenuItem value="Desarrollo de Software">Desarrollo de Software</MenuItem>
+                                        <MenuItem value="Calidad de Software">Calidad de Software</MenuItem>
+                                        <MenuItem value="Redes y Telecomunicaciones">Redes y Telecomunicaciones</MenuItem>
+                                    </Select>
+                                </FormControl>
+
+                                <TextField
+                                    label="Objetivos y Descripción Breve"
+                                    name="objectives"
+                                    value={formData.objectives}
+                                    onChange={handleChange}
+                                    fullWidth
+                                    required
+                                    multiline
+                                    rows={6}
+                                    placeholder="Describa el objetivo general y los objetivos específicos..."
+                                />
+                            </Box>
                         </CardContent>
                     </Card>
                 </Grid>
 
-                {/* Manual de Usuario/Programador */}
-                <Grid item xs={12} md={6}>
+                <Grid item xs={12} md={4}>
                     <Card sx={{ height: '100%' }}>
                         <CardContent>
                             <Typography variant="h6" fontWeight="bold" gutterBottom>
-                                Manual de Usuario/Programador
+                                Documento de Soporte
                             </Typography>
-                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                                Documentación técnica del sistema
+                            <Typography variant="body2" color="text.secondary" paragraph>
+                                Sube el archivo PDF con el anteproyecto completo firmado.
                             </Typography>
-                            <FileUpload
-                                onFileSelect={(file) => handleFileSelect(file, 'manual')}
-                                uploadedFile={manualFile}
-                                onRemoveFile={() => handleRemoveFile('manual')}
-                            />
+
+                            <Box sx={{
+                                p: 3,
+                                border: '2px dashed #1976d2',
+                                borderRadius: 2,
+                                textAlign: 'center',
+                                backgroundColor: '#f0f7ff',
+                                cursor: 'pointer'
+                            }}>
+                                <input
+                                    type="file"
+                                    accept=".pdf"
+                                    id="proposal-file"
+                                    style={{ display: 'none' }}
+                                    onChange={handleFileChange}
+                                />
+                                <label htmlFor="proposal-file" style={{ cursor: 'pointer', display: 'block' }}>
+                                    <CloudUploadIcon sx={{ fontSize: 50, color: '#1976d2', mb: 1 }} />
+                                    <Typography variant="body2" fontWeight="bold" color="primary">
+                                        {formData.file ? formData.file.name : "Subir PDF"}
+                                    </Typography>
+                                </label>
+                            </Box>
                         </CardContent>
                     </Card>
                 </Grid>
 
-                {/* Plan de Pruebas */}
-                <Grid item xs={12} md={6}>
-                    <Card sx={{ height: '100%' }}>
-                        <CardContent>
-                            <Typography variant="h6" fontWeight="bold" gutterBottom>
-                                Plan de Pruebas
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                                Casos de prueba y validación del sistema
-                            </Typography>
-                            <FileUpload
-                                onFileSelect={(file) => handleFileSelect(file, 'planPruebas')}
-                                uploadedFile={planPruebasFile}
-                                onRemoveFile={() => handleRemoveFile('planPruebas')}
-                            />
-                        </CardContent>
-                    </Card>
+                <Grid item xs={12}>
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                        <Button
+                            variant="contained"
+                            size="large"
+                            startIcon={<SaveIcon />}
+                            onClick={handleSubmit}
+                            disabled={!formData.title || !formData.file}
+                        >
+                            Enviar Postulación
+                        </Button>
+                    </Box>
                 </Grid>
             </Grid>
-
-            {/* Botón Guardar */}
-            {hasChanges && (
-                <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        startIcon={<SaveIcon />}
-                        onClick={handleSave}
-                        size="large"
-                    >
-                        Guardar Cambios
-                    </Button>
-                </Box>
-            )}
-
-            {/* Información adicional */}
-            <Card sx={{ mt: 3, backgroundColor: '#FFF9E6' }}>
-                <CardContent>
-                    <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-                        📋 Requisitos de los documentos:
-                    </Typography>
-                    <Typography variant="body2" component="div">
-                        <ul style={{ margin: '8px 0', paddingLeft: '20px' }}>
-                            <li>Formato: PDF únicamente</li>
-                            <li>Tamaño máximo: 10 MB por archivo</li>
-                            <li>El anteproyecto debe estar firmado por el tutor</li>
-                            <li>Los manuales deben seguir el formato institucional</li>
-                        </ul>
-                    </Typography>
-                </CardContent>
-            </Card>
         </Box>
     );
 }
