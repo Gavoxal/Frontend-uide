@@ -41,5 +41,15 @@ export function LoginService(user, passwd) {
     };
   }
 
+  // O el usuario docente de integración predefinido
+  if (user === "docente" && passwd === "docente123") {
+    return {
+      name: "Docente",
+      lastName: "Integración",
+      role: "docente_integracion",
+      image: "",
+    };
+  }
+
   return null; // Login fallido
 }

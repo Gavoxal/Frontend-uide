@@ -22,6 +22,11 @@ import TutorDashboard from "../pages/Tutor/Dashboard";
 // Reviewer pages
 import ReviewerDashboard from "../pages/Reviewer/Dashboard";
 
+// Docente Integración pages
+import DocenteDashboard from "../pages/DocenteIntegracion/Dashboard";
+import DocenteAdvances from "../pages/DocenteIntegracion/WeeklyAdvances";
+import ReviewAdvance from "../pages/DocenteIntegracion/ReviewAdvance";
+
 // Old admin pages (temporarily keeping for transition)
 import OldDashboardPage from "../pages/Admin/dashboard.page";
 import RegisterHotelPage from "../pages/Admin/components/register.hotel";
@@ -62,6 +67,16 @@ function RouterPages() {
                     <Route element={<DashboardLayout />}>
                         <Route index element={<TutorDashboard />} />
                         <Route path="dashboard" element={<TutorDashboard />} />
+                    </Route>
+                </Route>
+
+                {/* Rutas protegidas - Docente Integración */}
+                <Route path="/docente-integracion" element={<AuthAdmin />}>
+                    <Route element={<DashboardLayout />}>
+                        <Route index element={<DocenteDashboard />} />
+                        <Route path="dashboard" element={<DocenteDashboard />} />
+                        <Route path="advances" element={<DocenteAdvances />} />
+                        <Route path="review/:weekId/:studentId" element={<ReviewAdvance />} />
                     </Route>
                 </Route>
 

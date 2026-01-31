@@ -48,6 +48,10 @@ const MENU_BY_ROLE = {
         { icon: <AssignmentIcon />, label: "Propuestas", path: "/reviewer/proposals" },
         { icon: <GavelIcon />, label: "Defensas", path: "/reviewer/defenses" },
     ],
+    docente_integracion: [
+        { icon: <DashboardIcon />, label: "Dashboard", path: "/docente-integracion/dashboard" },
+        { icon: <AssignmentIcon />, label: "Avances", path: "/docente-integracion/advances" },
+    ],
     admin: [
         { icon: <DashboardIcon />, label: "Dashboard", path: "/director/dashboard" },
         { icon: <PeopleIcon />, label: "Estudiantes", path: "/director/students" },
