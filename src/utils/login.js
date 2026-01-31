@@ -41,12 +41,23 @@ export function LoginService(user, passwd) {
     };
   }
 
+
   // Usuario director
   if (user === "director" && passwd === "director123") {
     return {
       name: "Director",
       lastName: "Carrera",
       role: "director",
+    };
+  }
+
+  // O el usuario docente de integración predefinido
+  if (user === "docente" && passwd === "docente123") {
+    return {
+      name: "Docente",
+      lastName: "Integración",
+      role: "docente_integracion",
+
       image: "",
     };
   }
