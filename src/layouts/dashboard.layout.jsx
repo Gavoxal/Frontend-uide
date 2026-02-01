@@ -23,6 +23,7 @@ function DashboardLayout() {
         if (path.includes('/defenses')) return 'Defensas';
         if (path.includes('/tutor')) return 'Mi Tutor';
         if (path.includes('/anteproyecto')) return 'Anteproyecto';
+        if (path.includes('/profile')) return 'Perfil';
         return 'Tablero';
     };
 

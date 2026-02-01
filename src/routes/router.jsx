@@ -15,6 +15,9 @@ import DirectorPrerequisites from "../pages/Director/Prerequisites";
 import StudentDashboard from "../pages/Student/Dashboard";
 import StudentPrerequisites from "../pages/Student/Prerequisites";
 import StudentAnteproyecto from "../pages/Student/Anteproyecto";
+import StudentProfile from "../pages/Student/Profile";
+import ThesisProposal from "../pages/Student/Proporsal";
+import StudentAvances from "../pages/Student/Avances";
 
 // Tutor pages
 import TutorDashboard from "../pages/Tutor/Dashboard";
@@ -54,6 +57,9 @@ function RouterPages() {
                         <Route path="dashboard" element={<StudentDashboard />} />
                         <Route path="prerequisites" element={<StudentPrerequisites />} />
                         <Route path="anteproyecto" element={<StudentAnteproyecto />} />
+                        <Route path="profile" element={<StudentProfile />} />
+                        <Route path="proposals" element={<ThesisProposal />} />
+                        <Route path="avances" element={<StudentAvances />} />
                     </Route>
                 </Route>
 

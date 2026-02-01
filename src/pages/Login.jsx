@@ -9,9 +9,10 @@ import LoadingScreen from '../components/load.mui.component.jsx';
 import { LoginService } from '../utils/login.js';
 import { setUserData, rmDataUser } from '../storage/user.model.jsx';
 import uideImage from '../assets/uide3.svg';
+import studentimage from '../assets/uide.jpeg';
 
 // Imagen de estudiantes - si no existe, usaremos un placeholder
-const studentsImage = 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&q=80';
+const studentsImage = studentimage;
 
 function LoginPage() {
   const [user, setUser] = useState('');
@@ -93,9 +94,10 @@ function LoginPage() {
     }
   }
 
-  useEffect(() => {
-    rmDataUser();
-  }, []);
+  // Comentado: esto borraba la sesión inmediatamente después del login
+  // useEffect(() => {
+  //   rmDataUser();
+  // }, []);
 
   // Mostrar loading screen después del login
   if (isLoading) {

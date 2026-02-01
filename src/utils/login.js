@@ -6,7 +6,7 @@ export function LoginService(user, passwd) {
     return {
       name: tempUser.name,
       lastName: tempUser.lastname,
-      role: "user",  // Rol por defecto para usuarios registrados
+      role: tempUser.role,  // Usar el rol que el usuario seleccionó en el registro
       image: "",
     };
   }
@@ -34,9 +34,19 @@ export function LoginService(user, passwd) {
   // O el usuario estudiante predefinido
   if (user === "estudiante" && passwd === "estudiante123") {
     return {
-      name: "Estudiante",
+      name: "Abel",
       lastName: "Main",
-      role: "estudiante",
+      role: "student",  // Cambiado de "estudiante" a "student" para que coincida con navigateUser
+      image: "",
+    };
+  }
+
+  // O el usuario revisor predefinido
+  if (user === "revisor" && passwd === "revisor123") {
+    return {
+      name: "Revisor",
+      lastName: "Main",
+      role: "reviewer",  // Cambiado de "revisor" a "reviewer" para que coincida con navigateUser
       image: "",
     };
   }
