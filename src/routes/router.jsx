@@ -13,11 +13,13 @@ import DirectorPrerequisites from "../pages/Director/Prerequisites";
 import DirectorStudentLoad from "../pages/Director/StudentLoad";
 import DirectorStudentList from "../pages/Director/StudentList";
 import DirectorTutorList from "../pages/Director/TutorList";
-import DirectorRegisterTutor from "../pages/Director/RegisterTutor";
 import DirectorAssignTutor from "../pages/Director/AssignTutor";
 import DirectorProposalReview from "../pages/Director/ProposalReview";
 import DirectorProposalDetail from "../pages/Director/ProposalDetail";
+import DirectorProfile from "../pages/Director/Profile";
 import DirectorThesisDefense from "../pages/Director/ThesisDefense";
+
+
 
 // Student pages
 import StudentDashboard from "../pages/Student/Dashboard.student";
@@ -55,12 +57,12 @@ function RouterPages() {
                         <Route path="student-load" element={<DirectorStudentLoad />} />
                         <Route path="students" element={<DirectorStudentList />} />
                         <Route path="tutors" element={<DirectorTutorList />} />
-                        <Route path="tutors/create" element={<DirectorRegisterTutor />} />
                         <Route path="tutors/assign" element={<DirectorAssignTutor />} />
                         <Route path="proposals" element={<DirectorProposalReview />} />
                         <Route path="proposals/detail/:id" element={<DirectorProposalDetail />} />
                         <Route path="defense" element={<DirectorThesisDefense />} />
                         <Route path="prerequisites" element={<DirectorPrerequisites />} />
+                        <Route path="profile" element={<DirectorProfile />} />
                     </Route>
                 </Route>
 

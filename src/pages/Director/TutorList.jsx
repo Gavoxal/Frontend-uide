@@ -70,13 +70,7 @@ function DirectorTutorList() {
                     <TextMui value="Listado de Tutores Académicos" variant="h4" />
                     <TextMui value="Gestión del cuerpo docente para titulaciones" variant="body1" />
                 </Box>
-                <Box sx={{ width: '200px' }}>
-                    <ButtonMui
-                        name="Añadir Tutor"
-                        onClick={() => navigate('/director/tutors/create')}
-                        startIcon={<PersonAddIcon />}
-                        backgroundColor="#ed6c02"
-                    />
+                <Box>
                 </Box>
             </Box>
 

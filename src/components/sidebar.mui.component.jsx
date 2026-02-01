@@ -39,7 +39,7 @@ const MENU_BY_ROLE = {
                 { label: "Asignar Tutor", path: "/director/tutors/assign" }
             ]
         },
-        { icon: <GavelIcon />, label: "Defensas", path: "/director/defenses" },
+        { icon: <GavelIcon />, label: "Defensas", path: "/director/defense" },
     ],
     student: [
         { icon: <DashboardIcon />, label: "Dashboard", path: "/student/dashboard" },
@@ -137,7 +137,7 @@ function SidebarMui({ onNavigate, currentPage, isExpanded, toggleSidebar }) {
             {/* BOTTOM */}
             <Box sx={{ mt: "auto", width: "100%" }}>
                 <MenuItem
-                    item={{ icon: <PersonIcon />, label: "Perfil", path: "/perfil" }}
+                    item={{ icon: <PersonIcon />, label: "Perfil", path: userRole === 'director' ? "/director/profile" : "/perfil" }}
                     isExpanded={isExpanded}
                     currentPage={currentPage}
                     onNavigate={onNavigate}
