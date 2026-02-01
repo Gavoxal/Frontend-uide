@@ -34,6 +34,13 @@ export const menuConfig = {
         { icon: GavelIcon, label: "Defensas", path: "/director/defense" },
     ],
 
+    coordinador: [
+        { icon: DashboardIcon, label: "Tablero", path: "/coordinador/dashboard" },
+        { icon: PeopleIcon, label: "Estudiantes", path: "/coordinador/students" },
+        { icon: ChecklistIcon, label: "Revisión de Prerrequisitos", path: "/coordinador/prerequisites" },
+        { icon: AssignmentIcon, label: "Propuestas de Tesis", path: "/coordinador/proposals" },
+    ],
+
     student: [
         { icon: DashboardIcon, label: "Dashboard", path: "/student/dashboard" },
         { icon: ChecklistIcon, label: "Prerrequisitos", path: "/student/prerequisites" },

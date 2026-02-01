@@ -62,5 +62,14 @@ export function LoginService(user, passwd) {
     };
   }
 
+  // Usuario coordinador
+  if (user === "coordinador" && passwd === "coordinador123") {
+    return {
+      name: "Darío",
+      lastName: "Valarezo",
+      role: "coordinador",
+    };
+  }
+
   return null; // Login fallido
 }

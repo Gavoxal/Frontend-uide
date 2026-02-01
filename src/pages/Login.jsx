@@ -90,6 +90,9 @@ function LoginPage() {
       case "docente_integracion":
         navigate('/docente-integracion/dashboard');
         break;
+      case "coordinador":
+        navigate('/coordinador/dashboard');
+        break;
       default:
         navigate('/student/dashboard');
         break;

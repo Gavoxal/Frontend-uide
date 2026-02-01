@@ -38,6 +38,13 @@ import DocenteDashboard from "../pages/DocenteIntegracion/Dashboard";
 import DocenteAdvances from "../pages/DocenteIntegracion/WeeklyAdvances";
 import ReviewAdvance from "../pages/DocenteIntegracion/ReviewAdvance";
 
+// Coordinador pages
+import CoordinadorDashboard from "../pages/Coordinador/Dashboard";
+import CoordinadorPrerequisites from "../pages/Coordinador/Prerequisites";
+import CoordinadorStudents from "../pages/Coordinador/Students";
+import CoordinadorProposals from "../pages/Coordinador/Proposals";
+import CoordinadorProposalDetail from "../pages/Coordinador/ProposalDetail";
+
 // Old admin pages (temporarily keeping for transition)
 import OldDashboardPage from "../pages/Admin/dashboard.page";
 import RegisterHotelPage from "../pages/Admin/components/register.hotel";
@@ -105,6 +112,18 @@ function RouterPages() {
                     <Route element={<DashboardLayout />}>
                         <Route index element={<ReviewerDashboard />} />
                         <Route path="dashboard" element={<ReviewerDashboard />} />
+                    </Route>
+                </Route>
+
+                {/* Rutas protegidas - Coordinador */}
+                <Route path="/coordinador" element={<AuthAdmin />}>
+                    <Route element={<DashboardLayout />}>
+                        <Route index element={<CoordinadorDashboard />} />
+                        <Route path="dashboard" element={<CoordinadorDashboard />} />
+                        <Route path="students" element={<CoordinadorStudents />} />
+                        <Route path="prerequisites" element={<CoordinadorPrerequisites />} />
+                        <Route path="proposals" element={<CoordinadorProposals />} />
+                        <Route path="proposals/detail/:id" element={<CoordinadorProposalDetail />} />
                     </Route>
                 </Route>
 

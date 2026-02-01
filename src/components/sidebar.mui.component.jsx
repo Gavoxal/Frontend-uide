@@ -24,6 +24,7 @@ import { getMenuByRole } from "../config/menuConfig.js";
 // Mapeo de roles a etiquetas legibles
 const roleLabels = {
     director: 'Director',
+    coordinador: 'Coordinador',
     student: 'Estudiante',
     tutor: 'Tutor',
     reviewer: 'Revisor',
