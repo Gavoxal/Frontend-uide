@@ -7,73 +7,35 @@ import {
     ListItemText,
     Divider,
     Collapse,
+    Avatar,
+    Typography,
+    Chip,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
-import DashboardIcon from "@mui/icons-material/Dashboard";
-import PeopleIcon from "@mui/icons-material/People";
-import AssignmentIcon from "@mui/icons-material/Assignment";
-import ChecklistIcon from "@mui/icons-material/Checklist";
 import PersonIcon from "@mui/icons-material/Person";
 import LogoutIcon from "@mui/icons-material/Logout";
-import SchoolIcon from "@mui/icons-material/School";
-import GavelIcon from "@mui/icons-material/Gavel";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import { useState } from "react";
 import { getDataUser } from "../storage/user.model.jsx";
 import uideImage from "../assets/uide3.svg";
+import { getMenuByRole } from "../config/menuConfig.js";
 
-// Configuración de menús por rol
-const MENU_BY_ROLE = {
-    director: [
-        { icon: <DashboardIcon />, label: "Dashboard", path: "/director/dashboard" },
-        { icon: <PeopleIcon />, label: "Estudiantes", path: "/director/students" },
-        { icon: <ChecklistIcon />, label: "Prerrequisitos", path: "/director/prerequisites" },
-        { icon: <AssignmentIcon />, label: "Propuestas", path: "/director/proposals" },
-        {
-            icon: <SchoolIcon />,
-            label: "Tutores",
-            path: "/director/tutors",
-            children: [
-                { label: "Listado", path: "/director/tutors" },
-                { label: "Asignar Tutor", path: "/director/tutors/assign" }
-            ]
-        },
-        { icon: <GavelIcon />, label: "Defensas", path: "/director/defense" },
-    ],
-    student: [
-        { icon: <DashboardIcon />, label: "Dashboard", path: "/student/dashboard" },
-        { icon: <ChecklistIcon />, label: "Prerrequisitos", path: "/student/prerequisites" },
-        { icon: <AssignmentIcon />, label: "Mis Propuestas", path: "/student/proposals" },
-        { icon: <SchoolIcon />, label: "Anteproyecto", path: "/student/anteproyecto" },
-        { icon: <PersonIcon />, label: "Mi Tutor", path: "/student/tutor" },
-        { icon: <AssignmentIcon />, label: "Avances", path: "/student/advances" },
-        { icon: <GavelIcon />, label: "Defensa", path: "/student/defense" },
-    ],
-    tutor: [
-        { icon: <DashboardIcon />, label: "Dashboard", path: "/tutor/dashboard" },
-        { icon: <PeopleIcon />, label: "Mis Estudiantes", path: "/tutor/students" },
-        { icon: <AssignmentIcon />, label: "Revisar Avances", path: "/tutor/advances" },
-    ],
-    reviewer: [
-        { icon: <DashboardIcon />, label: "Dashboard", path: "/reviewer/dashboard" },
-        { icon: <AssignmentIcon />, label: "Propuestas", path: "/reviewer/proposals" },
-        { icon: <GavelIcon />, label: "Defensas", path: "/reviewer/defenses" },
-    ],
-    docente_integracion: [
-        { icon: <DashboardIcon />, label: "Dashboard", path: "/docente-integracion/dashboard" },
-        { icon: <AssignmentIcon />, label: "Avances", path: "/docente-integracion/advances" },
-    ],
-    admin: [
-        { icon: <DashboardIcon />, label: "Dashboard", path: "/director/dashboard" },
-        { icon: <PeopleIcon />, label: "Estudiantes", path: "/director/students" },
-    ],
+// Mapeo de roles a etiquetas legibles
+const roleLabels = {
+    director: 'Director',
+    student: 'Estudiante',
+    tutor: 'Tutor',
+    reviewer: 'Revisor',
+    docente_integracion: 'Docente Integración',
+    admin: 'Administrador',
+    user: 'Usuario'
 };
 
 function SidebarMui({ onNavigate, currentPage, isExpanded, toggleSidebar }) {
     const user = getDataUser();
-    const userRole = user?.role || "admin";
-    const menuItems = MENU_BY_ROLE[userRole] || MENU_BY_ROLE.admin;
+    const userRole = user?.role || "user";
+    const menuItems = getMenuByRole(userRole);
 
     return (
         <Box
@@ -138,17 +100,89 @@ function SidebarMui({ onNavigate, currentPage, isExpanded, toggleSidebar }) {
 
             <Divider sx={{ bgcolor: "rgba(255,255,255,0.1)", my: 2 }} />
 
-            {/* BOTTOM */}
-            <Box sx={{ mt: "auto", width: "100%" }}>
-                <MenuItem
-                    item={{ icon: <PersonIcon />, label: "Perfil", path: userRole === 'director' ? "/director/profile" : "/perfil" }}
-                    isExpanded={isExpanded}
-                    currentPage={currentPage}
-                    onNavigate={onNavigate}
-                />
+            {/* BOTTOM - PERFIL DE USUARIO */}
+            <Box sx={{ mt: "auto", width: "100%", px: 2, pb: 2 }}>
+                {/* Avatar y datos del usuario */}
+                {isExpanded ? (
+                    <Box
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1.5,
+                            p: 1.5,
+                            backgroundColor: "rgba(255,255,255,0.1)",
+                            borderRadius: 2,
+                            mb: 1,
+                        }}
+                    >
+                        <Avatar
+                            sx={{
+                                bgcolor: "white",
+                                color: "#000A9B",
+                                width: 40,
+                                height: 40,
+                                fontWeight: "bold",
+                            }}
+                        >
+                            {user?.name?.charAt(0)}{user?.lastName?.charAt(0)}
+                        </Avatar>
+                        <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                            <Typography
+                                variant="body2"
+                                sx={{
+                                    color: "white",
+                                    fontWeight: 600,
+                                    fontSize: "0.875rem",
+                                    lineHeight: 1.2,
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                }}
+                            >
+                                {user?.name} {user?.lastName}
+                            </Typography>
+                            <Chip
+                                label={roleLabels[user?.role] || 'Usuario'}
+                                size="small"
+                                sx={{
+                                    height: 18,
+                                    fontSize: "0.65rem",
+                                    backgroundColor: "rgba(255,255,255,0.2)",
+                                    color: "white",
+                                    fontWeight: 500,
+                                    mt: 0.5,
+                                    "& .MuiChip-label": {
+                                        px: 1,
+                                    },
+                                }}
+                            />
+                        </Box>
+                    </Box>
+                ) : (
+                    <Box
+                        sx={{
+                            display: "flex",
+                            justifyContent: "center",
+                            mb: 1,
+                        }}
+                    >
+                        <Avatar
+                            sx={{
+                                bgcolor: "white",
+                                color: "#000A9B",
+                                width: 36,
+                                height: 36,
+                                fontWeight: "bold",
+                            }}
+                        >
+                            {user?.name?.charAt(0)}{user?.lastName?.charAt(0)}
+                        </Avatar>
+                    </Box>
+                )}
 
+                {/* Botón de cerrar sesión */}
                 <MenuItem
-                    item={{ icon: <LogoutIcon />, label: "Salir", path: "/ingreso" }}
+                    item={{ icon: LogoutIcon, label: "Cerrar Sesión", path: "/ingreso" }}
                     isExpanded={isExpanded}
                     currentPage={currentPage}
                     onNavigate={onNavigate}
@@ -164,6 +198,7 @@ function MenuItem({ item, isExpanded, currentPage, onNavigate }) {
     const hasChildren = item.children && item.children.length > 0;
     const [open, setOpen] = useState(false);
     const active = currentPage.includes(item.path);
+    const IconComponent = item.icon; // Guardar el componente en una variable
 
     const handleClick = () => {
         if (hasChildren) {
@@ -196,7 +231,7 @@ function MenuItem({ item, isExpanded, currentPage, onNavigate }) {
                         justifyContent: "center",
                     }}
                 >
-                    {item.icon}
+                    {IconComponent && <IconComponent />}
                 </ListItemIcon>
 
                 {isExpanded && (
