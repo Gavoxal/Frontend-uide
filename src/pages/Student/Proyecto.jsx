@@ -19,9 +19,9 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import FileUpload from '../../components/file.mui.component.jsx';
 import CommentSection from '../../components/comment.mui.component.jsx';
-import AlertMui from '../../components/alert.mui.component';
+import AlertMui from '../../components/alert.mui.component.jsx';
 
-function StudentAnteproyecto() {
+function StudentProyecto() {
     const [alertState, setAlertState] = useState({
         open: false,
         title: '',
@@ -63,7 +63,7 @@ function StudentAnteproyecto() {
             setAlertState({
                 open: true,
                 title: 'Documento Faltante',
-                message: 'Por favor, sube el documento del anteproyecto antes de enviar.',
+                message: 'Por favor, sube el documento del proyecto antes de enviar.',
                 status: 'warning'
             });
             return;
@@ -77,8 +77,8 @@ function StudentAnteproyecto() {
 
         setAlertState({
             open: true,
-            title: '¡Anteproyecto Enviado!',
-            message: '¡Anteproyecto enviado correctamente! El tutor lo revisará pronto y recibirás comentarios.',
+            title: '¡Proyecto Enviado!',
+            message: '¡Proyecto enviado correctamente! El tutor lo revisará pronto y recibirás comentarios.',
             status: 'success'
         });
     };
@@ -175,7 +175,7 @@ function StudentAnteproyecto() {
                 {/* Encabezado */}
                 <Box sx={{ mb: 4 }}>
                     <Typography variant="h4" fontWeight="bold" gutterBottom>
-                        Anteproyecto y Documentación
+                        Proyecto y Documentación
                     </Typography>
                     <Typography variant="body1" color="text.secondary">
                         Sube los documentos requeridos para tu trabajo de titulación
@@ -214,17 +214,17 @@ function StudentAnteproyecto() {
                             <>
                                 {/* Información */}
                                 <Alert severity="info" sx={{ mb: 3 }}>
-                                    Debes subir tu anteproyecto aprobado y los documentos complementarios. Solo se aceptan archivos en formato PDF.
+                                    Debes subir tu proyecto aprobado y los documentos complementarios. Solo se aceptan archivos en formato PDF.
                                 </Alert>
 
                                 {/* Anteproyecto */}
                                 <Card sx={{ mb: 3, borderRadius: 3, boxShadow: 2 }}>
                                     <CardContent sx={{ p: 4 }}>
                                         <Typography variant="h6" fontWeight="bold" gutterBottom>
-                                            Anteproyecto *
+                                            Proyecto *
                                         </Typography>
                                         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                                            Documento principal del anteproyecto aprobado por el director
+                                            Documento principal del proyecto aprobado por el director
                                         </Typography>
                                         <FileUpload
                                             onFileSelect={(file) => handleFileSelect(file, 'anteproyecto')}
@@ -255,15 +255,15 @@ function StudentAnteproyecto() {
                                         </Card>
                                     </Grid>
 
-                                    {/* Plan de Pruebas */}
+                                    {/* Articulo Cientifico */}
                                     <Grid item xs={12} md={6}>
                                         <Card sx={{ height: '100%', borderRadius: 3, boxShadow: 2 }}>
                                             <CardContent sx={{ p: 4 }}>
                                                 <Typography variant="h6" fontWeight="bold" gutterBottom>
-                                                    Plan de Pruebas
+                                                    Articulo Cientifico
                                                 </Typography>
                                                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                                                    Casos de prueba y validación del sistema
+                                                    Documento cientifico del proyecto
                                                 </Typography>
                                                 <FileUpload
                                                     onFileSelect={(file) => handleFileSelect(file, 'planPruebas')}
@@ -425,4 +425,4 @@ function StudentAnteproyecto() {
     );
 }
 
-export default StudentAnteproyecto;
+export default StudentProyecto;

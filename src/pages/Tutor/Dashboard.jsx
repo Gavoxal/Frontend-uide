@@ -1,128 +1,256 @@
-import { Box, Typography, Grid, Card, CardContent, List, ListItem, ListItemText, Divider } from "@mui/material";
-import PeopleIcon from "@mui/icons-material/People";
-import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
-import ScheduleIcon from "@mui/icons-material/Schedule";
-import { getDataUser } from "../../storage/user.model.jsx";
-import StatsCard from "../../components/common/StatsCard";
-import StudentCard from "../../components/common/StudentCard";
+import React, { useState } from 'react';
+import { Box, Typography, Grid, Card, CardContent, Alert, AlertTitle, List, ListItem, ListItemText, Chip } from '@mui/material';
+import { getDataUser } from '../../storage/user.model.jsx';
+import StudentCard from '../../components/studentcard.mui.component';
+import WarningIcon from '@mui/icons-material/Warning';
+import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
+import { useNavigate } from 'react-router-dom';
+
+// Mock data de estudiantes asignados
+const MOCK_STUDENTS = [
+    {
+        id: 1,
+        name: "Juan Pérez",
+        email: "juan@uide.edu.ec",
+        thesis: "Sistema de IoT para agricultura inteligente",
+        career: "Ingeniería de Software",
+        status: "green",
+        lastActivity: {
+            date: "Hace 2 días",
+            title: "Implementación de sensores DHT22"
+        },
+        weekNumber: 8
+    },
+    {
+        id: 2,
+        name: "María García",
+        email: "maria@uide.edu.ec",
+        thesis: "Aplicación móvil de gestión académica con React Native",
+        career: "Ingeniería de Software",
+        status: "yellow",
+        lastActivity: {
+            date: "Hace 5 días",
+            title: "Módulo de autenticación"
+        },
+        weekNumber: 12
+    },
+    {
+        id: 3,
+        name: "Carlos López",
+        email: "carlos@uide.edu.ec",
+        thesis: "Sistema de reconocimiento facial con Deep Learning",
+        career: "Ingeniería de Software",
+        status: "red",
+        lastActivity: {
+            date: "Hace 10 días",
+            title: "Entrenamiento de modelo CNN"
+        },
+        weekNumber: 6
+    },
+    {
+        id: 4,
+        name: "Ana Martínez",
+        email: "ana@uide.edu.ec",
+        thesis: "Plataforma de e-commerce con microservicios",
+        career: "Ingeniería de Software",
+        status: "green",
+        lastActivity: {
+            date: "Hace 1 día",
+            title: "Implementación de gateway API"
+        },
+        weekNumber: 10
+    },
+    {
+        id: 5,
+        name: "Luis Rodríguez",
+        email: "luis@uide.edu.ec",
+        thesis: "Sistema de gestión hospitalaria con blockchain",
+        career: "Ingeniería de Software",
+        status: "yellow",
+        lastActivity: {
+            date: "Hace 4 días",
+            title: "Smart contracts en Solidity"
+        },
+        weekNumber: 9
+    },
+    {
+        id: 6,
+        name: "Sofia Hernández",
+        email: "sofia@uide.edu.ec",
+        thesis: "Chatbot inteligente con NLP para atención al cliente",
+        career: "Ingeniería de Software",
+        status: "green",
+        lastActivity: {
+            date: "Hace 3 días",
+            title: "Integración con RASA Framework"
+        },
+        weekNumber: 11
+    }
+];
 
 function TutorDashboard() {
     const user = getDataUser();
+    const navigate = useNavigate();
+    const [students] = useState(MOCK_STUDENTS);
 
-    const stats = {
-        totalStudents: 5,
-        avancesReview: 3,
-        pendingMeetings: 2,
+    // Calcular estadísticas
+    const totalStudents = students.length;
+    const pendingReview = students.filter(s => s.status === 'yellow').length;
+    const delayed = students.filter(s => s.status === 'red').length;
+    const onTrack = students.filter(s => s.status === 'green').length;
+
+    // Alertas/Notificaciones
+    const alerts = [
+        { id: 1, type: 'review', message: `${pendingReview} avances pendientes de revisión`, severity: 'warning' },
+        { id: 2, type: 'delayed', message: `${delayed} estudiantes con retraso`, severity: 'error' },
+        { id: 3, type: 'meeting', message: 'Reunión con Juan Pérez programada para mañana', severity: 'info' }
+    ];
+
+    const handleViewStudent = (student) => {
+        console.log('Ver detalles de:', student.name);
+        // Navegar a vista de detalles
     };
 
-    const myStudents = [
-        {
-            name: "Eduardo Pardo",
-            cedula: "1234567890",
-            email: "epardo@example.com",
-            cycle: 8,
-            phase: "Desarrollo",
-            status: "in-progress",
-        },
-        {
-            name: "Ana García",
-            cedula: "5566778899",
-            email: "agarcia@example.com",
-            cycle: 8,
-            phase: "Desarrollo",
-            status: "in-progress",
-        },
-    ];
+    const handlePlanActivity = (student) => {
+        navigate('/tutor/planning', { state: { student } });
+    };
 
-    const upcomingMeetings = [
-        { student: "Eduardo Pardo", date: "2026-01-27", time: "10:00 AM" },
-        { student: "Ana García", date: "2026-01-28", time: "02:00 PM" },
-    ];
+    const handleReviewStudent = (student) => {
+        navigate('/tutor/review', { state: { student } });
+    };
 
     return (
-        <Box>
+        <Box sx={{ maxWidth: 1400, mx: 'auto' }}>
             {/* Encabezado */}
             <Box sx={{ mb: 4 }}>
                 <Typography variant="h4" fontWeight="bold" gutterBottom>
-                    Bienvenido, {user?.name || "Tutor"}
+                    ¡Hola, {user?.name || "Tutor"}! 👨‍🏫
                 </Typography>
                 <Typography variant="body1" color="text.secondary">
-                    Panel de gestión de tutoría
+                    Panel de control de tus estudiantes de titulación
                 </Typography>
             </Box>
 
-            {/* Estadísticas */}
-            <Grid container spacing={3} sx={{ mb: 4 }}>
-                <Grid item xs={12} sm={4}>
-                    <StatsCard
-                        title="Estudiantes Asignados"
-                        value={stats.totalStudents}
-                        icon={<PeopleIcon fontSize="large" />}
-                        color="primary"
-                    />
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                    <StatsCard
-                        title="Avances por Revisar"
-                        value={stats.avancesReview}
-                        icon={<AssignmentTurnedInIcon fontSize="large" />}
-                        color="warning"
-                    />
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                    <StatsCard
-                        title="Reuniones Pendientes"
-                        value={stats.pendingMeetings}
-                        icon={<ScheduleIcon fontSize="large" />}
-                        color="info"
-                    />
-                </Grid>
-            </Grid>
-
-            <Grid container spacing={3}>
-                {/* Mis Estudiantes */}
-                <Grid item xs={12} md={6}>
-                    <Typography variant="h6" fontWeight="bold" gutterBottom>
-                        Mis Estudiantes
-                    </Typography>
-                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                        {myStudents.map((student, index) => (
-                            <StudentCard key={index} student={student} onClick={() => console.log("Ver estudiante", student.name)} />
-                        ))}
-                    </Box>
+            {/* Estadísticas principales */}
+            <Grid container spacing={3} sx={{ mb: 3 }}>
+                <Grid item xs={12} sm={6} md={3}>
+                    <Card sx={{
+                        borderRadius: 3,
+                        boxShadow: 2,
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        color: 'white'
+                    }}>
+                        <CardContent sx={{ p: 3 }}>
+                            <Typography variant="body2" sx={{ opacity: 0.9, mb: 1 }}>
+                                Total Estudiantes
+                            </Typography>
+                            <Typography variant="h3" fontWeight="bold">
+                                {totalStudents}
+                            </Typography>
+                        </CardContent>
+                    </Card>
                 </Grid>
 
-                {/* Próximas Reuniones */}
-                <Grid item xs={12} md={6}>
-                    <Typography variant="h6" fontWeight="bold" gutterBottom>
-                        Próximas Reuniones
-                    </Typography>
-                    <Card>
-                        <CardContent>
-                            <List>
-                                {upcomingMeetings.map((meeting, index) => (
-                                    <Box key={index}>
-                                        <ListItem alignItems="flex-start">
-                                            <ListItemText
-                                                primary={meeting.student}
-                                                secondary={
-                                                    <>
-                                                        <Typography component="span" variant="body2" color="text.primary">
-                                                            {new Date(meeting.date).toLocaleDateString()}
-                                                        </Typography>
-                                                        {" — "}{meeting.time}
-                                                    </>
-                                                }
-                                            />
-                                        </ListItem>
-                                        {index < upcomingMeetings.length - 1 && <Divider />}
-                                    </Box>
-                                ))}
-                            </List>
+                <Grid item xs={12} sm={6} md={3}>
+                    <Card sx={{
+                        borderRadius: 3,
+                        boxShadow: 2,
+                        backgroundColor: '#4caf50',
+                        color: 'white'
+                    }}>
+                        <CardContent sx={{ p: 3 }}>
+                            <Typography variant="body2" sx={{ opacity: 0.9, mb: 1 }}>
+                                Al Día
+                            </Typography>
+                            <Typography variant="h3" fontWeight="bold">
+                                {onTrack}
+                            </Typography>
+                        </CardContent>
+                    </Card>
+                </Grid>
+
+                <Grid item xs={12} sm={6} md={3}>
+                    <Card sx={{
+                        borderRadius: 3,
+                        boxShadow: 2,
+                        backgroundColor: '#ff9800',
+                        color: 'white'
+                    }}>
+                        <CardContent sx={{ p: 3 }}>
+                            <Typography variant="body2" sx={{ opacity: 0.9, mb: 1 }}>
+                                Por Revisar
+                            </Typography>
+                            <Typography variant="h3" fontWeight="bold">
+                                {pendingReview}
+                            </Typography>
+                        </CardContent>
+                    </Card>
+                </Grid>
+
+                <Grid item xs={12} sm={6} md={3}>
+                    <Card sx={{
+                        borderRadius: 3,
+                        boxShadow: 2,
+                        backgroundColor: '#f44336',
+                        color: 'white'
+                    }}>
+                        <CardContent sx={{ p: 3 }}>
+                            <Typography variant="body2" sx={{ opacity: 0.9, mb: 1 }}>
+                                Retrasados
+                            </Typography>
+                            <Typography variant="h3" fontWeight="bold">
+                                {delayed}
+                            </Typography>
                         </CardContent>
                     </Card>
                 </Grid>
             </Grid>
+
+            {/* Sección de Alertas */}
+            {alerts.length > 0 && (
+                <Card sx={{ borderRadius: 3, boxShadow: 2, mb: 3 }}>
+                    <CardContent sx={{ p: 3 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                            <NotificationsActiveIcon sx={{ color: '#667eea' }} />
+                            <Typography variant="h6" fontWeight="bold">
+                                Notificaciones y Alertas
+                            </Typography>
+                        </Box>
+                        <List>
+                            {alerts.map((alert) => (
+                                <ListItem key={alert.id} sx={{ px: 0 }}>
+                                    <Alert severity={alert.severity} sx={{ width: '100%' }}>
+                                        {alert.message}
+                                    </Alert>
+                                </ListItem>
+                            ))}
+                        </List>
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* Lista de Estudiantes */}
+            <Box sx={{ mb: 3 }}>
+                <Typography variant="h5" fontWeight="bold" gutterBottom>
+                    Mis Estudiantes
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                    Lista de estudiantes asignados para este ciclo académico
+                </Typography>
+
+                <Grid container spacing={3}>
+                    {students.map((student) => (
+                        <Grid item xs={12} md={6} lg={4} key={student.id}>
+                            <StudentCard
+                                student={student}
+                                onView={handleViewStudent}
+                                onPlan={handlePlanActivity}
+                                onReview={handleReviewStudent}
+                            />
+                        </Grid>
+                    ))}
+                </Grid>
+            </Box>
         </Box>
     );
 }

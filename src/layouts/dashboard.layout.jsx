@@ -19,11 +19,13 @@ function DashboardLayout() {
         if (path.includes('/students')) return 'Estudiantes';
         if (path.includes('/proposals')) return 'Propuestas';
         if (path.includes('/tutors')) return 'Tutores';
-        if (path.includes('/advances')) return 'Avances';
+        if (path.includes('/avances')) return 'Avances';
         if (path.includes('/defenses')) return 'Defensas';
-        if (path.includes('/tutor')) return 'Mi Tutor';
-        if (path.includes('/anteproyecto')) return 'Anteproyecto';
+        if (path.includes('/proyecto')) return 'Proyecto';
         if (path.includes('/profile')) return 'Perfil';
+        if (path.includes('/planning')) return 'Planificación';
+        if (path.includes('/review')) return 'Revisión';
+        if (path.includes('/meetings')) return 'Reuniones';
         return 'Tablero';
     };
 

@@ -6,6 +6,7 @@ import NotFound from "../pages/NotFound";
 
 import AuthAdmin from "./AuthAdmin";
 import DashboardLayout from "../layouts/dashboard.layout";
+import { UserProgressProvider } from "../contexts/UserProgressContext";
 
 // Director pages
 import DirectorDashboard from "../pages/Director/Dashboard";
@@ -14,13 +15,17 @@ import DirectorPrerequisites from "../pages/Director/Prerequisites";
 // Student pages
 import StudentDashboard from "../pages/Student/Dashboard";
 import StudentPrerequisites from "../pages/Student/Prerequisites";
-import StudentAnteproyecto from "../pages/Student/Anteproyecto";
+import StudentProyecto from "../pages/Student/Proyecto";
 import StudentProfile from "../pages/Student/Profile";
 import ThesisProposal from "../pages/Student/Proporsal";
 import StudentAvances from "../pages/Student/Avances";
 
 // Tutor pages
 import TutorDashboard from "../pages/Tutor/Dashboard";
+import ActivityPlanning from "../pages/Tutor/ActivityPlanning";
+import ReviewFeedback from "../pages/Tutor/ReviewFeedback";
+import MeetingLog from "../pages/Tutor/MeetingLog";
+import TutorProfile from "../pages/Tutor/Profile";
 
 // Reviewer pages
 import ReviewerDashboard from "../pages/Reviewer/Dashboard";
@@ -52,11 +57,15 @@ function RouterPages() {
 
                 {/* Rutas protegidas - Estudiante */}
                 <Route path="/student" element={<AuthAdmin />}>
-                    <Route element={<DashboardLayout />}>
+                    <Route element={
+                        <UserProgressProvider>
+                            <DashboardLayout />
+                        </UserProgressProvider>
+                    }>
                         <Route index element={<StudentDashboard />} />
                         <Route path="dashboard" element={<StudentDashboard />} />
                         <Route path="prerequisites" element={<StudentPrerequisites />} />
-                        <Route path="anteproyecto" element={<StudentAnteproyecto />} />
+                        <Route path="proyecto" element={<StudentProyecto />} />
                         <Route path="profile" element={<StudentProfile />} />
                         <Route path="proposals" element={<ThesisProposal />} />
                         <Route path="avances" element={<StudentAvances />} />
@@ -68,6 +77,10 @@ function RouterPages() {
                     <Route element={<DashboardLayout />}>
                         <Route index element={<TutorDashboard />} />
                         <Route path="dashboard" element={<TutorDashboard />} />
+                        <Route path="planning" element={<ActivityPlanning />} />
+                        <Route path="review" element={<ReviewFeedback />} />
+                        <Route path="meetings" element={<MeetingLog />} />
+                        <Route path="profile" element={<TutorProfile />} />
                     </Route>
                 </Route>
 

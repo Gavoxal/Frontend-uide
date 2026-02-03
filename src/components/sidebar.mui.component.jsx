@@ -6,6 +6,7 @@ import {
     ListItemIcon,
     ListItemText,
     Divider,
+    Tooltip,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import DashboardIcon from "@mui/icons-material/Dashboard";
@@ -16,7 +17,11 @@ import PersonIcon from "@mui/icons-material/Person";
 import LogoutIcon from "@mui/icons-material/Logout";
 import SchoolIcon from "@mui/icons-material/School";
 import GavelIcon from "@mui/icons-material/Gavel";
+import LockIcon from "@mui/icons-material/Lock";
+import RateReviewIcon from "@mui/icons-material/RateReview";
+import EventNoteIcon from "@mui/icons-material/EventNote";
 import { getDataUser } from "../storage/user.model.jsx";
+import { useUserProgress } from "../contexts/UserProgressContext";
 import uideImage from "../assets/uide3.svg";
 
 // Configuración de menús por rol
@@ -33,15 +38,15 @@ const MENU_BY_ROLE = {
         { icon: <DashboardIcon />, label: "Dashboard", path: "/student/dashboard" },
         { icon: <ChecklistIcon />, label: "Prerrequisitos", path: "/student/prerequisites" },
         { icon: <AssignmentIcon />, label: "Mis Propuestas", path: "/student/proposals" },
-        { icon: <SchoolIcon />, label: "Anteproyecto", path: "/student/anteproyecto" },
-        { icon: <PersonIcon />, label: "Mi Tutor", path: "/student/tutor" },
         { icon: <AssignmentIcon />, label: "Avances", path: "/student/avances" },
-        { icon: <GavelIcon />, label: "Defensa", path: "/student/defense" },
+        { icon: <SchoolIcon />, label: "Proyecto", path: "/student/proyecto" },
+        { icon: <GavelIcon />, label: "Defensa", path: "/student/defensa" },
     ],
     tutor: [
         { icon: <DashboardIcon />, label: "Dashboard", path: "/tutor/dashboard" },
-        { icon: <PeopleIcon />, label: "Mis Estudiantes", path: "/tutor/students" },
-        { icon: <AssignmentIcon />, label: "Revisar Avances", path: "/tutor/advances" },
+        { icon: <AssignmentIcon />, label: "Planificar Actividades", path: "/tutor/planning" },
+        { icon: <RateReviewIcon />, label: "Revisar Avances", path: "/tutor/review" },
+        { icon: <EventNoteIcon />, label: "Bitácora de Reuniones", path: "/tutor/meetings" },
     ],
     reviewer: [
         { icon: <DashboardIcon />, label: "Dashboard", path: "/reviewer/dashboard" },
@@ -58,6 +63,24 @@ function SidebarMui({ onNavigate, currentPage, isExpanded, toggleSidebar }) {
     const user = getDataUser();
     const userRole = user?.role || "admin";
     const menuItems = MENU_BY_ROLE[userRole] || MENU_BY_ROLE.admin;
+
+    // Solo para estudiantes, verificar permisos
+    const progressContext = userRole === 'student' ? useUserProgress() : null;
+
+    const canAccessItem = (item) => {
+        if (userRole !== 'student' || !progressContext) return true;
+
+        // Extraer el nombre de la sección del path
+        const sectionName = item.path.split('/').pop();
+        return progressContext.canAccessSection(sectionName);
+    };
+
+    const getBlockReasonForItem = (item) => {
+        if (userRole !== 'student' || !progressContext) return null;
+
+        const sectionName = item.path.split('/').pop();
+        return progressContext.getBlockReason(sectionName);
+    };
 
     return (
         <Box
@@ -109,16 +132,23 @@ function SidebarMui({ onNavigate, currentPage, isExpanded, toggleSidebar }) {
 
             {/* MENU DINÁMICO POR ROL */}
             <List sx={{ width: "100%" }}>
-                {menuItems.map((item, index) => (
-                    <MenuItem
-                        key={index}
-                        icon={item.icon}
-                        label={item.label}
-                        isExpanded={isExpanded}
-                        active={currentPage.includes(item.path)}
-                        onClick={() => onNavigate(item.path)}
-                    />
-                ))}
+                {menuItems.map((item, index) => {
+                    const canAccess = canAccessItem(item);
+                    const blockReason = getBlockReasonForItem(item);
+
+                    return (
+                        <MenuItem
+                            key={index}
+                            icon={item.icon}
+                            label={item.label}
+                            isExpanded={isExpanded}
+                            active={currentPage.includes(item.path)}
+                            onClick={() => canAccess && onNavigate(item.path)}
+                            blocked={!canAccess}
+                            blockReason={blockReason}
+                        />
+                    );
+                })}
             </List>
 
             <Divider sx={{ bgcolor: "rgba(255,255,255,0.1)", my: 2 }} />
@@ -146,20 +176,22 @@ function SidebarMui({ onNavigate, currentPage, isExpanded, toggleSidebar }) {
 
 export default SidebarMui;
 
-function MenuItem({ icon, label, isExpanded, active, onClick }) {
-    return (
+function MenuItem({ icon, label, isExpanded, active, onClick, blocked = false, blockReason = null }) {
+    const menuItem = (
         <ListItem
-            onClick={onClick}
+            onClick={blocked ? undefined : onClick}
             sx={{
-                cursor: "pointer",
+                cursor: blocked ? "not-allowed" : "pointer",
                 px: isExpanded ? 2 : 0,
                 justifyContent: isExpanded ? "flex-start" : "center",
                 backgroundColor: active ? "rgba(255,255,255,0.15)" : "transparent",
                 borderRadius: 1,
                 mb: 1,
+                opacity: blocked ? 0.4 : 1,
                 "&:hover": {
-                    backgroundColor: "rgba(255,255,255,0.25)",
+                    backgroundColor: blocked ? "transparent" : "rgba(255,255,255,0.25)",
                 },
+                position: 'relative',
             }}
         >
             <ListItemIcon
@@ -169,10 +201,20 @@ function MenuItem({ icon, label, isExpanded, active, onClick }) {
                     justifyContent: "center",
                 }}
             >
-                {icon}
+                {blocked ? <LockIcon fontSize="small" /> : icon}
             </ListItemIcon>
 
             {isExpanded && <ListItemText primary={label} sx={{ color: "white" }} />}
         </ListItem>
     );
+
+    if (blocked && blockReason) {
+        return (
+            <Tooltip title={blockReason} placement="right" arrow>
+                {menuItem}
+            </Tooltip>
+        );
+    }
+
+    return menuItem;
 }

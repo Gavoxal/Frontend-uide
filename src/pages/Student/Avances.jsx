@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
     Box,
     Typography,
@@ -6,44 +6,28 @@ import {
     CardContent,
     Button,
     LinearProgress,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
     Chip,
-    IconButton,
-    Alert,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    Divider,
-    Accordion,
-    AccordionSummary,
-    AccordionDetails,
-    Collapse,
-    List,
-    ListItem,
-    ListItemText
+    Stepper,
+    Step,
+    StepLabel,
 } from '@mui/material';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import DownloadIcon from '@mui/icons-material/Download';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import EditIcon from '@mui/icons-material/Edit';
-import LockIcon from '@mui/icons-material/Lock';
-import UploadFileIcon from '@mui/icons-material/UploadFile';
-import ArticleIcon from '@mui/icons-material/Article';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import CloseIcon from '@mui/icons-material/Close';
-import FileUpload from '../../components/file.mui.component';
-import CommentSection from '../../components/comment.mui.component';
+import {
+    PlayCircleOutline,
+    CheckCircleOutline,
+    RadioButtonUnchecked,
+    AccessTime,
+    UploadFile,
+    CheckCircle,
+    Grade,
+} from '@mui/icons-material';
+import CalendarMui from '../../components/calendar.mui.component';
+import DetailsModal from '../../components/details.mui.component';
 import AlertMui from '../../components/alert.mui.component';
 
 function StudentAvances() {
-    const [uploadModalOpen, setUploadModalOpen] = useState(false);
-    const [uploadedFile, setUploadedFile] = useState(null);
+    const [selectedProgress, setSelectedProgress] = useState(null);
+    const [detailModalOpen, setDetailModalOpen] = useState(false);
+    const [initialTab, setInitialTab] = useState(0);
     const [alertState, setAlertState] = useState({
         open: false,
         title: '',
@@ -51,138 +35,248 @@ function StudentAvances() {
         status: 'info'
     });
 
-    // Datos de ejemplo
+    // Datos de ejemplo - En producción vendrían del backend
     const progressData = {
         completedWeeks: 2,
         totalWeeks: 15,
-        daysUntilDeadline: 10,
         currentWeek: 3
     };
 
-    // Rúbrica de evaluación
-    const rubricData = {
-        criteria: [
-            {
-                name: 'Formato del documento',
-                levels: [
-                    { name: 'Excelente', description: 'Cumple completamente con el formato establecido' },
-                    { name: 'Satisfactorio', description: 'Cumple parcialmente, requiere ajustes menores' },
-                    { name: 'Insatisfactorio', description: 'No cumple con los requisitos mínimos' }
-                ]
-            },
-            {
-                name: 'Contenido técnico',
-                levels: [
-                    { name: 'Excelente', description: 'Demuestra dominio completo del tema' },
-                    { name: 'Satisfactorio', description: 'Demuestra conocimiento adecuado con algunas carencias' },
-                    { name: 'Insatisfactorio', description: 'Carece de fundamento técnico suficiente' }
-                ]
-            },
-            {
-                name: 'Avance del proyecto',
-                levels: [
-                    { name: 'Excelente', description: 'Evidencia progreso significativo y funcional' },
-                    { name: 'Satisfactorio', description: 'Muestra avance pero con funcionalidad limitada' },
-                    { name: 'Insatisfactorio', description: 'Avance insuficiente o no funcional' }
-                ]
-            }
-        ]
-    };
-
-    const weeklySubmissions = [
+    // Estructura unificada de avances semanales
+    const weeklyProgress = [
         {
             id: 1,
-            week: 'Semana 1',
-            dueDate: 'Enero 06, 2026',
-            status: 'Calificado',
-            grade: '95/100',
-            file: 'avance_semana1.pdf',
-            locked: false
+            weekNumber: 1,
+            title: "Autenticación de Usuarios",
+            assignmentDate: new Date(2026, 0, 20),
+            dueDate: new Date(2026, 0, 27),
+
+            tutorAssignment: {
+                description: "Implementar sistema de autenticación completo con JWT",
+                requirements: [
+                    "Login con email y contraseña",
+                    "Registro de usuarios",
+                    "Implementar JWT para sesiones",
+                    "Recuperación de contraseña"
+                ],
+                assignedBy: "Ing. Carlos Pérez",
+                assignedDate: new Date(2026, 0, 20),
+            },
+
+            studentSubmission: {
+                uploadedFile: "avance_semana1.pdf",
+                submittedDate: new Date(2026, 0, 26),
+                comments: "Implementación completa con pruebas unitarias incluidas",
+            },
+
+            tutorReview: {
+                status: "approved",
+                feedback: "Excelente trabajo. La implementación es sólida y las pruebas son adecuadas.",
+                reviewDate: new Date(2026, 0, 27),
+                technicalScore: "Cumple",
+            },
+
+            integrationGrade: {
+                score: 95,
+                gradedBy: "Ing. Lorena García",
+                gradedDate: new Date(2026, 0, 28),
+                feedback: "Muy buen trabajo, cumple con todos los criterios de la rúbrica.",
+            },
+
+            currentState: "graded"
         },
         {
             id: 2,
-            week: 'Semana 2',
-            dueDate: 'Enero 10, 2026',
-            status: 'Atrasado',
-            grade: '70/100',
-            file: 'avance_semana2.pdf',
-            locked: false
+            weekNumber: 2,
+            title: "Dashboard y Gestión de Perfiles",
+            assignmentDate: new Date(2026, 0, 27),
+            dueDate: new Date(2026, 1, 3),
+
+            tutorAssignment: {
+                description: "Crear dashboard principal y sistema de perfiles de usuario",
+                requirements: [
+                    "Dashboard con estadísticas básicas",
+                    "Página de perfil de usuario",
+                    "Edición de perfil",
+                    "Carga de imagen de perfil"
+                ],
+                assignedBy: "Ing. Carlos Pérez",
+                assignedDate: new Date(2026, 0, 27),
+            },
+
+            studentSubmission: {
+                uploadedFile: "avance_semana2.pdf",
+                submittedDate: new Date(2026, 1, 2),
+                comments: "Dashboard implementado con gráficos interactivos",
+            },
+
+            tutorReview: {
+                status: "approved",
+                feedback: "Buen trabajo. Considera mejorar la responsividad en móviles.",
+                reviewDate: new Date(2026, 1, 3),
+                technicalScore: "Cumple pero falta",
+            },
+
+            integrationGrade: null,
+            currentState: "pending_integration_grade"
         },
         {
             id: 3,
-            week: 'Semana 3',
-            dueDate: 'Enero 20, 2026',
-            status: 'Enviado',
-            grade: '---',
-            file: 'avance_semana3.pdf',
-            locked: false
+            weekNumber: 3,
+            title: "Sistema de Reportes",
+            assignmentDate: new Date(2026, 1, 3),
+            dueDate: new Date(2026, 1, 10),
+
+            tutorAssignment: {
+                description: "Implementar módulo de generación de reportes",
+                requirements: [
+                    "Reportes en PDF",
+                    "Filtros por fecha",
+                    "Exportación a Excel",
+                    "Gráficos estadísticos"
+                ],
+                assignedBy: "Ing. Carlos Pérez",
+                assignedDate: new Date(2026, 1, 3),
+            },
+
+            studentSubmission: {
+                uploadedFile: "avance_semana3.pdf",
+                submittedDate: new Date(2026, 1, 9),
+                comments: "Implementación con librería jsPDF",
+            },
+
+            tutorReview: null,
+            integrationGrade: null,
+            currentState: "pending_tutor_review"
         },
         {
             id: 4,
-            week: 'Semana 4',
-            dueDate: 'Enero 20, 2026',
-            status: 'Pendiente',
-            grade: '---',
-            file: null,
-            locked: false
+            weekNumber: 4,
+            title: "API REST y Endpoints",
+            assignmentDate: new Date(2026, 1, 10),
+            dueDate: new Date(2026, 1, 17),
+
+            tutorAssignment: {
+                description: "Desarrollar API REST para el backend del sistema",
+                requirements: [
+                    "CRUD completo para entidades principales",
+                    "Validación de datos con Zod",
+                    "Documentación con Swagger",
+                    "Manejo de errores estándar"
+                ],
+                assignedBy: "Ing. Carlos Pérez",
+                assignedDate: new Date(2026, 1, 10),
+            },
+
+            studentSubmission: null,
+            tutorReview: null,
+            integrationGrade: null,
+            currentState: "pending_upload"
         },
         {
             id: 5,
-            week: 'Semana 5',
-            dueDate: 'Enero 20, 2026',
-            status: 'Próximo',
-            grade: '---',
-            file: null,
-            locked: true
-        },
+            weekNumber: 5,
+            title: "Optimización y Testing",
+            assignmentDate: new Date(2026, 1, 17),
+            dueDate: new Date(2026, 1, 24),
+
+            tutorAssignment: null,
+            studentSubmission: null,
+            tutorReview: null,
+            integrationGrade: null,
+            currentState: "pending_assignment"
+        }
     ];
 
-    const getStatusConfig = (status) => {
-        switch (status) {
-            case 'Calificado':
-                return { color: 'success', bgColor: '#4caf50' };
-            case 'Atrasado':
-                return { color: 'error', bgColor: '#f44336' };
-            case 'Enviado':
-                return { color: 'info', bgColor: '#2196f3' };
-            case 'Pendiente':
-                return { color: 'default', bgColor: '#757575' };
-            case 'Próximo':
-                return { color: 'default', bgColor: '#9e9e9e' };
+    // Convertir avances a eventos del calendario
+    const calendarEvents = weeklyProgress
+        .filter(progress => progress.tutorAssignment)
+        .map(progress => {
+            let color = '#9e9e9e';
+            let title = progress.title;
+
+            switch (progress.currentState) {
+                case 'graded':
+                    color = '#4caf50';
+                    break;
+                case 'pending_integration_grade':
+                    color = '#2196f3';
+                    break;
+                case 'pending_tutor_review':
+                    color = '#ff9800';
+                    break;
+                case 'pending_upload':
+                    color = '#f44336';
+                    break;
+                default:
+                    color = '#9e9e9e';
+            }
+
+            return {
+                title: `S${progress.weekNumber}: ${title}`,
+                date: progress.dueDate,
+                color: color,
+                progressId: progress.id
+            };
+        });
+
+    const getStateConfig = (state) => {
+        switch (state) {
+            case 'graded':
+                return { label: 'Calificado', color: '#4caf50', icon: CheckCircle };
+            case 'pending_integration_grade':
+                return { label: 'Esperando Calificación', color: '#2196f3', icon: Grade };
+            case 'pending_tutor_review':
+                return { label: 'En Revisión', color: '#ff9800', icon: PlayCircleOutline };
+            case 'pending_upload':
+                return { label: 'Pendiente de Entrega', color: '#f44336', icon: UploadFile };
+            case 'pending_assignment':
+                return { label: 'Sin Asignar', color: '#9e9e9e', icon: RadioButtonUnchecked };
             default:
-                return { color: 'default', bgColor: '#9e9e9e' };
+                return { label: 'Desconocido', color: '#9e9e9e', icon: RadioButtonUnchecked };
         }
     };
 
-    const getStatusDot = (week) => {
-        const colors = {
-            1: '#4caf50',
-            2: '#ff9800',
-            3: '#2196f3',
-            4: '#757575',
-            5: '#9e9e9e'
-        };
-        return colors[week] || '#9e9e9e';
+    const handleEventClick = (event) => {
+        const progress = weeklyProgress.find(p => p.id === event.progressId);
+        if (progress) {
+            openDetailModal(progress);
+        }
     };
 
-    const handleUploadProgress = () => {
-        setUploadModalOpen(true);
+    const handleDateClick = (date) => {
+        // Buscar avance en esa fecha
+        const progress = weeklyProgress.find(p =>
+            p.dueDate.toDateString() === date.toDateString()
+        );
+        if (progress && progress.tutorAssignment) {
+            openDetailModal(progress);
+        }
+    };
+
+    const openDetailModal = (progress) => {
+        setSelectedProgress(progress);
+        setDetailModalOpen(true);
+
+        // Determinar pestaña inicial según el estado
+        if (!progress.studentSubmission) {
+            setInitialTab(1); // Ir a "Mi Entrega"
+        } else if (!progress.tutorReview) {
+            setInitialTab(2); // Ir a "Revisión del Tutor"
+        } else if (!progress.integrationGrade) {
+            setInitialTab(3); // Ir a "Calificación Final"
+        } else {
+            setInitialTab(0); // Mostrar asignación
+        }
     };
 
     const handleCloseModal = () => {
-        setUploadModalOpen(false);
-        setUploadedFile(null);
+        setDetailModalOpen(false);
+        setSelectedProgress(null);
+        setInitialTab(0);
     };
 
-    const handleFileSelect = (file) => {
-        setUploadedFile(file);
-    };
-
-    const handleFileRemove = () => {
-        setUploadedFile(null);
-    };
-
-    const handleSubmitProgress = () => {
+    const handleSubmitProgress = (uploadedFile) => {
         if (!uploadedFile) {
             setAlertState({
                 open: true,
@@ -194,14 +288,15 @@ function StudentAvances() {
         }
 
         // Aquí iría la lógica para enviar al backend
-        setUploadModalOpen(false);
+        console.log('Enviando avance:', uploadedFile);
+
+        setDetailModalOpen(false);
         setAlertState({
             open: true,
             title: '¡Avance Enviado!',
-            message: 'Tu avance semanal ha sido enviado correctamente. Recibirás una calificación pronto.',
+            message: 'Tu avance semanal ha sido enviado correctamente. Tu tutor lo revisará pronto.',
             status: 'success'
         });
-        setUploadedFile(null);
     };
 
     const progressPercentage = (progressData.completedWeeks / progressData.totalWeeks) * 100;
@@ -212,22 +307,33 @@ function StudentAvances() {
                 {/* Header */}
                 <Box sx={{ mb: 4 }}>
                     <Typography variant="h4" fontWeight="bold" gutterBottom>
-                        Mis Avances
+                        Mis Avances Semanales
                     </Typography>
                     <Typography variant="body1" color="text.secondary">
-                        Seguimiento semanal de tu trabajo de titulación
+                        Seguimiento del progreso de tu trabajo de titulación
                     </Typography>
                 </Box>
 
-                {/* Seguimiento de Avances Section */}
+                {/* Calendario */}
+                <Box sx={{ mb: 4 }}>
+                    <CalendarMui
+                        events={calendarEvents}
+                        onEventClick={handleEventClick}
+                        onDateClick={handleDateClick}
+                        showViewToggle={false}
+                        showAddButton={false}
+                    />
+                </Box>
+
+                {/* Resumen de Progreso */}
                 <Card sx={{ mb: 4, borderRadius: 3, boxShadow: 2 }}>
                     <CardContent sx={{ p: 4 }}>
                         <Typography variant="h6" fontWeight="700" gutterBottom sx={{ mb: 3 }}>
-                            Seguimiento de Mis Avances
+                            Resumen de Progreso
                         </Typography>
 
-                        <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', mb: 3 }}>
-                            {/* Semanas Completadas Card */}
+                        <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+                            {/* Semanas Completadas */}
                             <Card sx={{
                                 flex: '1 1 300px',
                                 borderRadius: 3,
@@ -257,7 +363,7 @@ function StudentAvances() {
                                 </CardContent>
                             </Card>
 
-                            {/* Días para la fecha límite Card */}
+                            {/* Semana Actual */}
                             <Card sx={{
                                 flex: '1 1 300px',
                                 borderRadius: 3,
@@ -266,346 +372,142 @@ function StudentAvances() {
                             }}>
                                 <CardContent sx={{ p: 3 }}>
                                     <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                                        Días para la fecha límite
+                                        Semana Actual
                                     </Typography>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                                        <AccessTimeIcon sx={{ color: '#ff9800', fontSize: 32 }} />
-                                        <Typography variant="h4" fontWeight="bold" color="#ff9800">
-                                            {progressData.daysUntilDeadline} Días
+                                        <AccessTime sx={{ color: '#000A9B', fontSize: 32 }} />
+                                        <Typography variant="h4" fontWeight="bold" color="#000A9B">
+                                            Semana {progressData.currentWeek}
                                         </Typography>
                                     </Box>
                                     <Typography variant="caption" color="text.secondary">
-                                        Semana {progressData.currentWeek} - Avances
+                                        Mantén el ritmo de trabajo constante
                                     </Typography>
                                 </CardContent>
                             </Card>
                         </Box>
-
-                        {/* Botón Subir Avance */}
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                            <Button
-                                variant="contained"
-                                startIcon={<UploadFileIcon />}
-                                onClick={handleUploadProgress}
-                                sx={{
-                                    backgroundColor: '#FDB913',
-                                    color: '#000',
-                                    fontWeight: 600,
-                                    px: 3,
-                                    py: 1.5,
-                                    borderRadius: 2,
-                                    textTransform: 'none',
-                                    '&:hover': {
-                                        backgroundColor: '#E5A712'
-                                    }
-                                }}
-                            >
-                                Subir avance
-                            </Button>
-                        </Box>
                     </CardContent>
                 </Card>
 
-                {/* Tabla de Avances Semanales */}
+                {/* Lista de Avances con Timeline */}
                 <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
                     <CardContent sx={{ p: 4 }}>
                         <Typography variant="h6" fontWeight="700" gutterBottom sx={{ mb: 3 }}>
-                            Tabla de Avances Semanales
+                            Avances Semanales
                         </Typography>
 
-                        <TableContainer>
-                            <Table>
-                                <TableHead>
-                                    <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-                                        <TableCell sx={{ fontWeight: 700, color: 'text.primary' }}>
-                                            Semana
-                                        </TableCell>
-                                        <TableCell sx={{ fontWeight: 700, color: 'text.primary' }}>
-                                            Fecha de vencimiento
-                                        </TableCell>
-                                        <TableCell sx={{ fontWeight: 700, color: 'text.primary' }} align="center">
-                                            Estatus
-                                        </TableCell>
-                                        <TableCell sx={{ fontWeight: 700, color: 'text.primary' }} align="center">
-                                            Calificación
-                                        </TableCell>
-                                        <TableCell sx={{ fontWeight: 700, color: 'text.primary' }} align="center">
-                                            Acciones
-                                        </TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {weeklySubmissions.map((submission) => (
-                                        <TableRow
-                                            key={submission.id}
-                                            sx={{
-                                                '&:hover': {
-                                                    backgroundColor: '#fafafa'
-                                                }
-                                            }}
-                                        >
-                                            <TableCell>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                                                    <Box
-                                                        sx={{
-                                                            width: 10,
-                                                            height: 10,
-                                                            borderRadius: '50%',
-                                                            backgroundColor: getStatusDot(submission.id)
-                                                        }}
-                                                    />
-                                                    <Typography variant="body2" fontWeight="500">
-                                                        {submission.week}
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                            {weeklyProgress.map((progress) => {
+                                const stateConfig = getStateConfig(progress.currentState);
+                                const StateIcon = stateConfig.icon;
+
+                                return (
+                                    <Card
+                                        key={progress.id}
+                                        sx={{
+                                            borderRadius: 2,
+                                            border: '1px solid #e0e0e0',
+                                            '&:hover': {
+                                                boxShadow: 3,
+                                                borderColor: '#000A9B'
+                                            },
+                                            transition: 'all 0.2s'
+                                        }}
+                                    >
+                                        <CardContent sx={{ p: 3 }}>
+                                            {/* Header del avance */}
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                                                <Box>
+                                                    <Typography variant="h6" fontWeight="600">
+                                                        Semana {progress.weekNumber}: {progress.title || 'Sin asignar'}
                                                     </Typography>
-                                                </Box>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                                                    {submission.dueDate}
-                                                </Typography>
-                                            </TableCell>
-                                            <TableCell align="center">
-                                                <Chip
-                                                    label={submission.status}
-                                                    size="small"
-                                                    sx={{
-                                                        backgroundColor: getStatusConfig(submission.status).bgColor,
-                                                        color: 'white',
-                                                        fontWeight: 600,
-                                                        fontSize: '0.75rem'
-                                                    }}
-                                                />
-                                            </TableCell>
-                                            <TableCell align="center">
-                                                <Typography variant="body2" fontWeight="500">
-                                                    {submission.grade}
-                                                </Typography>
-                                            </TableCell>
-                                            <TableCell align="center">
-                                                <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-                                                    {submission.locked ? (
-                                                        <IconButton size="small" disabled>
-                                                            <LockIcon sx={{ fontSize: 20 }} />
-                                                        </IconButton>
-                                                    ) : submission.status === 'Pendiente' || submission.status === 'Atrasado' ? (
-                                                        <Button
-                                                            variant="contained"
-                                                            size="small"
-                                                            sx={{
-                                                                textTransform: 'none',
-                                                                minWidth: 'auto',
-                                                                px: 2,
-                                                                fontSize: '0.75rem',
-                                                                backgroundColor: '#667eea',
-                                                                '&:hover': {
-                                                                    backgroundColor: '#5568d3'
-                                                                }
-                                                            }}
-                                                        >
-                                                            Editar
-                                                        </Button>
-                                                    ) : (
-                                                        <>
-                                                            <IconButton size="small" sx={{ color: '#667eea' }}>
-                                                                <DownloadIcon sx={{ fontSize: 20 }} />
-                                                            </IconButton>
-                                                            <IconButton size="small" sx={{ color: '#667eea' }}>
-                                                                <ArticleIcon sx={{ fontSize: 20 }} />
-                                                            </IconButton>
-                                                        </>
+                                                    {progress.dueDate && (
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            Fecha límite: {progress.dueDate.toLocaleDateString('es-ES', {
+                                                                day: 'numeric',
+                                                                month: 'long',
+                                                                year: 'numeric'
+                                                            })}
+                                                        </Typography>
                                                     )}
                                                 </Box>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
+                                                <Chip
+                                                    icon={<StateIcon />}
+                                                    label={stateConfig.label}
+                                                    sx={{
+                                                        backgroundColor: stateConfig.color,
+                                                        color: 'white',
+                                                        fontWeight: 600
+                                                    }}
+                                                />
+                                            </Box>
+
+                                            {/* Timeline horizontal */}
+                                            {progress.tutorAssignment && (
+                                                <Box sx={{ mb: 2 }}>
+                                                    <Stepper activeStep={
+                                                        progress.currentState === 'graded' ? 4 :
+                                                            progress.currentState === 'pending_integration_grade' ? 3 :
+                                                                progress.currentState === 'pending_tutor_review' ? 2 :
+                                                                    progress.currentState === 'pending_upload' ? 1 : 0
+                                                    } alternativeLabel>
+                                                        <Step completed={!!progress.tutorAssignment}>
+                                                            <StepLabel>Asignado</StepLabel>
+                                                        </Step>
+                                                        <Step completed={!!progress.studentSubmission}>
+                                                            <StepLabel>Entregado</StepLabel>
+                                                        </Step>
+                                                        <Step completed={!!progress.tutorReview}>
+                                                            <StepLabel>Revisado</StepLabel>
+                                                        </Step>
+                                                        <Step completed={!!progress.integrationGrade}>
+                                                            <StepLabel>Calificado</StepLabel>
+                                                        </Step>
+                                                    </Stepper>
+                                                </Box>
+                                            )}
+
+                                            {/* Botón de acción */}
+                                            <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                                {progress.tutorAssignment ? (
+                                                    <Button
+                                                        variant="contained"
+                                                        onClick={() => openDetailModal(progress)}
+                                                        sx={{
+                                                            backgroundColor: '#000A9B',
+                                                            textTransform: 'none',
+                                                            fontWeight: 600,
+                                                            '&:hover': {
+                                                                backgroundColor: '#0011cc'
+                                                            }
+                                                        }}
+                                                    >
+                                                        {!progress.studentSubmission ? 'Subir Entrega' : 'Ver Detalles'}
+                                                    </Button>
+                                                ) : (
+                                                    <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                                                        El tutor aún no ha asignado esta semana
+                                                    </Typography>
+                                                )}
+                                            </Box>
+                                        </CardContent>
+                                    </Card>
+                                );
+                            })}
+                        </Box>
                     </CardContent>
                 </Card>
             </Box>
 
-            {/* Upload Progress Modal */}
-            <Dialog
-                open={uploadModalOpen}
+            {/* Modal de Detalle */}
+            <DetailsModal
+                open={detailModalOpen}
                 onClose={handleCloseModal}
-                maxWidth="md"
-                fullWidth
-                PaperProps={{
-                    sx: {
-                        borderRadius: 3,
-                        maxHeight: '90vh'
-                    }
-                }}
-            >
-                <DialogTitle sx={{ pb: 2 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <Box>
-                            <Typography variant="h5" fontWeight="700" gutterBottom>
-                                Subir Avance Semanal
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                Semana {progressData.currentWeek} - Fecha límite: <strong>31 de ene de 2026 23:59</strong>
-                            </Typography>
-                        </Box>
-                        <IconButton onClick={handleCloseModal} size="small">
-                            <CloseIcon />
-                        </IconButton>
-                    </Box>
-                </DialogTitle>
-
-                <Divider />
-
-                <DialogContent sx={{ py: 3 }}>
-                    {/* Información de entrega */}
-                    <Alert severity="info" sx={{ mb: 3 }}>
-                        <Typography variant="body2" fontWeight="600" gutterBottom>
-                            Instrucciones de entrega
-                        </Typography>
-                        <Typography variant="caption">
-                            Sube el documento con los avances realizados durante esta semana. Asegúrate de incluir toda la evidencia necesaria.
-                        </Typography>
-                    </Alert>
-
-                    {/* Detalles Accordion */}
-                    <Accordion sx={{ mb: 3, boxShadow: 1 }}>
-                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                            <Typography fontWeight="600">Detalles</Typography>
-                        </AccordionSummary>
-                        <AccordionDetails>
-                            <Box sx={{ pl: 2 }}>
-                                <Typography variant="body2" fontWeight="600" gutterBottom>
-                                    Tema: Avances de proyecto
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary" gutterBottom>
-                                    Descripción: Subir la evidencia de los avances realizados
-                                </Typography>
-                                <Typography variant="body2" fontWeight="600" sx={{ mt: 2, mb: 1 }}>
-                                    Entregable:
-                                </Typography>
-                                <List dense sx={{ pl: 2 }}>
-                                    <ListItem sx={{ py: 0 }}>
-                                        <ListItemText
-                                            primary="• Documento con formato definido."
-                                            primaryTypographyProps={{ variant: 'body2' }}
-                                        />
-                                    </ListItem>
-                                    <ListItem sx={{ py: 0 }}>
-                                        <ListItemText
-                                            primary="• Link de repositorio del proyecto."
-                                            primaryTypographyProps={{ variant: 'body2' }}
-                                        />
-                                    </ListItem>
-                                </List>
-                            </Box>
-                        </AccordionDetails>
-                    </Accordion>
-
-                    {/* Rúbrica Accordion */}
-                    <Accordion sx={{ mb: 3, boxShadow: 1 }}>
-                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                            <Typography fontWeight="600">Criterios de Evaluación</Typography>
-                        </AccordionSummary>
-                        <AccordionDetails>
-                            <TableContainer sx={{ mt: 1 }}>
-                                <Table size="small">
-                                    <TableHead>
-                                        <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-                                            <TableCell sx={{ fontWeight: 700, width: '30%' }}>Criterio</TableCell>
-                                            <TableCell sx={{ fontWeight: 700 }}>Niveles de Cumplimiento</TableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {rubricData.criteria.map((criterion, idx) => (
-                                            <TableRow key={idx}>
-                                                <TableCell sx={{ fontWeight: 600, verticalAlign: 'top' }}>
-                                                    {criterion.name}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                                                        {criterion.levels.map((level, levelIdx) => (
-                                                            <Box
-                                                                key={levelIdx}
-                                                                sx={{
-                                                                    p: 1.5,
-                                                                    backgroundColor: levelIdx === 0 ? '#e8f5e9' : levelIdx === 1 ? '#fff8e1' : '#ffebee',
-                                                                    border: '1px solid',
-                                                                    borderColor: levelIdx === 0 ? '#4caf50' : levelIdx === 1 ? '#ffc107' : '#f44336',
-                                                                    borderRadius: 1
-                                                                }}
-                                                            >
-                                                                <Typography variant="caption" fontWeight="700" display="block" gutterBottom>
-                                                                    {level.name}
-                                                                </Typography>
-                                                                <Typography variant="caption" color="text.secondary">
-                                                                    {level.description}
-                                                                </Typography>
-                                                            </Box>
-                                                        ))}
-                                                    </Box>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
-                        </AccordionDetails>
-                    </Accordion>
-
-                    {/* File Upload Section */}
-                    <Card sx={{ mb: 3, borderRadius: 2, backgroundColor: '#f9fafb' }}>
-                        <CardContent>
-                            <Typography variant="subtitle1" fontWeight="600" gutterBottom>
-                                Subir Archivo de Avance
-                            </Typography>
-                            <FileUpload
-                                onFileSelect={handleFileSelect}
-                                onRemoveFile={handleFileRemove}
-                                uploadedFile={uploadedFile}
-                            />
-                        </CardContent>
-                    </Card>
-
-                    {/* Comments Section */}
-                    <Card sx={{ borderRadius: 2 }}>
-                        <CardContent>
-                            <CommentSection proposalId="avance-s3" />
-                        </CardContent>
-                    </Card>
-                </DialogContent>
-
-                <Divider />
-
-                <DialogActions sx={{ p: 3, gap: 2 }}>
-                    <Button
-                        onClick={handleCloseModal}
-                        variant="outlined"
-                        sx={{
-                            textTransform: 'none',
-                            borderRadius: 2,
-                            px: 3
-                        }}
-                    >
-                        Cancelar
-                    </Button>
-                    <Button
-                        onClick={handleSubmitProgress}
-                        variant="contained"
-                        startIcon={<UploadFileIcon />}
-                        sx={{
-                            textTransform: 'none',
-                            borderRadius: 2,
-                            px: 3,
-                            backgroundColor: '#667eea',
-                            '&:hover': {
-                                backgroundColor: '#5568d3'
-                            }
-                        }}
-                    >
-                        Enviar Avance
-                    </Button>
-                </DialogActions>
-            </Dialog>
+                progressData={selectedProgress}
+                getStateConfig={getStateConfig}
+                onSubmit={handleSubmitProgress}
+                initialTab={initialTab}
+            />
 
             {/* Alert Component */}
             <AlertMui
