@@ -1,138 +1,360 @@
 import { useState } from 'react';
-
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import IconButton from '@mui/material/IconButton';
-import { Box, Grid} from '@mui/material';
-import Button from '../components/button.mui.component.jsx';
-import InputMui from '../components/input.mui.component.jsx';
-import TextMui from '../components/text.mui.component.jsx';
-import { LoginService } from '../utils/login.js';
+import {
+  Box,
+  Typography,
+  TextField,
+  Button as MuiButton,
+  Link,
+  MenuItem,
+  Grid
+} from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-
+import uideImage from '../assets/uide3.svg';
 
 function RegisterPage() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
-  const [name, setName] = useState('');
-  const [lastname, setLastname] = useState('');
-  const [email, setEmail] = useState('');
-  const [address, setAddress] = useState('');
-  const [passwd, setPasswd] = useState('');
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errors, setErrors] = useState({});
 
-  const handleRegisterTemporary = () => {
-  // Guardar las credenciales temporalmente en sessionStorage
-  const tempUser = { 
-    user: email,  // o cualquier campo que uses como usuario
-    passwd: passwd,
-    name,
-    lastname
+  const [formData, setFormData] = useState({
+    name: '',
+    lastname: '',
+    email: '',
+    phone: '',
+    address: '',
+    role: 'student',
+    passwd: '',
+    confirmPasswd: ''
+  });
+
+  const roleOptions = [
+    { value: 'student', label: 'Estudiante' },
+    { value: 'tutor', label: 'Tutor' },
+    { value: 'reviewer', label: 'Revisor' }
+  ];
+
+  const handleChange = (field) => (event) => {
+    setFormData({ ...formData, [field]: event.target.value });
+    if (errors[field]) setErrors({ ...errors, [field]: '' });
   };
-  
-  sessionStorage.setItem('tempUser', JSON.stringify(tempUser));
 
-  // Redirigir al login
-  navigate('/ingreso');
-};
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.name.trim()) newErrors.name = 'El nombre es requerido';
+    if (!formData.lastname.trim()) newErrors.lastname = 'El apellido es requerido';
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!formData.email.trim()) newErrors.email = 'El correo es requerido';
+    else if (!emailRegex.test(formData.email)) newErrors.email = 'Formato de correo inválido';
+    if (!formData.passwd) newErrors.passwd = 'La contraseña es requerida';
+    else if (formData.passwd.length < 6) newErrors.passwd = 'La contraseña debe tener al menos 6 caracteres';
+    if (!formData.confirmPasswd) newErrors.confirmPasswd = 'Confirma tu contraseña';
+    else if (formData.passwd !== formData.confirmPasswd) newErrors.confirmPasswd = 'Las contraseñas no coinciden';
 
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleRegister = (e) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    const tempUser = {
+      user: formData.email,
+      passwd: formData.passwd,
+      name: formData.name,
+      lastname: formData.lastname,
+      phone: formData.phone,
+      address: formData.address,
+      role: formData.role
+    };
+    sessionStorage.setItem('tempUser', JSON.stringify(tempUser));
+    navigate('/ingreso');
+  };
+
+  const handleLogin = () => navigate('/ingreso');
 
   return (
-    <Box sx={{ flexGrow: 1 }}>
-      <Grid
-        container
-        spacing={2}
-        direction="column"
-        justifyItems="center"
-        justifyContent="center"
-        alignItems="center"
-      >
-        <Grid item xs={12}>
-          <TextMui value="Registro" variant="h4" />
-        </Grid>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        backgroundColor: '#000A9B',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 2
+      }}
+    >
+      <Box sx={{ width: '100%', maxWidth: 900 }}>
+        {/* Logo y Título */}
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
+          <Box component="img" src={uideImage} alt="UIDE Logo" sx={{ width: 70, height: 70, mb: 2 }} />
+          <Typography variant="h4" sx={{ color: 'white', fontWeight: 'bold', mb: 1 }}>GradeX</Typography>
+          <Typography variant="h5" sx={{ color: 'white', fontWeight: 'bold', mb: 0.5 }}>CREAR CUENTA</Typography>
+          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.8)', textAlign: 'center' }}>
+            Completa tus datos para registrarte
+          </Typography>
+        </Box>
 
-        <Grid item size={{ xs: 10, sm: 6, md: 5, lg: 4 }}>
-          <form onSubmit={(e) => e.preventDefault()}>
-            <Grid
-              container
-              spacing={2}
-              justifyItems="center"
-              justifyContent="center"
-              alignItems="center"
-            >
-              <Grid size={6}>
-                <InputMui
-                  placeholder="Juan, Carlos"
-                  label="Tu Nombre"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              </Grid>
+        {/* Formulario */}
+        <form onSubmit={handleRegister}>
+          <Grid container spacing={2}>
+            {/** Nombre y Apellido en una fila */}
+            <Grid item xs={12} md={6}>
+              <Typography variant="caption" sx={{ color: 'white', mb: 0.5, display: 'block' }}>Nombre *</Typography>
+              <TextField
+                fullWidth
+                placeholder="Juan"
+                value={formData.name}
+                onChange={handleChange('name')}
+                error={!!errors.name}
+                helperText={errors.name}
+                sx={{
+                  backgroundColor: 'rgba(255,255,255,0.15)',
+                  borderRadius: 1,
+                  '& .MuiOutlinedInput-root': {
+                    color: 'white',
+                    '& fieldset': { borderColor: errors.name ? '#f44336' : 'transparent' },
+                    '&:hover fieldset': { borderColor: errors.name ? '#f44336' : 'rgba(255,255,255,0.3)' },
+                    '&.Mui-focused fieldset': { borderColor: errors.name ? '#f44336' : '#FBBF24' },
+                  },
+                  '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.5)' },
+                  '& .MuiFormHelperText-root': { color: '#ffcdd2', backgroundColor: '#000A9B', margin: 0, paddingLeft: 1, paddingTop: 0.5 }
+                }}
+              />
+            </Grid>
 
-              <Grid size={6}>
-                <InputMui
-                  placeholder="Perez, Castillo"
-                  label="Tu Apellido"
-                  value={lastname}
-                  onChange={(e) => setLastname(e.target.value)}
-                  required
-                />
-              </Grid>
+            <Grid item xs={12} md={6}>
+              <Typography variant="caption" sx={{ color: 'white', mb: 0.5, display: 'block' }}>Apellido *</Typography>
+              <TextField
+                fullWidth
+                placeholder="Pérez"
+                value={formData.lastname}
+                onChange={handleChange('lastname')}
+                error={!!errors.lastname}
+                helperText={errors.lastname}
+                sx={{
+                  backgroundColor: 'rgba(255,255,255,0.15)',
+                  borderRadius: 1,
+                  '& .MuiOutlinedInput-root': {
+                    color: 'white',
+                    '& fieldset': { borderColor: errors.lastname ? '#f44336' : 'transparent' },
+                    '&:hover fieldset': { borderColor: errors.lastname ? '#f44336' : 'rgba(255,255,255,0.3)' },
+                    '&.Mui-focused fieldset': { borderColor: errors.lastname ? '#f44336' : '#FBBF24' },
+                  },
+                  '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.5)' },
+                  '& .MuiFormHelperText-root': { color: '#ffcdd2', backgroundColor: '#000A9B', margin: 0, paddingLeft: 1, paddingTop: 0.5 }
+                }}
+              />
+            </Grid>
 
-              <Grid size={6}>
-                <InputMui
-                  placeholder="example@uide.com"
-                  label="Tu Correo"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </Grid>
+            {/** Correo en una fila completa */}
+            <Grid item xs={12}>
+              <Typography variant="caption" sx={{ color: 'white', mb: 0.5, display: 'block' }}>Correo Electrónico *</Typography>
+              <TextField
+                fullWidth
+                type="email"
+                placeholder="ejemplo@uide.edu.ec"
+                value={formData.email}
+                onChange={handleChange('email')}
+                error={!!errors.email}
+                helperText={errors.email}
+                sx={{
+                  backgroundColor: 'rgba(255,255,255,0.15)',
+                  borderRadius: 1,
+                  '& .MuiOutlinedInput-root': {
+                    color: 'white',
+                    '& fieldset': { borderColor: errors.email ? '#f44336' : 'transparent' },
+                    '&:hover fieldset': { borderColor: errors.email ? '#f44336' : 'rgba(255,255,255,0.3)' },
+                    '&.Mui-focused fieldset': { borderColor: errors.email ? '#f44336' : '#FBBF24' },
+                  },
+                  '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.5)' },
+                  '& .MuiFormHelperText-root': { color: '#ffcdd2', backgroundColor: '#000A9B', margin: 0, paddingLeft: 1, paddingTop: 0.5 }
+                }}
+              />
+            </Grid>
 
-              <Grid size={6}>
-                <InputMui
-                  placeholder="Calle, Ciudad"
-                  label="Tu Dirección"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  required
-                />
-              </Grid>
+            {/** Teléfono y Tipo de Usuario */}
+            <Grid item xs={12} md={6}>
+              <Typography variant="caption" sx={{ color: 'white', mb: 0.5, display: 'block' }}>Teléfono (opcional)</Typography>
+              <TextField
+                fullWidth
+                placeholder="0999999999"
+                value={formData.phone}
+                onChange={handleChange('phone')}
+                sx={{
+                  backgroundColor: 'rgba(255,255,255,0.15)',
+                  borderRadius: 1,
+                  '& .MuiOutlinedInput-root': {
+                    color: 'white',
+                    '& fieldset': { borderColor: 'transparent' },
+                    '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.3)' },
+                    '&.Mui-focused fieldset': { borderColor: '#FBBF24' },
+                  },
+                  '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.5)' },
+                }}
+              />
+            </Grid>
 
-              <Grid size={10}>
-                <InputMui
-                  endIcon={
-                    <IconButton
-                      onClick={() => setShowPassword(!showPassword)}
-                      size="small"
-                    >
+            <Grid item xs={12} md={6}>
+              <Typography variant="caption" sx={{ color: 'white', mb: 0.5, display: 'block' }}>Tipo de Usuario *</Typography>
+              <TextField
+                select
+                fullWidth
+                value={formData.role}
+                onChange={handleChange('role')}
+                sx={{
+                  backgroundColor: 'rgba(255,255,255,0.15)',
+                  borderRadius: 1,
+                  '& .MuiOutlinedInput-root': {
+                    color: 'white',
+                    '& fieldset': { borderColor: 'transparent' },
+                    '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.3)' },
+                    '&.Mui-focused fieldset': { borderColor: '#FBBF24' },
+                  },
+                  '& .MuiSelect-icon': { color: 'white' },
+                }}
+              >
+                {roleOptions.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+
+            {/** Dirección y Contraseña */}
+            <Grid item xs={12} md={6}>
+              <Typography variant="caption" sx={{ color: 'white', mb: 0.5, display: 'block' }}>Dirección (opcional)</Typography>
+              <TextField
+                fullWidth
+                placeholder="Av. Principal, Quito"
+                value={formData.address}
+                onChange={handleChange('address')}
+                sx={{
+                  backgroundColor: 'rgba(255,255,255,0.15)',
+                  borderRadius: 1,
+                  '& .MuiOutlinedInput-root': {
+                    color: 'white',
+                    '& fieldset': { borderColor: 'transparent' },
+                    '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.3)' },
+                    '&.Mui-focused fieldset': { borderColor: '#FBBF24' },
+                  },
+                  '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.5)' },
+                }}
+              />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <Typography variant="caption" sx={{ color: 'white', mb: 0.5, display: 'block' }}>Contraseña *</Typography>
+              <TextField
+                fullWidth
+                type={showPassword ? 'text' : 'password'}
+                placeholder="••••••••"
+                value={formData.passwd}
+                onChange={handleChange('passwd')}
+                error={!!errors.passwd}
+                helperText={errors.passwd}
+                InputProps={{
+                  endAdornment: (
+                    <IconButton onClick={() => setShowPassword(!showPassword)} sx={{ color: 'white' }}>
                       {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
                     </IconButton>
-                  }
-                  placeholder="paswd123"
-                  label="Contraseña"
-                  type={showPassword ? 'text' : 'password'}
-                  value={passwd}
-                  onChange={(e) => setPasswd(e.target.value)}
-                  required
-                />
-              </Grid>
-
-              <Grid size={10}>
-                <Button
-                  type="button"
-                  onClick={handleRegisterTemporary}
-                  name="Guardar y continuar"
-                  backgroundColor="green"
-                  color="white"
-                />
-              </Grid>
+                  )
+                }}
+                sx={{
+                  backgroundColor: 'rgba(255,255,255,0.15)',
+                  borderRadius: 1,
+                  '& .MuiOutlinedInput-root': {
+                    color: 'white',
+                    '& fieldset': { borderColor: errors.passwd ? '#f44336' : 'transparent' },
+                    '&:hover fieldset': { borderColor: errors.passwd ? '#f44336' : 'rgba(255,255,255,0.3)' },
+                    '&.Mui-focused fieldset': { borderColor: errors.passwd ? '#f44336' : '#FBBF24' },
+                  },
+                  '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.5)' },
+                  '& .MuiFormHelperText-root': { color: '#ffcdd2', backgroundColor: '#000A9B', margin: 0, paddingLeft: 1, paddingTop: 0.5 }
+                }}
+              />
             </Grid>
-          </form>
-        </Grid>
-      </Grid>
+
+            {/** Confirmar Contraseña en una sola columna */}
+            <Grid item xs={12} md={6}>
+              <Typography variant="caption" sx={{ color: 'white', mb: 0.5, display: 'block' }}>Confirmar Contraseña *</Typography>
+              <TextField
+                fullWidth
+                type={showConfirmPassword ? 'text' : 'password'}
+                placeholder="••••••••"
+                value={formData.confirmPasswd}
+                onChange={handleChange('confirmPasswd')}
+                error={!!errors.confirmPasswd}
+                helperText={errors.confirmPasswd}
+                InputProps={{
+                  endAdornment: (
+                    <IconButton onClick={() => setShowConfirmPassword(!showConfirmPassword)} sx={{ color: 'white' }}>
+                      {showConfirmPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                    </IconButton>
+                  )
+                }}
+                sx={{
+                  backgroundColor: 'rgba(255,255,255,0.15)',
+                  borderRadius: 1,
+                  '& .MuiOutlinedInput-root': {
+                    color: 'white',
+                    '& fieldset': { borderColor: errors.confirmPasswd ? '#f44336' : 'transparent' },
+                    '&:hover fieldset': { borderColor: errors.confirmPasswd ? '#f44336' : 'rgba(255,255,255,0.3)' },
+                    '&.Mui-focused fieldset': { borderColor: errors.confirmPasswd ? '#f44336' : '#FBBF24' },
+                  },
+                  '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.5)' },
+                  '& .MuiFormHelperText-root': { color: '#ffcdd2', backgroundColor: '#000A9B', margin: 0, paddingLeft: 1, paddingTop: 0.5 }
+                }}
+              />
+            </Grid>
+          </Grid>
+
+          {/* Botón Registrarse */}
+          <MuiButton
+            type="submit"
+            fullWidth
+            variant="contained"
+            sx={{
+              backgroundColor: '#FBBF24',
+              color: '#000A9B',
+              fontWeight: 'bold',
+              padding: '12px',
+              borderRadius: 1,
+              fontSize: '1rem',
+              textTransform: 'none',
+              mt: 3,
+              mb: 2,
+              '&:hover': { backgroundColor: '#F59E0B' }
+            }}
+          >
+            Registrarse
+          </MuiButton>
+
+          {/* Link a Login */}
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="body2" sx={{ color: 'white', display: 'inline' }}>
+              ¿Ya tienes una cuenta?{' '}
+            </Typography>
+            <Link
+              onClick={handleLogin}
+              sx={{
+                color: '#FF6B35',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                textDecoration: 'none',
+                '&:hover': { textDecoration: 'underline' }
+              }}
+            >
+              Inicia Sesión
+            </Link>
+          </Box>
+        </form>
+      </Box>
     </Box>
   );
 }
 
-export default RegisterPage
+export default RegisterPage;

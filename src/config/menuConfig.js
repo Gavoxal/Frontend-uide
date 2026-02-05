@@ -10,6 +10,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import ChecklistIcon from '@mui/icons-material/Checklist';
 import PersonIcon from '@mui/icons-material/Person';
 import GavelIcon from '@mui/icons-material/Gavel';
+import EventNoteIcon from '@mui/icons-material/EventNote';
 
 /**
  * Configuración de menús por rol de usuario
@@ -35,26 +36,26 @@ export const menuConfig = {
     ],
 
     coordinador: [
-        { icon: DashboardIcon, label: "Tablero", path: "/coordinador/dashboard" },
+        { icon: DashboardIcon, label: "Dashboard", path: "/coordinador/dashboard" },
         { icon: PeopleIcon, label: "Estudiantes", path: "/coordinador/students" },
-        { icon: ChecklistIcon, label: "Revisión de Prerrequisitos", path: "/coordinador/prerequisites" },
-        { icon: AssignmentIcon, label: "Propuestas de Tesis", path: "/coordinador/proposals" },
+        { icon: ChecklistIcon, label: "Prerrequisitos", path: "/coordinador/prerequisites" },
+        { icon: AssignmentIcon, label: "Propuestas", path: "/coordinador/proposals" },
     ],
 
     student: [
         { icon: DashboardIcon, label: "Dashboard", path: "/student/dashboard" },
         { icon: ChecklistIcon, label: "Prerrequisitos", path: "/student/prerequisites" },
+        { icon: DescriptionIcon, label: "Anteproyecto", path: "/student/anteproyecto" },
         { icon: AssignmentIcon, label: "Mis Propuestas", path: "/student/proposals" },
-        { icon: SchoolIcon, label: "Anteproyecto", path: "/student/anteproyecto" },
-        { icon: PersonIcon, label: "Mi Tutor", path: "/student/tutor" },
-        { icon: AssignmentIcon, label: "Avances", path: "/student/advances" },
-        { icon: GavelIcon, label: "Defensa", path: "/student/defense" },
+        { icon: AssignmentIcon, label: "Avances", path: "/student/avances" },
+        { icon: SchoolIcon, label: "Proyecto", path: "/student/proyecto" },
     ],
 
     tutor: [
         { icon: DashboardIcon, label: "Dashboard", path: "/tutor/dashboard" },
-        { icon: PeopleIcon, label: "Mis Estudiantes", path: "/tutor/students" },
-        { icon: AssignmentIcon, label: "Revisar Avances", path: "/tutor/advances" },
+        { icon: AssignmentIcon, label: "Planificar Actividades", path: "/tutor/planning" },
+        { icon: RateReviewIcon, label: "Revisar Avances", path: "/tutor/review" },
+        { icon: EventNoteIcon, label: "Bitácora de reuniones", path: "/tutor/meetings" },
     ],
 
     reviewer: [

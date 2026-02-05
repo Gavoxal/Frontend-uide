@@ -10,14 +10,17 @@ import {
     Avatar,
     Typography,
     Chip,
+    Tooltip,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
-import PersonIcon from "@mui/icons-material/Person";
 import LogoutIcon from "@mui/icons-material/Logout";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
+import LockIcon from "@mui/icons-material/Lock";
+import PersonIcon from "@mui/icons-material/Person";
 import { useState } from "react";
 import { getDataUser } from "../storage/user.model.jsx";
+import { useUserProgress } from "../contexts/UserProgressContext";
 import uideImage from "../assets/uide3.svg";
 import { getMenuByRole } from "../config/menuConfig.js";
 
@@ -37,6 +40,24 @@ function SidebarMui({ onNavigate, currentPage, isExpanded, toggleSidebar }) {
     const user = getDataUser();
     const userRole = user?.role || "user";
     const menuItems = getMenuByRole(userRole);
+
+    // Solo para estudiantes, verificar permisos
+    const progressContext = userRole === 'student' ? useUserProgress() : null;
+
+    const canAccessItem = (item) => {
+        if (userRole !== 'student' || !progressContext) return true;
+
+        // Extraer el nombre de la sección del path
+        const sectionName = item.path.split('/').pop();
+        return progressContext.canAccessSection(sectionName);
+    };
+
+    const getBlockReasonForItem = (item) => {
+        if (userRole !== 'student' || !progressContext) return null;
+
+        const sectionName = item.path.split('/').pop();
+        return progressContext.getBlockReason(sectionName);
+    };
 
     return (
         <Box
@@ -87,22 +108,37 @@ function SidebarMui({ onNavigate, currentPage, isExpanded, toggleSidebar }) {
             </IconButton>
 
             {/* MENU DINÁMICO POR ROL */}
-            <List sx={{ width: "100%" }}>
-                {menuItems.map((item, index) => (
-                    <MenuItem
-                        key={index}
-                        item={item}
-                        isExpanded={isExpanded}
-                        currentPage={currentPage}
-                        onNavigate={onNavigate}
-                    />
-                ))}
+            <List sx={{ width: "100%", flexGrow: 1, overflowY: 'auto' }}>
+                {menuItems.map((item, index) => {
+                    const canAccess = canAccessItem(item);
+                    const blockReason = getBlockReasonForItem(item);
+
+                    return (
+                        <MenuItem
+                            key={index}
+                            item={item}
+                            isExpanded={isExpanded}
+                            currentPage={currentPage}
+                            onNavigate={onNavigate}
+                            blocked={!canAccess}
+                            blockReason={blockReason}
+                        />
+                    );
+                })}
             </List>
 
             <Divider sx={{ bgcolor: "rgba(255,255,255,0.1)", my: 2 }} />
 
             {/* BOTTOM - PERFIL DE USUARIO */}
             <Box sx={{ mt: "auto", width: "100%", px: 2, pb: 2 }}>
+                {/* Link al perfil */}
+                <MenuItem
+                    item={{ icon: PersonIcon, label: "Perfil", path: `/${userRole}/profile` }}
+                    isExpanded={isExpanded}
+                    currentPage={currentPage}
+                    onNavigate={onNavigate}
+                />
+
                 {/* Avatar y datos del usuario */}
                 {isExpanded ? (
                     <Box
@@ -114,6 +150,7 @@ function SidebarMui({ onNavigate, currentPage, isExpanded, toggleSidebar }) {
                             backgroundColor: "rgba(255,255,255,0.1)",
                             borderRadius: 2,
                             mb: 1,
+                            mt: 1,
                         }}
                     >
                         <Avatar
@@ -165,6 +202,7 @@ function SidebarMui({ onNavigate, currentPage, isExpanded, toggleSidebar }) {
                             display: "flex",
                             justifyContent: "center",
                             mb: 1,
+                            mt: 1,
                         }}
                     >
                         <Avatar
@@ -195,13 +233,18 @@ function SidebarMui({ onNavigate, currentPage, isExpanded, toggleSidebar }) {
 
 export default SidebarMui;
 
-function MenuItem({ item, isExpanded, currentPage, onNavigate }) {
+function MenuItem({ item, isExpanded, currentPage, onNavigate, blocked = false, blockReason = null }) {
     const hasChildren = item.children && item.children.length > 0;
     const [open, setOpen] = useState(false);
-    const active = currentPage.includes(item.path);
-    const IconComponent = item.icon; // Guardar el componente en una variable
+
+    // Check if the item is active or any of its children
+    const isActive = currentPage === item.path || (hasChildren && item.children.some(child => currentPage === child.path));
+
+    const IconComponent = item.icon;
 
     const handleClick = () => {
+        if (blocked) return;
+
         if (hasChildren) {
             setOpen(!open);
         } else {
@@ -209,20 +252,22 @@ function MenuItem({ item, isExpanded, currentPage, onNavigate }) {
         }
     };
 
-    return (
+    const listItemContent = (
         <>
             <ListItem
                 onClick={handleClick}
                 sx={{
-                    cursor: "pointer",
+                    cursor: blocked ? "not-allowed" : "pointer",
                     px: isExpanded ? 2 : 0,
                     justifyContent: isExpanded ? "flex-start" : "center",
-                    backgroundColor: active && !hasChildren ? "rgba(255,255,255,0.15)" : "transparent",
+                    backgroundColor: isActive && !hasChildren ? "rgba(255,255,255,0.15)" : "transparent",
                     borderRadius: 1,
                     mb: 1,
+                    opacity: blocked ? 0.4 : 1,
                     "&:hover": {
-                        backgroundColor: "rgba(255,255,255,0.25)",
+                        backgroundColor: blocked ? "transparent" : "rgba(255,255,255,0.25)",
                     },
+                    position: 'relative',
                 }}
             >
                 <ListItemIcon
@@ -232,7 +277,7 @@ function MenuItem({ item, isExpanded, currentPage, onNavigate }) {
                         justifyContent: "center",
                     }}
                 >
-                    {IconComponent && <IconComponent />}
+                    {blocked ? <LockIcon fontSize="small" /> : (IconComponent && <IconComponent />)}
                 </ListItemIcon>
 
                 {isExpanded && (
@@ -254,6 +299,8 @@ function MenuItem({ item, isExpanded, currentPage, onNavigate }) {
                                     pl: 4,
                                     cursor: "pointer",
                                     backgroundColor: currentPage === child.path ? "rgba(255,255,255,0.3)" : "transparent",
+                                    borderRadius: 1,
+                                    mb: 0.5,
                                     "&:hover": { backgroundColor: "rgba(255,255,255,0.2)" },
                                 }}
                             >
@@ -268,4 +315,14 @@ function MenuItem({ item, isExpanded, currentPage, onNavigate }) {
             )}
         </>
     );
+
+    if (blocked && blockReason) {
+        return (
+            <Tooltip title={blockReason} placement="right" arrow>
+                {listItemContent}
+            </Tooltip>
+        );
+    }
+
+    return listItemContent;
 }
