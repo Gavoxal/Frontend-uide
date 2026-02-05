@@ -62,10 +62,34 @@ function StudentLoad() {
         setOpenAlert(true);
     };
 
-    const confirmUpload = () => {
+    const confirmUpload = async () => {
         setOpenAlert(false);
-        setOpenSuccess(true);
-        // Aquí iría la lógica de subida real
+
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch('http://localhost:3000/api/v1/estudiantes/importar-excel', {
+                method: 'POST',
+                body: formData,
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                setOpenSuccess(true);
+                // Optional: Show details from result.creados or result.errores
+                console.log('Estudiantes creados:', result.creados);
+            } else {
+                console.error('Error al subir:', result);
+                alert('Error al procesar el archivo: ' + (result.message || 'Error desconocido'));
+            }
+        } catch (error) {
+            console.error('Error de red:', error);
+            alert('Error de conexión con el servidor.');
+        }
     };
 
     const clearFile = () => {
