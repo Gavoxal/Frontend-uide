@@ -60,6 +60,9 @@ import CoordinadorPrerequisites from "../pages/Coordinador/Prerequisites";
 import CoordinadorStudents from "../pages/Coordinador/Students";
 import CoordinadorProposals from "../pages/Coordinador/Proposals";
 import CoordinadorProposalDetail from "../pages/Coordinador/ProposalDetail";
+import CoordinadorAssignTutor from "../pages/Coordinador/AssignTutor";
+import CoordinadorThesisDefense from "../pages/Coordinador/ThesisDefense";
+import CoordinadorTutorList from "../pages/Coordinador/TutorList";
 
 // Old admin pages (temporarily keeping for transition)
 import OldDashboardPage from "../pages/Admin/dashboard.page";
@@ -159,6 +162,9 @@ function RouterPages() {
                         <Route path="prerequisites" element={<CoordinadorPrerequisites />} />
                         <Route path="proposals" element={<CoordinadorProposals />} />
                         <Route path="proposals/detail/:id" element={<CoordinadorProposalDetail />} />
+                        <Route path="tutors" element={<CoordinadorTutorList />} />
+                        <Route path="tutors/assign" element={<CoordinadorAssignTutor />} />
+                        <Route path="defense" element={<CoordinadorThesisDefense />} />
                     </Route>
                 </Route>
 

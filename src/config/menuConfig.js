@@ -40,6 +40,16 @@ export const menuConfig = {
         { icon: PeopleIcon, label: "Estudiantes", path: "/coordinador/students" },
         { icon: ChecklistIcon, label: "Prerrequisitos", path: "/coordinador/prerequisites" },
         { icon: AssignmentIcon, label: "Propuestas", path: "/coordinador/proposals" },
+        {
+            icon: SchoolIcon,
+            label: "Tutores",
+            path: "/coordinador/tutors",
+            children: [
+                { label: "Listado", path: "/coordinador/tutors" },
+                { label: "Asignar Tutor", path: "/coordinador/tutors/assign" }
+            ]
+        },
+        { icon: GavelIcon, label: "Defensas", path: "/coordinador/defense" },
     ],
 
     student: [

@@ -338,29 +338,7 @@ function LoginPage() {
                 Ingresar
               </MuiButton>
 
-              {/* Registro */}
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography
-                  variant="body2"
-                  sx={{ color: 'white', display: 'inline' }}
-                >
-                  No tienes una cuenta?{' '}
-                </Typography>
-                <Link
-                  onClick={handleRegister}
-                  sx={{
-                    color: '#FF6B35',
-                    fontWeight: 'bold',
-                    cursor: 'pointer',
-                    textDecoration: 'none',
-                    '&:hover': {
-                      textDecoration: 'underline',
-                    },
-                  }}
-                >
-                  Regístrate
-                </Link>
-              </Box>
+
             </form>
           </Box>
         </Box>
