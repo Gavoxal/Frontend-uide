@@ -10,7 +10,7 @@ import { UserProgressProvider } from "../contexts/UserProgressContext";
 
 // Director pages
 import DirectorDashboard from "../pages/Director/Dashboard";
-import DirectorPrerequisites from "../pages/Director/Prerequisites";
+import DirectorPrerequisites from "../pages/Director/PrerequisitesViewDirector";
 import DirectorStudentLoad from "../pages/Director/StudentLoad";
 import DirectorStudentList from "../pages/Director/StudentList";
 import DirectorTutorList from "../pages/Director/TutorList";
@@ -44,6 +44,10 @@ import TutorProfile from "../pages/Tutor/Profile";
 
 // Reviewer pages
 import ReviewerDashboard from "../pages/Reviewer/Dashboard";
+import ReviewerProposals from "../pages/Reviewer/Proposals";
+import ReviewerProposalReview from "../pages/Reviewer/ProposalReview";
+import ReviewerDefenses from "../pages/Reviewer/Defenses";
+import ReviewerProfile from "../pages/Reviewer/Profile";
 
 // Docente Integración pages
 import DocenteDashboard from "../pages/DocenteIntegracion/Dashboard";
@@ -139,6 +143,10 @@ function RouterPages() {
                     <Route element={<DashboardLayout />}>
                         <Route index element={<ReviewerDashboard />} />
                         <Route path="dashboard" element={<ReviewerDashboard />} />
+                        <Route path="proposals" element={<ReviewerProposals />} />
+                        <Route path="proposals/review/:id" element={<ReviewerProposalReview />} />
+                        <Route path="defenses" element={<ReviewerDefenses />} />
+                        <Route path="profile" element={<ReviewerProfile />} />
                     </Route>
                 </Route>
 

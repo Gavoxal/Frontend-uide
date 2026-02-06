@@ -107,7 +107,10 @@ function StudentProfile() {
 
             {/* Profile Header Card */}
             <ProfileHeader
-                studentData={studentData}
+                name={studentData.name}
+                subtitle={`Estudiante de ${studentData.carrera}`}
+                initials={studentData.initials}
+                tags={[studentData.semestre, studentData.status]}
                 onEditProfile={handleEditProfile}
                 onEditCover={handleEditCover}
             />

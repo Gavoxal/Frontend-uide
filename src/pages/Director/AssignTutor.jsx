@@ -35,7 +35,9 @@ function DirectorAssignTutor() {
             topic: 'Implementación de IA para optimización de tráfico urbano',
             area: 'Ciencia de Datos',
             status: 'Aprobado',
-            tutor: null
+            tutor: null,
+            career: 'Ingeniería de Software',
+            malla: 'Malla 2020'
         },
         {
             id: 102,
@@ -45,7 +47,9 @@ function DirectorAssignTutor() {
             topic: 'Sistema de gestión documental con Blockchain',
             area: 'Transformación Digital',
             status: 'Tutor Asignado',
-            tutor: 'Ing. Carlos Mendez, PhD' // Mocking one assigned for demo
+            tutor: 'Ing. Carlos Mendez, PhD',
+            career: 'Tecnologías de la Información',
+            malla: 'Malla 2019'
         },
         {
             id: 103,
@@ -55,7 +59,9 @@ function DirectorAssignTutor() {
             topic: 'Aplicación Móvil para Turismo',
             area: 'Desarrollo Software',
             status: 'Aprobado',
-            tutor: null
+            tutor: null,
+            career: 'Ingeniería de Software',
+            malla: 'Malla 2020'
         }
     ]);
 
@@ -81,7 +87,7 @@ function DirectorAssignTutor() {
             p.id === selectedProject.id ? { ...p, tutor: tutorName, status: 'Tutor Asignado' } : p
         ));
 
-        setSuccessMsg(`Se ha asignado el tutor ${tutorName} al estudiante ${selectedProject.student}.`);
+        setSuccessMsg(`Se ha asignado el tutor ${tutorName} al estudiante ${selectedProject.student}. Se ha enviado el correo de notificación.`);
         setOpenAlert(false);
         setSelectedProject(null);
     };
@@ -218,6 +224,10 @@ function DirectorAssignTutor() {
                                             <TextMui value={project.email} variant="body2" />
                                         </Box>
 
+                                        <Box sx={{ ml: 3.5, mb: 1 }}>
+                                            <TextMui value={`${project.career} | ${project.malla}`} variant="caption" color="text.secondary" sx={{ display: 'block', fontStyle: 'italic' }} />
+                                        </Box>
+
                                         <Divider sx={{ my: 1, borderStyle: 'dashed' }} />
 
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'primary.main', bgcolor: 'primary.50', p: 1, borderRadius: 1 }}>
@@ -264,12 +274,22 @@ function DirectorAssignTutor() {
             <AlertMui
                 open={openAlert}
                 handleClose={() => setOpenAlert(false)}
-                title={`Asignar Tutor a: ${selectedProject?.student}`}
+                title={`Asignar Tutor - Confirmación de Correo`}
                 message={
-                    <Box sx={{ mt: 2, minWidth: 300 }}>
-                        <TextMui value={`Tema: ${selectedProject?.topic}`} variant="body2" sx={{ mb: 2, fontWeight: 'bold' }} />
-                        <TextMui value="Seleccione un docente:" variant="caption" color="text.secondary" />
+                    <Box sx={{ mt: 2, minWidth: 350 }}>
+                        <NotificationMui severity="info" sx={{ mb: 2 }}>
+                            Al confirmar, <strong>se enviará un correo electrónico</strong> notificando la asignación.
+                        </NotificationMui>
 
+                        <Box sx={{ p: 2, bgcolor: '#f9f9f9', borderRadius: 2, mb: 2, border: '1px solid #eee' }}>
+                            <TextMui value="Detalles del Anteproyecto:" variant="subtitle2" sx={{ mb: 1, color: 'primary.main' }} />
+                            <TextMui value={`Tema: ${selectedProject?.topic}`} variant="body2" sx={{ mb: 0.5, fontWeight: 'bold' }} />
+                            <TextMui value={`Estudiante: ${selectedProject?.student} (${selectedProject?.cedula})`} variant="body2" />
+                            <TextMui value={`Carrera: ${selectedProject?.career}`} variant="caption" display="block" />
+                            <TextMui value={`Malla: ${selectedProject?.malla}`} variant="caption" display="block" />
+                        </Box>
+
+                        <TextMui value="Seleccione el Docente a notificar:" variant="caption" color="text.secondary" />
                         <FormControl fullWidth sx={{ mt: 1 }}>
                             <InputLabel id="tutor-select-label">Tutor</InputLabel>
                             <Select
@@ -287,7 +307,7 @@ function DirectorAssignTutor() {
                 }
                 status="info"
                 showBtnL={true}
-                btnNameL="Guardar Asignación"
+                btnNameL="Confirmar y Enviar Correo"
                 actionBtnL={confirmAssignment}
                 showBtnR={true}
                 btnNameR="Cancelar"

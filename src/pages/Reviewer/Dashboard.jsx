@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { Box, Typography, Grid, Card, CardContent, Button, Divider } from "@mui/material";
 import RateReviewIcon from "@mui/icons-material/RateReview";
 import GavelIcon from "@mui/icons-material/Gavel";
@@ -6,6 +7,7 @@ import StatsCard from "../../components/common/StatsCard";
 
 function ReviewerDashboard() {
     const user = getDataUser();
+    const navigate = useNavigate();
 
     const stats = {
         proposalsToReview: 8,
@@ -89,7 +91,12 @@ function ReviewerDashboard() {
                                             Enviado: {new Date(proposal.submittedDate).toLocaleDateString()}
                                         </Typography>
                                     </Box>
-                                    <Button variant="contained" color="primary" sx={{ ml: 2 }}>
+                                    <Button
+                                        variant="contained"
+                                        color="primary"
+                                        sx={{ ml: 2 }}
+                                        onClick={() => navigate(`/reviewer/proposals/review/${proposal.id}`)}
+                                    >
                                         Revisar
                                     </Button>
                                 </Box>

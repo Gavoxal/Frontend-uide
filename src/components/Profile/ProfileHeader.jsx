@@ -1,7 +1,7 @@
 import { Box, Typography, Card, CardContent, Avatar, Button, Chip, IconButton } from "@mui/material";
 import { Edit as EditIcon, CameraAlt as CameraIcon } from "@mui/icons-material";
 
-function ProfileHeader({ studentData, onEditProfile, onEditCover }) {
+function ProfileHeader({ name, subtitle, initials, tags, onEditProfile, onEditCover }) {
     return (
         <Card
             sx={{
@@ -55,7 +55,7 @@ function ProfileHeader({ studentData, onEditProfile, onEditCover }) {
                                 boxShadow: 3
                             }}
                         >
-                            {studentData.initials || "AY"}
+                            {initials || "U"}
                         </Avatar>
                         <IconButton
                             size="small"
@@ -79,32 +79,25 @@ function ProfileHeader({ studentData, onEditProfile, onEditCover }) {
                     {/* Name and Info */}
                     <Box sx={{ flex: 1, mt: 5 }}>
                         <Typography variant="h5" fontWeight="bold" color="text.primary" gutterBottom>
-                            {studentData.name}
+                            {name}
                         </Typography>
                         <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-                            Estudiante de {studentData.carrera}
+                            {subtitle}
                         </Typography>
                         <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                            <Chip
-                                label={studentData.semestre}
-                                size="small"
-                                sx={{
-                                    backgroundColor: "#e8eaf6",
-                                    color: "#5c6bc0",
-                                    fontWeight: "600",
-                                    fontSize: "0.75rem"
-                                }}
-                            />
-                            <Chip
-                                label={studentData.status}
-                                size="small"
-                                sx={{
-                                    backgroundColor: "#e8f5e9",
-                                    color: "#4caf50",
-                                    fontWeight: "600",
-                                    fontSize: "0.75rem"
-                                }}
-                            />
+                            {tags && tags.map((tag, index) => (
+                                <Chip
+                                    key={index}
+                                    label={tag}
+                                    size="small"
+                                    sx={{
+                                        backgroundColor: index % 2 === 0 ? "#e8eaf6" : "#e8f5e9",
+                                        color: index % 2 === 0 ? "#5c6bc0" : "#4caf50",
+                                        fontWeight: "600",
+                                        fontSize: "0.75rem"
+                                    }}
+                                />
+                            ))}
                         </Box>
                     </Box>
 

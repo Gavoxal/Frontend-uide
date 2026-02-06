@@ -25,7 +25,8 @@ function TableRequisitosMui({ students, onVerify, onGrantAccess }) {
                     <TableRow sx={{ backgroundColor: "#F4F6F8" }}>
                         <TableCell><strong>Estudiante</strong></TableCell>
                         <TableCell><strong>Cédula</strong></TableCell>
-                        <TableCell><strong>Ciclo</strong></TableCell>
+                        <TableCell><strong>Carrera</strong></TableCell>
+                        <TableCell><strong>Malla</strong></TableCell>
                         <TableCell align="center"><strong>Inglés</strong></TableCell>
                         <TableCell align="center"><strong>Prácticas</strong></TableCell>
                         <TableCell align="center"><strong>Vinculación</strong></TableCell>
@@ -44,7 +45,8 @@ function TableRequisitosMui({ students, onVerify, onGrantAccess }) {
                             <TableRow key={student.id} hover>
                                 <TableCell>{student.name}</TableCell>
                                 <TableCell>{student.cedula}</TableCell>
-                                <TableCell>{student.cycle}°</TableCell>
+                                <TableCell>{student.career}</TableCell>
+                                <TableCell>{student.malla}</TableCell>
 
                                 {/* Inglés */}
                                 <TableCell align="center">
@@ -128,7 +130,7 @@ function TableRequisitosMui({ students, onVerify, onGrantAccess }) {
                     })}
                     {students.length === 0 && (
                         <TableRow>
-                            <TableCell colSpan={8} align="center" sx={{ py: 3 }}>
+                            <TableCell colSpan={9} align="center" sx={{ py: 3 }}>
                                 <Typography color="text.secondary">
                                     No se encontraron estudiantes
                                 </Typography>
