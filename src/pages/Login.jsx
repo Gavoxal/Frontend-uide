@@ -88,6 +88,12 @@ function LoginPage() {
       case "admin":
         navigate('/director/dashboard');
         break;
+      case "coordinador":
+        navigate('/coordinador/dashboard');
+        break;
+      case "docente_integracion":
+        navigate('/docente-integracion/dashboard');
+        break;
       default:
         navigate('/student/dashboard');
         break;

@@ -1,0 +1,189 @@
+import React, { useState, useEffect } from 'react';
+import {
+    Dialog, DialogTitle, DialogContent, DialogActions, Typography,
+    Box, Grid, FormControl, InputLabel, Select, MenuItem,
+    TextField, IconButton, Divider
+} from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import ButtonMui from '../button.mui.component';
+
+function TribunalAssignment({ student, onClose, onSave }) {
+    const [assignment, setAssignment] = useState({
+        president: '',
+        vocal1: '',
+        vocal2: '',
+        date: '',
+        time: '',
+        classroom: ''
+    });
+
+    useEffect(() => {
+        if (student) {
+            setAssignment({
+                president: student.president || '',
+                vocal1: student.vocal1 || '',
+                vocal2: student.vocal2 || '',
+                date: student.date || '',
+                time: student.time || '',
+                classroom: student.classroom || ''
+            });
+        }
+    }, [student]);
+
+    const handleChange = (e) => {
+        setAssignment({ ...assignment, [e.target.name]: e.target.value });
+    };
+
+    const handleSaveClick = () => {
+        onSave(assignment);
+    };
+
+    if (!student) return null;
+
+    return (
+        <Dialog
+            open={!!student}
+            onClose={onClose}
+            maxWidth="md"
+            fullWidth
+            PaperProps={{ sx: { borderRadius: 2 } }}
+        >
+            <DialogTitle sx={{ m: 0, p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box>
+                    <Typography variant="h6" fontWeight="bold" color="primary">
+                        Asignar Tribunal
+                    </Typography>
+                    <Typography variant="subtitle2" color="text.secondary">
+                        {student.name}
+                    </Typography>
+                </Box>
+                <IconButton onClick={onClose}>
+                    <CloseIcon />
+                </IconButton>
+            </DialogTitle>
+
+            <Divider />
+
+            <DialogContent dividers>
+                <Box sx={{ mb: 3 }}>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 'bold' }}>
+                        TEMA DE TESIS:
+                    </Typography>
+                    <Typography variant="body1">
+                        {student.topic}
+                    </Typography>
+                </Box>
+
+                <Grid container spacing={2} sx={{ mt: 1 }}>
+                    {/* Fila 1: Tribunal */}
+                    <Grid item xs={12} md={4}>
+                        <FormControl fullWidth size="small">
+                            <InputLabel id="label-president">Presidente del Tribunal</InputLabel>
+                            <Select
+                                labelId="label-president"
+                                name="president"
+                                value={assignment.president}
+                                label="Presidente del Tribunal"
+                                onChange={handleChange}
+                                sx={{ minWidth: '220px' }}
+                            >
+                                <MenuItem value="Ing. Lorena">Ing. Lorena</MenuItem>
+                                <MenuItem value="Ing. Wilson">Ing. Wilson</MenuItem>
+                                <MenuItem value="Ing. Charly">Ing. Charly</MenuItem>
+                            </Select>
+                        </FormControl>
+                    </Grid>
+
+                    <Grid item xs={12} md={4}>
+                        <FormControl fullWidth size="small">
+                            <InputLabel id="label-vocal1">Vocal 1</InputLabel>
+                            <Select
+                                labelId="label-vocal1"
+                                name="vocal1"
+                                value={assignment.vocal1}
+                                label="Vocal 1"
+                                onChange={handleChange}
+                                sx={{ minWidth: '150px' }}
+                            >
+                                <MenuItem value="Ing. Gabriel">Ing. Gabriel</MenuItem>
+                                <MenuItem value="Ing. Eduardo">Ing. Eduardo</MenuItem>
+                            </Select>
+                        </FormControl>
+                    </Grid>
+
+                    <Grid item xs={12} md={4}>
+                        <FormControl fullWidth size="small">
+                            <InputLabel id="label-vocal2">Vocal 2</InputLabel>
+                            <Select
+                                labelId="label-vocal2"
+                                name="vocal2"
+                                value={assignment.vocal2}
+                                label="Vocal 2"
+                                onChange={handleChange}
+                                sx={{ minWidth: '150px' }}
+                            >
+                                <MenuItem value="Ing. Fernando">Ing. Fernando</MenuItem>
+                                <MenuItem value="Ing. Dario">Ing. Dario</MenuItem>
+                            </Select>
+                        </FormControl>
+                    </Grid>
+
+                    {/* Fila 2: Fecha, Hora y Aula */}
+                    <Grid item xs={12} md={4}>
+                        <TextField
+                            fullWidth
+                            size="small"
+                            name="date"
+                            label="Fecha de Sustentación"
+                            type="date"
+                            InputLabelProps={{ shrink: true }}
+                            value={assignment.date}
+                            onChange={handleChange}
+                        />
+                    </Grid>
+
+                    <Grid item xs={12} md={4}>
+                        <TextField
+                            fullWidth
+                            size="small"
+                            name="time"
+                            label="Hora"
+                            type="time"
+                            InputLabelProps={{ shrink: true }}
+                            value={assignment.time}
+                            onChange={handleChange}
+                        />
+                    </Grid>
+
+                    <Grid item xs={12} md={4}>
+                        <TextField
+                            fullWidth
+                            size="small"
+                            name="classroom"
+                            label="Aula Asignada"
+                            placeholder="Ej: Aula Magna"
+                            value={assignment.classroom}
+                            onChange={handleChange}
+                        />
+                    </Grid>
+                </Grid>
+            </DialogContent>
+
+            <DialogActions sx={{ p: 2 }}>
+                <ButtonMui
+                    name="Cancelar"
+                    onClick={onClose}
+                    backgroundColor="gray"
+                    variant="text"
+                />
+                <ButtonMui
+                    name="Guardar Asignación"
+                    onClick={handleSaveClick}
+                    backgroundColor="#1976d2"
+                />
+            </DialogActions>
+        </Dialog>
+    );
+}
+
+export default TribunalAssignment;

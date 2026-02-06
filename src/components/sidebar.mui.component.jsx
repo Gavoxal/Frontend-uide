@@ -31,8 +31,19 @@ const MENU_BY_ROLE = {
         { icon: <PeopleIcon />, label: "Estudiantes", path: "/director/students" },
         { icon: <ChecklistIcon />, label: "Prerrequisitos", path: "/director/prerequisites" },
         { icon: <AssignmentIcon />, label: "Propuestas", path: "/director/proposals" },
-        { icon: <SchoolIcon />, label: "Tutores", path: "/director/tutors" },
-        { icon: <GavelIcon />, label: "Defensas", path: "/director/defenses" },
+        {
+            icon: <SchoolIcon />,
+            label: "Tutores",
+            path: "/director/tutors",
+        },
+        { icon: <GavelIcon />, label: "Defensas", path: "/director/defense" },
+    ],
+
+    coordinador: [
+        { icon: <DashboardIcon />, label: "Dashboard", path: "/coordinador/dashboard" },
+        { icon: <PeopleIcon />, label: "Estudiantes", path: "/coordinador/students" },
+        { icon: <ChecklistIcon />, label: "Prerrequisitos", path: "/coordinador/prerequisites" },
+        { icon: <AssignmentIcon />, label: "Propuestas", path: "/coordinador/proposals" },
     ],
     student: [
         { icon: <DashboardIcon />, label: "Dashboard", path: "/student/dashboard" },
@@ -48,11 +59,18 @@ const MENU_BY_ROLE = {
         { icon: <RateReviewIcon />, label: "Revisar Avances", path: "/tutor/review" },
         { icon: <EventNoteIcon />, label: "Bitácora de Reuniones", path: "/tutor/meetings" },
     ],
+
     reviewer: [
         { icon: <DashboardIcon />, label: "Dashboard", path: "/reviewer/dashboard" },
         { icon: <AssignmentIcon />, label: "Propuestas", path: "/reviewer/proposals" },
         { icon: <GavelIcon />, label: "Defensas", path: "/reviewer/defenses" },
     ],
+
+    docente_integracion: [
+        { icon: <DashboardIcon />, label: "Dashboard", path: "/docente-integracion/dashboard" },
+        { icon: <AssignmentIcon />, label: "Avances", path: "/docente-integracion/advances" },
+    ],
+
     admin: [
         { icon: <DashboardIcon />, label: "Dashboard", path: "/director/dashboard" },
         { icon: <PeopleIcon />, label: "Estudiantes", path: "/director/students" },

@@ -1,3 +1,4 @@
+import React from 'react';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -5,47 +6,62 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
+import { Box, Typography } from '@mui/material';
 
-function createData(name, calories, fat, carbs, protein) {
-  return { name, calories, fat, carbs, protein };
-}
+export default function TableMui({ headers, data, actions }) {
+  // Guard clause for empty or missing props
+  if (!headers) {
+    return <Typography sx={{ p: 2 }}>Error: No headers provided to TableMui</Typography>;
+  }
 
-const rows = [
-  createData('Frozen yoghurt', 159, 6.0, 24, 4.0),
-  createData('Ice cream sandwich', 237, 9.0, 37, 4.3),
-  createData('Eclair', 262, 16.0, 24, 6.0),
-  createData('Cupcake', 305, 3.7, 67, 4.3),
-  createData('Gingerbread', 356, 16.0, 49, 3.9),
-];
-
-export default function BasicTable() {
   return (
-    <TableContainer component={Paper}>
-      <Table sx={{ minWidth: 650 }} aria-label="simple table">
+    <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #e0e0e0', borderRadius: 2 }}>
+      <Table sx={{ minWidth: 650 }} aria-label="dynamic table">
         <TableHead>
-          <TableRow>
-            <TableCell>Dessert (100g serving)</TableCell>
-            <TableCell align="right">Calories</TableCell>
-            <TableCell align="right">Fat&nbsp;(g)</TableCell>
-            <TableCell align="right">Carbs&nbsp;(g)</TableCell>
-            <TableCell align="right">Protein&nbsp;(g)</TableCell>
+          <TableRow sx={{ backgroundColor: '#f9fafb' }}>
+            {headers.map((header, index) => (
+              <TableCell key={index} align="left" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
+                {header}
+              </TableCell>
+            ))}
+            {actions && (
+              <TableCell align="center" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
+                Acciones
+              </TableCell>
+            )}
           </TableRow>
         </TableHead>
         <TableBody>
-          {rows.map((row) => (
-            <TableRow
-              key={row.name}
-              sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-            >
-              <TableCell component="th" scope="row">
-                {row.name}
+          {data && data.length > 0 ? (
+            data.map((row, rowIndex) => (
+              <TableRow
+                key={rowIndex}
+                sx={{ '&:last-child td, &:last-child th': { border: 0 }, '&:hover': { backgroundColor: '#f5f5f5' } }}
+              >
+                {/* Dynamically render cells based on object values. 
+                    Be careful with object order; usually better to map by specific keys if strict order needed. 
+                    For this generic component, we assume object keys order matches headers or caller prepares data. */}
+                {Object.values(row).map((cell, cellIndex) => (
+                  <TableCell key={cellIndex} align="left">
+                    {cell}
+                  </TableCell>
+                ))}
+                {actions && (
+                  <TableCell align="center">
+                    {actions(row, rowIndex)}
+                  </TableCell>
+                )}
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={headers.length + (actions ? 1 : 0)} align="center">
+                <Typography variant="body2" sx={{ py: 4, color: 'text.secondary', fontStyle: 'italic' }}>
+                  No se encontraron registros disponibles
+                </Typography>
               </TableCell>
-              <TableCell align="right">{row.calories}</TableCell>
-              <TableCell align="right">{row.fat}</TableCell>
-              <TableCell align="right">{row.carbs}</TableCell>
-              <TableCell align="right">{row.protein}</TableCell>
             </TableRow>
-          ))}
+          )}
         </TableBody>
       </Table>
     </TableContainer>

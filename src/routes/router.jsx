@@ -11,13 +11,21 @@ import { UserProgressProvider } from "../contexts/UserProgressContext";
 // Director pages
 import DirectorDashboard from "../pages/Director/Dashboard";
 import DirectorPrerequisites from "../pages/Director/Prerequisites";
+import DirectorStudentLoad from "../pages/Director/StudentLoad";
+import DirectorStudentList from "../pages/Director/StudentList";
+import DirectorTutorList from "../pages/Director/TutorList";
+import DirectorAssignTutor from "../pages/Director/AssignTutor";
+import DirectorProposalReview from "../pages/Director/ProposalReview";
+import DirectorProposalDetail from "../pages/Director/ProposalDetail";
+import DirectorProfile from "../pages/Director/Profile";
+import DirectorThesisDefense from "../pages/Director/ThesisDefense";
 
 // Student pages
 import StudentDashboard from "../pages/Student/Dashboard";
 import StudentPrerequisites from "../pages/Student/Prerequisites";
 import StudentProyecto from "../pages/Student/Proyecto";
 import StudentProfile from "../pages/Student/Profile";
-import ThesisProposal from "../pages/Student/Proporsal";
+import ThesisProposal from "../pages/Student/Proposal";
 import StudentAvances from "../pages/Student/Avances";
 
 // Tutor pages
@@ -29,6 +37,20 @@ import TutorProfile from "../pages/Tutor/Profile";
 
 // Reviewer pages
 import ReviewerDashboard from "../pages/Reviewer/Dashboard";
+import ReviewerProposals from "../pages/Reviewer/Proposals";
+
+// Docente Integración pages
+import DocenteDashboard from "../pages/DocenteIntegracion/Dashboard";
+import DocenteAdvances from "../pages/DocenteIntegracion/WeeklyAdvances";
+import ReviewAdvance from "../pages/DocenteIntegracion/ReviewAdvance";
+
+
+// Coordinador pages
+import CoordinadorDashboard from "../pages/Coordinador/Dashboard";
+import CoordinadorStudents from "../pages/Coordinador/Students";
+import CoordinadorPrerequisites from "../pages/Coordinador/Prerequisites";
+import CoordinadorProposals from "../pages/Coordinador/Proposals";
+import CoordinadorProposalDetail from "../pages/Coordinador/ProposalDetail";
 
 // Old admin pages (temporarily keeping for transition)
 import OldDashboardPage from "../pages/Admin/dashboard.page";
@@ -51,7 +73,15 @@ function RouterPages() {
                     <Route element={<DashboardLayout />}>
                         <Route index element={<DirectorDashboard />} />
                         <Route path="dashboard" element={<DirectorDashboard />} />
+                        <Route path="student-load" element={<DirectorStudentLoad />} />
+                        <Route path="students" element={<DirectorStudentList />} />
+                        <Route path="tutors" element={<DirectorTutorList />} />
+                        <Route path="tutors/assign" element={<DirectorAssignTutor />} />
+                        <Route path="proposals" element={<DirectorProposalReview />} />
+                        <Route path="proposals/detail/:id" element={<DirectorProposalDetail />} />
+                        <Route path="defense" element={<DirectorThesisDefense />} />
                         <Route path="prerequisites" element={<DirectorPrerequisites />} />
+                        <Route path="profile" element={<DirectorProfile />} />
                     </Route>
                 </Route>
 
@@ -84,11 +114,34 @@ function RouterPages() {
                     </Route>
                 </Route>
 
+                {/* Rutas protegidas - Docente Integración */}
+                <Route path="/docente-integracion" element={<AuthAdmin />}>
+                    <Route element={<DashboardLayout />}>
+                        <Route index element={<DocenteDashboard />} />
+                        <Route path="dashboard" element={<DocenteDashboard />} />
+                        <Route path="advances" element={<DocenteAdvances />} />
+                        <Route path="review/:weekId/:studentId" element={<ReviewAdvance />} />
+                    </Route>
+                </Route>
+
                 {/* Rutas protegidas - Revisor */}
                 <Route path="/reviewer" element={<AuthAdmin />}>
                     <Route element={<DashboardLayout />}>
                         <Route index element={<ReviewerDashboard />} />
                         <Route path="dashboard" element={<ReviewerDashboard />} />
+                        <Route path="proposals" element={<ReviewerProposals />} />
+                    </Route>
+                </Route>
+
+                {/* Rutas protegidas - Coordinador */}
+                <Route path="/coordinador" element={<AuthAdmin />}>
+                    <Route element={<DashboardLayout />}>
+                        <Route index element={<CoordinadorDashboard />} />
+                        <Route path="dashboard" element={<CoordinadorDashboard />} />
+                        <Route path="students" element={<CoordinadorStudents />} />
+                        <Route path="prerequisites" element={<CoordinadorPrerequisites />} />
+                        <Route path="proposals" element={<CoordinadorProposals />} />
+                        <Route path="proposals/detail/:id" element={<CoordinadorProposalDetail />} />
                     </Route>
                 </Route>
 

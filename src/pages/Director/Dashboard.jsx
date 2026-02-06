@@ -1,115 +1,93 @@
-import { Box, Typography, Grid } from "@mui/material";
+import React from "react";
+import { Box, Typography, Grid, Card, CardContent, CardActionArea } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import PeopleIcon from "@mui/icons-material/People";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
-import WarningIcon from "@mui/icons-material/Warning";
-import { getDataUser } from "../../storage/user.model.jsx";
+import AssignmentIcon from "@mui/icons-material/Assignment";
+import SchoolIcon from "@mui/icons-material/School";
 import StatsCard from "../../components/common/StatsCard";
-import StudentCard from "../../components/common/StudentCard";
+import { getDataUser } from "../../storage/user.model.jsx";
 
-function DirectorDashboard() {
+const DirectorDashboard = () => {
+    const navigate = useNavigate();
     const user = getDataUser();
 
-    // Datos de ejemplo - en producción vendrían de una API
+    // Datos simulados para el dashboard
     const stats = {
-        totalStudents: 45,
-        approved: 30,
-        pending: 12,
-        delayed: 3,
+        students: 120, // Simulando estudiantes activos
+        proposals: 15, // Simulando propuestas pendientes
+        defenses: 8,   // Simulando defensas programadas
     };
-
-    const recentStudents = [
-        {
-            name: "Eduardo Pardo",
-            cedula: "1234567890",
-            email: "epardo@example.com",
-            cycle: 8,
-            phase: "Desarrollo",
-            status: "in-progress",
-        },
-        {
-            name: "Gabriel Serrango",
-            cedula: "0987654321",
-            email: "gserrango@example.com",
-            cycle: 7,
-            phase: "Anteproyecto",
-            status: "pending",
-        },
-        {
-            name: "Fernando Castillo",
-            cedula: "1122334455",
-            email: "fcastillo@example.com",
-            cycle: 8,
-            phase: "Defensa",
-            status: "completed",
-        },
-    ];
 
     return (
         <Box>
             {/* Encabezado */}
             <Box sx={{ mb: 4 }}>
-                <Typography variant="h4" fontWeight="bold" gutterBottom color="#000A9B">
+                <Typography variant="h4" fontWeight="bold" gutterBottom>
                     Bienvenido, {user?.name || "Director"}
                 </Typography>
                 <Typography variant="body1" color="text.secondary">
-                    Panel de administración de trabajos de titulación
+                    Panel de gestión y administración de titulación
                 </Typography>
             </Box>
 
-            {/* Estadísticas */}
-            <Grid container spacing={3} sx={{ mb: 4 }}>
-                <Grid item xs={12} sm={6} md={3}>
-                    <StatsCard
-                        title="Total Estudiantes"
-                        value={stats.totalStudents}
-                        icon={<PeopleIcon fontSize="large" />}
-                        color="primary"
-                    />
+            {/* Tarjetas de Resumen / Acceso Rápido */}
+            <Grid container spacing={3}>
+
+                {/* Gestión de Estudiantes */}
+                <Grid item xs={12} sm={6} md={4}>
+                    <Box onClick={() => navigate('/director/student-load')} sx={{ cursor: 'pointer', height: '100%' }}>
+                        <StatsCard
+                            title="Estudiantes"
+                            value={stats.students.toString()}
+                            icon={<PeopleIcon fontSize="large" />}
+                            color="primary"
+                            subtitle="Gestión de Nómina"
+                        />
+                    </Box>
                 </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                    <StatsCard
-                        title="Aprobados"
-                        value={stats.approved}
-                        icon={<CheckCircleIcon fontSize="large" />}
-                        color="success"
-                    />
+
+                {/* Revisión de Propuestas */}
+                <Grid item xs={12} sm={6} md={4}>
+                    <Box onClick={() => navigate('/director/proposals')} sx={{ cursor: 'pointer', height: '100%' }}>
+                        <StatsCard
+                            title="Propuestas"
+                            value={stats.proposals.toString()}
+                            icon={<AssignmentIcon fontSize="large" />}
+                            color="warning"
+                            subtitle="Pendientes de Revisión"
+                        />
+                    </Box>
                 </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                    <StatsCard
-                        title="Pendientes"
-                        value={stats.pending}
-                        icon={<HourglassEmptyIcon fontSize="large" />}
-                        color="info"
-                    />
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                    <StatsCard
-                        title="Atrasados"
-                        value={stats.delayed}
-                        icon={<WarningIcon fontSize="large" />}
-                        color="error"
-                        subtitle="Requieren atención"
-                    />
+
+                {/* Defensas y Tribunales */}
+                <Grid item xs={12} sm={6} md={4}>
+                    <Box onClick={() => navigate('/director/defense')} sx={{ cursor: 'pointer', height: '100%' }}>
+                        <StatsCard
+                            title="Defensas"
+                            value={stats.defenses.toString()}
+                            icon={<SchoolIcon fontSize="large" />}
+                            color="success"
+                            subtitle="Próximas fechas"
+                        />
+                    </Box>
                 </Grid>
             </Grid>
 
-            {/* Estudiantes Recientes */}
-            <Box sx={{ mb: 3 }}>
+            {/* Sección Informativa Adicional - Ejemplo: Próximas actividades */}
+            <Box sx={{ mt: 4 }}>
                 <Typography variant="h6" fontWeight="bold" gutterBottom>
                     Actividad Reciente
                 </Typography>
+                <Card>
+                    <CardContent>
+                        <Typography variant="body2" color="text.secondary">
+                            No hay actividad reciente registrada en el sistema.
+                        </Typography>
+                    </CardContent>
+                </Card>
             </Box>
-
-            <Grid container spacing={3}>
-                {recentStudents.map((student, index) => (
-                    <Grid item xs={12} md={6} lg={4} key={index}>
-                        <StudentCard student={student} onClick={() => console.log("Ver estudiante", student.name)} />
-                    </Grid>
-                ))}
-            </Grid>
         </Box>
     );
-}
+};
 
 export default DirectorDashboard;

@@ -35,6 +35,7 @@ function StudentProyecto() {
         planPruebasFile: null,
         status: 'draft', // draft, submitted, approved, rejected
         submittedDate: null,
+        versions: [] // Historial de versiones del anteproyecto
     });
 
     const handleFileSelect = (file, type) => {
@@ -42,19 +43,39 @@ function StudentProyecto() {
             name: file.name,
             size: `${(file.size / 1024).toFixed(2)} KB`,
             file: file,
+            date: new Date().toISOString().split('T')[0]
         };
 
-        setAnteproyecto(prev => ({
-            ...prev,
-            [`${type}File`]: fileData
-        }));
+        if (anteproyecto.status !== 'draft' && type === 'anteproyecto') {
+            // Versionamiento para anteproyecto en estado 'submitted' o desbloqueado
+            handleNewVersion(fileData);
+        } else {
+            setAnteproyecto(prev => ({
+                ...prev,
+                [`${type}File`]: fileData
+            }));
+        }
     };
 
-    const handleRemoveFile = (type) => {
-        setAnteproyecto(prev => ({
-            ...prev,
-            [`${type}File`]: null
-        }));
+    const handleNewVersion = (fileData) => {
+        setAnteproyecto(prev => {
+            const currentFile = prev.anteproyectoFile;
+            // Asegurar que solo archivamos si hay un archivo previo
+            const newVersions = currentFile ? [...prev.versions, { ...currentFile, version: prev.versions.length + 1 }] : prev.versions;
+
+            return {
+                ...prev,
+                versions: newVersions,
+                anteproyectoFile: { ...fileData, version: newVersions.length + 1 }
+            };
+        });
+
+        setAlertState({
+            open: true,
+            title: 'Nueva versión subida',
+            message: 'Se ha actualizado tu anteproyecto con una nueva versión.',
+            status: 'success'
+        });
     };
 
     const handleSubmit = () => {
@@ -175,10 +196,10 @@ function StudentProyecto() {
                 {/* Encabezado */}
                 <Box sx={{ mb: 4 }}>
                     <Typography variant="h4" fontWeight="bold" gutterBottom>
-                        Proyecto y Documentación
+                        Anteproyecto y Avances
                     </Typography>
                     <Typography variant="body1" color="text.secondary">
-                        Sube los documentos requeridos para tu trabajo de titulación
+                        Sube y actualiza los documentos de tu anteproyecto. El sistema guarda un historial de tus versiones.
                     </Typography>
                 </Box>
 
@@ -380,12 +401,73 @@ function StudentProyecto() {
                                     <Divider sx={{ my: 3 }} />
 
                                     <Typography variant="h6" fontWeight="600" gutterBottom>
-                                        Documentos Enviados
+                                        Anteproyecto Actual
                                     </Typography>
 
-                                    {renderDocumentCard(anteproyecto.anteproyectoFile, 'Anteproyecto')}
-                                    {renderDocumentCard(anteproyecto.manualFile, 'Manual de Usuario/Programador')}
-                                    {renderDocumentCard(anteproyecto.planPruebasFile, 'Plan de Pruebas')}
+                                    {/* Mostrar version actual si existe */}
+                                    {renderDocumentCard(anteproyecto.anteproyectoFile, `Anteproyecto (Versión ${anteproyecto.anteproyectoFile?.version || 1})`)}
+
+                                    {/* Historial de Versiones */}
+                                    {anteproyecto.versions && anteproyecto.versions.length > 0 && (
+                                        <Box sx={{ mt: 2, mb: 4, pl: 2, borderLeft: '3px solid #e0e0e0' }}>
+                                            <Typography variant="subtitle2" color="text.secondary" gutterBottom>Historial de Versiones</Typography>
+                                            {anteproyecto.versions.map((ver, idx) => (
+                                                <Typography key={idx} variant="body2" sx={{ color: 'text.secondary', mb: 0.5 }}>
+                                                    • Versión {ver.version || idx + 1}: {ver.name} ({ver.date})
+                                                </Typography>
+                                            ))}
+                                        </Box>
+                                    )}
+
+                                    <Box sx={{ mt: 3, mb: 4 }}>
+                                        <Typography variant="subtitle2" fontWeight="600" color="primary" gutterBottom>
+                                            Subir Nuevo Avance / Versión
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                            Puedes subir una nueva versión del anteproyecto para actualizar tus avances.
+                                        </Typography>
+                                        <FileUpload
+                                            onFileSelect={(file) => handleFileSelect(file, 'anteproyecto')}
+                                            uploadedFile={null}
+                                            onRemoveFile={() => { }}
+                                            placeholder="Cargar nueva versión del anteproyecto"
+                                        />
+                                    </Box>
+
+                                    <Divider sx={{ my: 3 }} />
+
+                                    <Typography variant="h6" fontWeight="600" gutterBottom>
+                                        Documentos Complementarios
+                                    </Typography>
+
+                                    {/* Permitir editar/subir otros documentos incluso en submitted */}
+                                    <Box sx={{ mb: 2 }}>
+                                        <Typography variant="subtitle2" fontWeight="600" gutterBottom>Manual de Usuario/Programador</Typography>
+                                        {anteproyecto.manualFile ? (
+                                            renderDocumentCard(anteproyecto.manualFile, 'Manual de Usuario')
+                                        ) : (
+                                            <FileUpload
+                                                onFileSelect={(file) => handleFileSelect(file, 'manual')}
+                                                uploadedFile={null}
+                                                onRemoveFile={() => { }}
+                                                placeholder="Cargar Manual"
+                                            />
+                                        )}
+                                    </Box>
+
+                                    <Box sx={{ mb: 2 }}>
+                                        <Typography variant="subtitle2" fontWeight="600" gutterBottom>Plan de Pruebas / Artículo</Typography>
+                                        {anteproyecto.planPruebasFile ? (
+                                            renderDocumentCard(anteproyecto.planPruebasFile, 'Plan de Pruebas')
+                                        ) : (
+                                            <FileUpload
+                                                onFileSelect={(file) => handleFileSelect(file, 'planPruebas')}
+                                                uploadedFile={null}
+                                                onRemoveFile={() => { }}
+                                                placeholder="Cargar Plan de Pruebas"
+                                            />
+                                        )}
+                                    </Box>
 
                                     {!anteproyecto.manualFile && !anteproyecto.planPruebasFile && (
                                         <Alert severity="warning" sx={{ mt: 2 }}>

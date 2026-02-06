@@ -36,34 +36,37 @@ function ThesisProposal() {
     });
     const [proposals, setProposals] = useState([
         {
-            tema: '',
-            area: '',
+            titulo: '',
+            areaInvestigacion: '',
             objetivo: '',
             problematica: '',
             alcance: '',
             file: null,
             status: 'draft', // draft, submitted, approved, rejected
             submittedDate: null,
+            versions: [] // Para versionamiento futuro si se requiere
         },
         {
-            tema: '',
-            area: '',
+            titulo: '',
+            areaInvestigacion: '',
             objetivo: '',
             problematica: '',
             alcance: '',
             file: null,
             status: 'draft',
             submittedDate: null,
+            versions: []
         },
         {
-            tema: '',
-            area: '',
+            titulo: '',
+            areaInvestigacion: '',
             objetivo: '',
             problematica: '',
             alcance: '',
             file: null,
             status: 'draft',
             submittedDate: null,
+            versions: []
         },
     ]);
 
@@ -106,14 +109,15 @@ function ThesisProposal() {
         setProposals((prev) => {
             const updated = [...prev];
             updated[currentTab] = {
-                tema: '',
-                area: '',
+                titulo: '',
+                areaInvestigacion: '',
                 objetivo: '',
                 problematica: '',
                 alcance: '',
                 file: null,
                 status: 'draft',
                 submittedDate: null,
+                versions: []
             };
             return updated;
         });
@@ -123,7 +127,7 @@ function ThesisProposal() {
         const currentProposal = proposals[currentTab];
 
         // Validaciones básicas
-        if (!currentProposal.tema || !currentProposal.area || !currentProposal.objetivo) {
+        if (!currentProposal.titulo || !currentProposal.areaInvestigacion || !currentProposal.objetivo) {
             setAlertState({
                 open: true,
                 title: 'Campos Incompletos',
@@ -278,8 +282,8 @@ function ThesisProposal() {
                                             <TextField
                                                 fullWidth
                                                 placeholder="Ingrese el tema de investigación"
-                                                value={currentProposal.tema}
-                                                onChange={(e) => handleInputChange('tema', e.target.value)}
+                                                value={currentProposal.titulo}
+                                                onChange={(e) => handleInputChange('titulo', e.target.value)}
                                                 sx={{ '& .MuiOutlinedInput-root': { backgroundColor: '#F9FAFB' } }}
                                             />
                                             <Typography variant="caption" sx={{ color: 'text.secondary', mt: 0.5, display: 'block' }}>
@@ -293,8 +297,8 @@ function ThesisProposal() {
                                             </Typography>
                                             <FormControl fullWidth>
                                                 <Select
-                                                    value={currentProposal.area}
-                                                    onChange={(e) => handleInputChange('area', e.target.value)}
+                                                    value={currentProposal.areaInvestigacion}
+                                                    onChange={(e) => handleInputChange('areaInvestigacion', e.target.value)}
                                                     displayEmpty
                                                     sx={{ backgroundColor: '#F9FAFB' }}
                                                 >
@@ -418,7 +422,7 @@ function ThesisProposal() {
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
                                         <Box>
                                             <Typography variant="h5" fontWeight="700" gutterBottom>
-                                                {currentProposal.tema}
+                                                {currentProposal.titulo}
                                             </Typography>
                                             <Chip
                                                 label={getStatusLabel(currentProposal.status)}
@@ -457,7 +461,7 @@ function ThesisProposal() {
                                             Área de Investigación
                                         </Typography>
                                         <Typography variant="body1" sx={{ textTransform: 'capitalize' }}>
-                                            {currentProposal.area.replace('-', ' ')}
+                                            {currentProposal.areaInvestigacion.replace('-', ' ')}
                                         </Typography>
                                     </Box>
 

@@ -95,7 +95,7 @@ export function UserProgressProvider({ children }) {
         }
 
         // Secciones que requieren las 15 semanas completadas
-        const requires15Weeks = ['proyecto', 'defensa'];
+        const requires15Weeks = ['defensa'];
         if (requires15Weeks.includes(sectionName.toLowerCase())) {
             return progressState.hasProjectAccess;
         }
@@ -114,7 +114,7 @@ export function UserProgressProvider({ children }) {
             return 'Debes completar y aprobar tus prerrequisitos primero';
         }
 
-        const requires15Weeks = ['proyecto', 'defensa'];
+        const requires15Weeks = ['defensa'];
         if (requires15Weeks.includes(sectionName.toLowerCase())) {
             const remaining = 15 - progressState.completedWeeks;
             return `Requiere completar las 15 semanas de avances (${remaining} restantes)`;
