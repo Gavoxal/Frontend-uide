@@ -53,6 +53,7 @@ import ReviewerProfile from "../pages/Reviewer/Profile";
 import DocenteDashboard from "../pages/DocenteIntegracion/Dashboard";
 import DocenteAdvances from "../pages/DocenteIntegracion/WeeklyAdvances";
 import ReviewAdvance from "../pages/DocenteIntegracion/ReviewAdvance";
+import DocenteActivityPlanning from "../pages/DocenteIntegracion/ActivityPlanning";
 
 // Coordinador pages
 import CoordinadorDashboard from "../pages/Coordinador/Dashboard";
@@ -137,6 +138,7 @@ function RouterPages() {
                         <Route index element={<DocenteDashboard />} />
                         <Route path="dashboard" element={<DocenteDashboard />} />
                         <Route path="advances" element={<DocenteAdvances />} />
+                        <Route path="planning" element={<DocenteActivityPlanning />} />
                         <Route path="review/:weekId/:studentId" element={<ReviewAdvance />} />
                     </Route>
                 </Route>

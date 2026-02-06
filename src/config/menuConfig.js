@@ -77,6 +77,7 @@ export const menuConfig = {
     docente_integracion: [
         { icon: DashboardIcon, label: "Dashboard", path: "/docente-integracion/dashboard" },
         { icon: AssignmentIcon, label: "Avances", path: "/docente-integracion/advances" },
+        { icon: AssignmentIcon, label: "Planificar Actividades", path: "/docente-integracion/planning" },
     ],
 
     admin: [

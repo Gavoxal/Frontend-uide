@@ -66,9 +66,9 @@ function ReviewAdvance() {
             </Paper>
 
             <Box sx={{ p: 3, flex: 1, overflow: 'auto' }}>
-                <Grid container spacing={3} sx={{ height: '100%' }}>
+                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
                     {/* Panel Izquierdo: Contenido */}
-                    <Grid item xs={12} md={8}>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
                         <Box sx={{ mb: 3 }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
                                 <Typography variant="h4" fontWeight="bold" color="text.primary">
@@ -144,11 +144,11 @@ function ReviewAdvance() {
                                 </Button>
                             </Paper>
                         ))}
-                    </Grid>
+                    </Box>
 
                     {/* Panel Derecho: Calificación */}
-                    <Grid item xs={12} md={4}>
-                        <Paper variant="outlined" sx={{ p: 3, height: '100%', bgcolor: 'white', borderRadius: 2 }}>
+                    <Box sx={{ width: { xs: '100%', md: 350 }, flexShrink: 0 }}>
+                        <Paper variant="outlined" sx={{ p: 3, bgcolor: 'white', borderRadius: 2, position: 'sticky', top: 24 }}>
                             <Typography variant="h6" gutterBottom fontWeight="bold">
                                 ✏️ Panel de Calificación
                             </Typography>
@@ -204,8 +204,8 @@ function ReviewAdvance() {
                                 Guardar Calificación
                             </Button>
                         </Paper>
-                    </Grid>
-                </Grid>
+                    </Box>
+                </Box>
             </Box>
         </Box>
     );
