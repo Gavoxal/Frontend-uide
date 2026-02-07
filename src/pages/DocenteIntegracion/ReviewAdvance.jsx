@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-    Box, Typography, Paper, Grid, TextField, Button, IconButton, Divider, Chip
+    Box, Typography, Paper, Grid, TextField, Button, IconButton, Divider, Chip, Tooltip
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
@@ -11,6 +11,8 @@ import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import SaveIcon from '@mui/icons-material/Save';
 import SendIcon from '@mui/icons-material/Send';
+import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
+import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import { weeksData } from './mockWeeks';
 
 function ReviewAdvance() {
@@ -37,6 +39,15 @@ function ReviewAdvance() {
         if (type === 'pdf') return <PictureAsPdfIcon sx={{ color: '#F40F02', fontSize: 30 }} />;
         if (type === 'zip') return <InsertDriveFileIcon sx={{ color: '#4CAF50', fontSize: 30 }} />;
         return <InsertDriveFileIcon sx={{ fontSize: 30 }} />;
+    };
+
+    // Lógica de navegación entre estudiantes
+    const currentIndex = week.students.findIndex(s => s.id === studentId);
+    const prevStudent = currentIndex > 0 ? week.students[currentIndex - 1] : null;
+    const nextStudent = currentIndex < week.students.length - 1 ? week.students[currentIndex + 1] : null;
+
+    const handleNavigate = (newStudentId) => {
+        navigate(`/docente-integracion/review/${weekId}/${newStudentId}`);
     };
 
     return (
@@ -70,19 +81,55 @@ function ReviewAdvance() {
                     {/* Panel Izquierdo: Contenido */}
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                         <Box sx={{ mb: 3 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                                <Typography variant="h4" fontWeight="bold" color="text.primary">
-                                    Semana {week.id}: Integración
-                                </Typography>
-                                <Chip
-                                    label="PENDIENTE"
-                                    sx={{
-                                        bgcolor: '#FFF9C4',
-                                        color: '#FBC02D',
-                                        fontWeight: 'bold',
-                                        borderRadius: 1
-                                    }}
-                                />
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                    <Typography variant="h4" fontWeight="bold" color="text.primary">
+                                        Semana {week.id}: Integración
+                                    </Typography>
+                                    <Chip
+                                        label="PENDIENTE"
+                                        sx={{
+                                            bgcolor: '#FFF9C4',
+                                            color: '#FBC02D',
+                                            fontWeight: 'bold',
+                                            borderRadius: 1
+                                        }}
+                                    />
+                                </Box>
+
+                                {/* Flechas de Navegación */}
+                                <Box sx={{ display: 'flex', gap: 1 }}>
+                                    <Tooltip title="Estudiante anterior">
+                                        <span>
+                                            <IconButton
+                                                onClick={() => handleNavigate(prevStudent.id)}
+                                                disabled={!prevStudent}
+                                                sx={{
+                                                    bgcolor: 'white',
+                                                    border: '1px solid #e0e0e0',
+                                                    '&:hover': { bgcolor: '#f5f5f5' }
+                                                }}
+                                            >
+                                                <KeyboardArrowLeftIcon />
+                                            </IconButton>
+                                        </span>
+                                    </Tooltip>
+                                    <Tooltip title="Siguiente estudiante">
+                                        <span>
+                                            <IconButton
+                                                onClick={() => handleNavigate(nextStudent.id)}
+                                                disabled={!nextStudent}
+                                                sx={{
+                                                    bgcolor: 'white',
+                                                    border: '1px solid #e0e0e0',
+                                                    '&:hover': { bgcolor: '#f5f5f5' }
+                                                }}
+                                            >
+                                                <KeyboardArrowRightIcon />
+                                            </IconButton>
+                                        </span>
+                                    </Tooltip>
+                                </Box>
                             </Box>
                             <Typography variant="body1" color="text.secondary">
                                 Estudiante: <b>{student.name}</b> • Ene 12 - Ene 19
