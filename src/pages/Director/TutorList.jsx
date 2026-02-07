@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import SearchIcon from '@mui/icons-material/Search';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 
+import SearchBar from '../../components/SearchBar.component';
 import TextMui from '../../components/text.mui.component';
 import InputMui from '../../components/input.mui.component';
 import ButtonMui from '../../components/button.mui.component';
@@ -74,18 +75,14 @@ function DirectorTutorList() {
                 </Box>
             </Box>
 
-            <Box sx={{ mb: 4 }}>
-                <Card>
-                    <CardContent>
-                        <InputMui
-                            placeholder="Buscar por nombre, especialidad..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            startIcon={<SearchIcon color="action" />}
-                        />
-                    </CardContent>
-                </Card>
-            </Box>
+
+            <SearchBar
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Buscar por nombre, especialidad..."
+                title="Buscar Tutores"
+            />
+
 
             <Grid container spacing={3}>
                 {filteredTutors.length > 0 ? (

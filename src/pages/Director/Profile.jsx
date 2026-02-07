@@ -12,6 +12,7 @@ import {
 
 import ProfileHeader from "../../components/Profile/ProfileHeader";
 import InfoCard from "../../components/Profile/InfoCard";
+import ChangePasswordDialog from "../../components/Profile/ChangePasswordDialog";
 
 // Director Profile Component standardized with Student Profile
 function DirectorProfile() {
@@ -40,9 +41,16 @@ function DirectorProfile() {
         { icon: <BadgeIcon color="primary" />, label: "Identificación", value: directorData.cedula }
     ];
 
-    // Handlers (Mock)
-    const handleEditProfile = () => console.log("Editar perfil");
-    const handleEditCover = () => console.log("Editar portada");
+    // State for password change dialog
+    const [openPasswordDialog, setOpenPasswordDialog] = useState(false);
+
+    // Handlers
+    const handleChangePassword = () => setOpenPasswordDialog(true);
+    const handlePasswordSubmit = (passwordData) => {
+        console.log("Cambiar contraseña:", passwordData);
+        // TODO: Implement API call to change password
+        alert("Contraseña cambiada exitosamente");
+    };
     const handleEditPersonalInfo = () => console.log("Editar información personal");
 
     return (
@@ -63,8 +71,7 @@ function DirectorProfile() {
                 subtitle={directorData.role}
                 initials={directorData.initials}
                 tags={[directorData.sede, directorData.status]}
-                onEditProfile={handleEditProfile}
-                onEditCover={handleEditCover}
+                onChangePassword={handleChangePassword}
             />
 
             {/* Main Content Grid */}
@@ -91,6 +98,13 @@ function DirectorProfile() {
                     />
                 </Grid>
             </Grid>
+
+            {/* Password Change Dialog */}
+            <ChangePasswordDialog
+                open={openPasswordDialog}
+                onClose={() => setOpenPasswordDialog(false)}
+                onSubmit={handlePasswordSubmit}
+            />
         </Box>
     );
 }

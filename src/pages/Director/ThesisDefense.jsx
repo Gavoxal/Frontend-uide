@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Typography, Grid, Card, CardContent, Divider, Chip, Avatar, Tooltip, Tabs, Tab } from '@mui/material';
+import SearchBar from '../../components/SearchBar.component';
 import TextMui from '../../components/text.mui.component';
 import TribunalAssignment from '../../components/Director/TribunalAssignment.mui';
 import StatsCard from '../../components/common/StatsCard';
@@ -337,17 +338,14 @@ function ThesisDefense() {
                 </Grid>
             </Grid>
 
+
             {/* Buscador */}
-            <Card sx={{ mb: 3 }}>
-                <CardContent>
-                    <InputMui
-                        placeholder="Buscar por nombre..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        startIcon={<SearchIcon color="action" />}
-                    />
-                </CardContent>
-            </Card>
+            <SearchBar
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Buscar por nombre..."
+                title="Buscar Estudiantes"
+            />
 
             <Grid container spacing={3}>
                 <Grid item xs={12}>

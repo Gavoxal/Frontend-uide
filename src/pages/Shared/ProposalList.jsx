@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Typography, Grid, Card, CardContent, InputAdornment, Chip, Button } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import TextMui from '../../components/text.mui.component';
 import InputMui from '../../components/input.mui.component';
 
@@ -9,9 +9,20 @@ import SearchIcon from '@mui/icons-material/Search';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
-function ReviewerProposals() {
+function SharedProposalList() {
     const navigate = useNavigate();
+    const location = useLocation();
     const [searchTerm, setSearchTerm] = useState("");
+
+    // Determine base path for navigation
+    const getBasePath = () => {
+        if (location.pathname.includes('docente-integracion')) return '/docente-integracion';
+        if (location.pathname.includes('tutor')) return '/tutor';
+        if (location.pathname.includes('coordinador')) return '/coordinador';
+        return '';
+    };
+
+    const basePath = getBasePath();
 
     // Mock Data
     const [proposals] = useState([
@@ -59,7 +70,13 @@ function ReviewerProposals() {
     ]);
 
     const handleNavigateToReview = (id) => {
-        navigate(`/reviewer/proposals/review/${id}`);
+        // Navigate to the review page relative to the current role
+        if (basePath === '/coordinador') {
+            // Coordinator uses 'detail' in current router setup, but we mapped it to SharedProposalReview
+            navigate(`${basePath}/proposals/detail/${id}`);
+        } else {
+            navigate(`${basePath}/proposals/review/${id}`);
+        }
     };
 
     const filteredProposals = proposals.filter(p =>
@@ -71,7 +88,7 @@ function ReviewerProposals() {
         <Box>
             <Box sx={{ mb: 4 }}>
                 <TextMui value="Revisión de Propuestas" variant="h4" />
-                <TextMui value="Evalúa y comenta las propuestas de tesis asignadas" variant="body1" />
+                <TextMui value="Listado de propuestas asignadas para revisión" variant="body1" />
             </Box>
 
             {/* Buscador */}
@@ -160,4 +177,4 @@ function ReviewerProposals() {
     );
 }
 
-export default ReviewerProposals;
+export default SharedProposalList;

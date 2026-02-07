@@ -204,6 +204,30 @@ function TutorDashboard() {
                         </CardContent>
                     </Card>
                 </Grid>
+
+                <Grid item xs={12} sm={6} md={3}>
+                    <Card
+                        onClick={() => navigate('/tutor/proposals')}
+                        sx={{
+                            borderRadius: 3,
+                            boxShadow: 2,
+                            background: 'linear-gradient(45deg, #FF8E53 30%, #FE6B8B 90%)',
+                            color: 'white',
+                            cursor: 'pointer',
+                            transition: '0.3s',
+                            '&:hover': { transform: 'scale(1.02)' }
+                        }}
+                    >
+                        <CardContent sx={{ p: 3 }}>
+                            <Typography variant="body2" sx={{ opacity: 0.9, mb: 1 }}>
+                                Propuestas Tesis
+                            </Typography>
+                            <Typography variant="h3" fontWeight="bold">
+                                3
+                            </Typography>
+                        </CardContent>
+                    </Card>
+                </Grid>
             </Grid>
 
             {/* Sección de Alertas */}

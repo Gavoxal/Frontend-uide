@@ -46,6 +46,16 @@ function Dashboard() {
                         icon={<AssignmentIcon />}
                         color="info"
                     />
+
+                    <Box onClick={() => navigate('/docente-integracion/proposals')} sx={{ cursor: 'pointer' }}>
+                        <StatsCard
+                            title="Propuestas de Tesis"
+                            value="3"
+                            icon={<AssignmentIcon />}
+                            color="warning"
+                            subtitle="Por revisar"
+                        />
+                    </Box>
                 </Box>
 
                 <Box sx={{ mt: 4 }}>

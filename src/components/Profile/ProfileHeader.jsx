@@ -1,7 +1,7 @@
 import { Box, Typography, Card, CardContent, Avatar, Button, Chip, IconButton } from "@mui/material";
-import { Edit as EditIcon, CameraAlt as CameraIcon } from "@mui/icons-material";
+import { LockReset as LockResetIcon, CameraAlt as CameraIcon } from "@mui/icons-material";
 
-function ProfileHeader({ name, subtitle, initials, tags, onEditProfile, onEditCover }) {
+function ProfileHeader({ name, subtitle, initials, tags, onChangePassword }) {
     return (
         <Card
             sx={{
@@ -15,29 +15,9 @@ function ProfileHeader({ name, subtitle, initials, tags, onEditProfile, onEditCo
                 sx={{
                     background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
                     height: 120,
-                    position: "relative",
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    alignItems: "flex-start",
-                    p: 2
+                    position: "relative"
                 }}
-            >
-                <Button
-                    variant="contained"
-                    startIcon={<EditIcon />}
-                    onClick={onEditCover}
-                    sx={{
-                        backgroundColor: "rgba(255, 255, 255, 0.9)",
-                        color: "#333",
-                        fontWeight: "600",
-                        "&:hover": {
-                            backgroundColor: "white"
-                        }
-                    }}
-                >
-                    Editar Portada
-                </Button>
-            </Box>
+            />
 
             {/* White Content Section */}
             <CardContent sx={{ pt: 0, pb: 3, px: 3 }}>
@@ -101,11 +81,11 @@ function ProfileHeader({ name, subtitle, initials, tags, onEditProfile, onEditCo
                         </Box>
                     </Box>
 
-                    {/* Edit Profile Button */}
+                    {/* Change Password Button */}
                     <Button
                         variant="contained"
-                        startIcon={<EditIcon />}
-                        onClick={onEditProfile}
+                        startIcon={<LockResetIcon />}
+                        onClick={onChangePassword}
                         sx={{
                             backgroundColor: "#667eea",
                             color: "white",
@@ -116,7 +96,7 @@ function ProfileHeader({ name, subtitle, initials, tags, onEditProfile, onEditCo
                             }
                         }}
                     >
-                        Editar Perfil
+                        Cambiar Contraseña
                     </Button>
                 </Box>
             </CardContent>

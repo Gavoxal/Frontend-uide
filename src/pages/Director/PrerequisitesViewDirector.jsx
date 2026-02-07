@@ -5,7 +5,6 @@ import {
     CardContent,
     Alert,
     Grid,
-    Tooltip,
 } from "@mui/material";
 import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -13,6 +12,8 @@ import SearchIcon from "@mui/icons-material/Search";
 import StatsCard from "../../components/common/StatsCard";
 import TableRequisitosMui from "../../components/Director/Table.requisitos.mui";
 import AlertMui from "../../components/alert.mui.component";
+import TooltipMui from '../../components/tooltip.mui.component';
+import SearchBar from '../../components/SearchBar.component';
 import TextMui from "../../components/text.mui.component";
 import InputMui from "../../components/input.mui.component";
 
@@ -146,7 +147,7 @@ function DirectorPrerequisites() {
             <Grid container spacing={3} sx={{ mb: 4 }}>
                 <Grid item xs={12} sm={6}>
 
-                    <Tooltip title="Filtrar pendientes" placement="top">
+                    <TooltipMui title="Filtrar pendientes" placement="top">
                         <Box
                             onClick={() => setFilterStatus(filterStatus === 'pending' ? 'all' : 'pending')}
                             sx={{
@@ -163,10 +164,10 @@ function DirectorPrerequisites() {
                                 color="warning"
                             />
                         </Box>
-                    </Tooltip>
+                    </TooltipMui>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                    <Tooltip title="Filtrar aprobados" placement="top">
+                    <TooltipMui title="Filtrar aprobados" placement="top">
                         <Box
                             onClick={() => setFilterStatus(filterStatus === 'approved' ? 'all' : 'approved')}
                             sx={{
@@ -183,28 +184,24 @@ function DirectorPrerequisites() {
                                 color="success"
                             />
                         </Box>
-                    </Tooltip>
+                    </TooltipMui>
                 </Grid>
             </Grid>
 
             {/* Filtro y Tabla */}
-            <Card>
+            <SearchBar
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Buscar por estudiante, cédula..."
+                title="Buscar Estudiantes"
+            />
+            <Card sx={{ mt: 3 }}> {/* Added margin-top for spacing */}
                 <CardContent>
-                    <Box sx={{ mb: 3 }}>
-                        <InputMui
-                            placeholder="Buscar por nombre o cédula..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            startIcon={<SearchIcon color="action" />}
-                        />
-                    </Box>
-
                     <TableRequisitosMui
                         students={filteredStudents}
                         onVerify={handleVerify}
                         onGrantAccess={handleGrantAccessClick}
                     />
-
                 </CardContent>
             </Card>
 

@@ -82,16 +82,16 @@ export function LoginService(user, passwd) {
     };
   }
 
-  // Usuario revisor predefinido
-  if (user === "revisor" && passwd === "revisor123") {
-    localStorage.setItem('userEmail', user);
-    return {
-      name: "Revisor",
-      lastName: "Main",
-      role: "reviewer",
-      image: "",
-    };
-  }
+  // Usuario revisor predefinido (DEPRECATED)
+  // if (user === "revisor" && passwd === "revisor123") {
+  //   localStorage.setItem('userEmail', user);
+  //   return {
+  //     name: "Revisor",
+  //     lastName: "Main",
+  //     role: "reviewer",
+  //     image: "",
+  //   };
+  // }
 
 
   // Usuario director

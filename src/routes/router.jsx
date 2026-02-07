@@ -19,6 +19,7 @@ import DirectorProposalReview from "../pages/Director/ProposalReview";
 import DirectorProposalDetail from "../pages/Director/ProposalDetail";
 import DirectorProfile from "../pages/Director/Profile";
 import DirectorThesisDefense from "../pages/Director/ThesisDefense";
+import DirectorCommitteeManagement from "../pages/Director/CommitteeManagement";
 
 
 
@@ -42,12 +43,17 @@ import ReviewFeedback from "../pages/Tutor/ReviewFeedback";
 import MeetingLog from "../pages/Tutor/MeetingLog";
 import TutorProfile from "../pages/Tutor/Profile";
 
-// Reviewer pages
-import ReviewerDashboard from "../pages/Reviewer/Dashboard";
-import ReviewerProposals from "../pages/Reviewer/Proposals";
-import ReviewerProposalReview from "../pages/Reviewer/ProposalReview";
-import ReviewerDefenses from "../pages/Reviewer/Defenses";
-import ReviewerProfile from "../pages/Reviewer/Profile";
+// Shared pages
+import SharedProposalReview from "../pages/Shared/ProposalReview";
+import SharedProposalList from "../pages/Shared/ProposalList";
+import SharedMeetingHistory from "../pages/Shared/MeetingHistory";
+
+// Reviewer pages (Deleted)
+// import ReviewerDashboard from "../pages/Reviewer/Dashboard";
+// import ReviewerProposals from "../pages/Reviewer/Proposals";
+// import ReviewerProposalReview from "../pages/Reviewer/ProposalReview";
+// import ReviewerDefenses from "../pages/Reviewer/Defenses";
+// import ReviewerProfile from "../pages/Reviewer/Profile";
 
 // Docente Integración pages
 import DocenteDashboard from "../pages/DocenteIntegracion/Dashboard";
@@ -93,7 +99,9 @@ function RouterPages() {
                         <Route path="proposals" element={<DirectorProposalReview />} />
                         <Route path="proposals/detail/:id" element={<DirectorProposalDetail />} />
                         <Route path="defense" element={<DirectorThesisDefense />} />
+                        <Route path="committee" element={<DirectorCommitteeManagement />} />
                         <Route path="prerequisites" element={<DirectorPrerequisites />} />
+                        <Route path="meetings" element={<SharedMeetingHistory />} />
                         <Route path="profile" element={<DirectorProfile />} />
                     </Route>
                 </Route>
@@ -127,6 +135,8 @@ function RouterPages() {
                         <Route path="dashboard" element={<TutorDashboard />} />
                         <Route path="planning" element={<ActivityPlanning />} />
                         <Route path="review" element={<ReviewFeedback />} />
+                        <Route path="proposals" element={<SharedProposalList />} />
+                        <Route path="proposals/review/:id" element={<SharedProposalReview />} />
                         <Route path="meetings" element={<MeetingLog />} />
                         <Route path="profile" element={<TutorProfile />} />
                     </Route>
@@ -140,20 +150,22 @@ function RouterPages() {
                         <Route path="advances" element={<DocenteAdvances />} />
                         <Route path="planning" element={<DocenteActivityPlanning />} />
                         <Route path="review/:weekId/:studentId" element={<ReviewAdvance />} />
+                        <Route path="proposals" element={<SharedProposalList />} />
+                        <Route path="proposals/review/:id" element={<SharedProposalReview />} />
                     </Route>
                 </Route>
 
-                {/* Rutas protegidas - Revisor */}
-                <Route path="/reviewer" element={<AuthAdmin />}>
+                {/* Rutas protegidas - Revisor (ELIMINADO) */}
+                {/* <Route path="/reviewer" element={<AuthAdmin />}>
                     <Route element={<DashboardLayout />}>
                         <Route index element={<ReviewerDashboard />} />
                         <Route path="dashboard" element={<ReviewerDashboard />} />
                         <Route path="proposals" element={<ReviewerProposals />} />
-                        <Route path="proposals/review/:id" element={<ReviewerProposalReview />} />
+                        <Route path="proposals/review/:id" element={<SharedProposalReview />} />
                         <Route path="defenses" element={<ReviewerDefenses />} />
                         <Route path="profile" element={<ReviewerProfile />} />
                     </Route>
-                </Route>
+                </Route> */}
 
                 {/* Rutas protegidas - Coordinador */}
                 <Route path="/coordinador" element={<AuthAdmin />}>
@@ -163,10 +175,11 @@ function RouterPages() {
                         <Route path="students" element={<CoordinadorStudents />} />
                         <Route path="prerequisites" element={<CoordinadorPrerequisites />} />
                         <Route path="proposals" element={<CoordinadorProposals />} />
-                        <Route path="proposals/detail/:id" element={<CoordinadorProposalDetail />} />
+                        <Route path="proposals/detail/:id" element={<SharedProposalReview />} />
                         <Route path="tutors" element={<CoordinadorTutorList />} />
                         <Route path="tutors/assign" element={<CoordinadorAssignTutor />} />
                         <Route path="defense" element={<CoordinadorThesisDefense />} />
+                        <Route path="meetings" element={<SharedMeetingHistory />} />
                     </Route>
                 </Route>
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Card, CardContent, Grid, Tooltip } from '@mui/material';
+import { Box, Grid, Chip, Card, CardContent } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -8,6 +8,8 @@ import SearchIcon from '@mui/icons-material/Search';
 
 import ButtonMui from '../../components/button.mui.component';
 import TableMui from '../../components/table.mui.component';
+import TooltipMui from '../../components/tooltip.mui.component';
+import SearchBar from '../../components/SearchBar.component';
 import TextMui from '../../components/text.mui.component';
 import StatsCard from '../../components/common/StatsCard'; // Assumed path/component exists based on Prerequisites
 import InputMui from '../../components/input.mui.component';
@@ -69,7 +71,7 @@ function ProposalReview() {
     };
 
     const handleReview = (student) => {
-        navigate(`/director/proposals/detail/${student.id}`);
+        navigate(`/ director / proposals / detail / ${student.id} `);
     };
 
     return (
@@ -82,7 +84,7 @@ function ProposalReview() {
             {/* Dashboard Stats */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
                 <Grid item xs={12} sm={6}>
-                    <Tooltip title="Filtrar pendientes" placement="top">
+                    <TooltipMui title="Filtrar pendientes" placement="top">
                         <Box
                             onClick={() => setFilterStatus(filterStatus === 'pending' ? 'all' : 'pending')}
                             sx={{
@@ -99,10 +101,10 @@ function ProposalReview() {
                                 color="warning"
                             />
                         </Box>
-                    </Tooltip>
+                    </TooltipMui>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                    <Tooltip title="Filtrar revisados" placement="top">
+                    <TooltipMui title="Filtrar revisados" placement="top">
                         <Box
                             onClick={() => setFilterStatus(filterStatus === 'reviewed' ? 'all' : 'reviewed')}
                             sx={{
@@ -119,22 +121,19 @@ function ProposalReview() {
                                 color="success"
                             />
                         </Box>
-                    </Tooltip>
+                    </TooltipMui>
                 </Grid>
             </Grid>
 
             {/* Filtros y Tabla */}
+            <SearchBar
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Buscar por estudiante..."
+                title="Buscar Propuestas"
+            />
             <Card>
                 <CardContent>
-                    <Box sx={{ mb: 3 }}>
-                        <InputMui
-                            placeholder="Buscar por nombre de estudiante..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            startIcon={<SearchIcon color="action" />}
-                        />
-                    </Box>
-
                     <TableMui
                         headers={headers}
                         data={filteredStudents.map(({ id, ...rest }) => rest)}

@@ -12,6 +12,7 @@ import { useState } from "react";
 import { getDataUser } from "../../storage/user.model.jsx";
 import ProfileHeader from "../../components/Profile/ProfileHeader";
 import InfoCard from "../../components/Profile/InfoCard";
+import ChangePasswordDialog from "../../components/Profile/ChangePasswordDialog";
 
 function TutorProfile() {
     const user = getDataUser();
@@ -67,13 +68,15 @@ function TutorProfile() {
         }
     ];
 
-    // Handlers
-    const handleEditProfile = () => {
-        console.log("Editar perfil");
-    };
+    // State for password change dialog
+    const [openPasswordDialog, setOpenPasswordDialog] = useState(false);
 
-    const handleEditCover = () => {
-        console.log("Editar portada");
+    // Handlers
+    const handleChangePassword = () => setOpenPasswordDialog(true);
+    const handlePasswordSubmit = (passwordData) => {
+        console.log("Cambiar contraseña:", passwordData);
+        // TODO: Implement API call to change password
+        alert("Contraseña cambiada exitosamente");
     };
 
     const handleEditPersonalInfo = () => {
@@ -94,9 +97,11 @@ function TutorProfile() {
 
             {/* Profile Header Card */}
             <ProfileHeader
-                studentData={tutorData}
-                onEditProfile={handleEditProfile}
-                onEditCover={handleEditCover}
+                name={tutorData.name}
+                subtitle={tutorData.especialidad}
+                initials={tutorData.initials}
+                tags={[tutorData.departamento, tutorData.status]}
+                onChangePassword={handleChangePassword}
             />
 
             {/* Main Content Grid */}
@@ -149,6 +154,13 @@ function TutorProfile() {
                     </Box>
                 </Grid>
             </Grid>
+
+            {/* Password Change Dialog */}
+            <ChangePasswordDialog
+                open={openPasswordDialog}
+                onClose={() => setOpenPasswordDialog(false)}
+                onSubmit={handlePasswordSubmit}
+            />
         </Box>
     );
 }

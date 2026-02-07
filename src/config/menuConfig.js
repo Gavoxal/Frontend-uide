@@ -11,6 +11,7 @@ import ChecklistIcon from '@mui/icons-material/Checklist';
 import PersonIcon from '@mui/icons-material/Person';
 import GavelIcon from '@mui/icons-material/Gavel';
 import EventNoteIcon from '@mui/icons-material/EventNote';
+import GroupsIcon from '@mui/icons-material/Groups';
 
 /**
  * Configuración de menús por rol de usuario
@@ -33,6 +34,8 @@ export const menuConfig = {
             ]
         },
         { icon: GavelIcon, label: "Defensas", path: "/director/defense" },
+        { icon: GroupsIcon, label: "Gestión de Comité", path: "/director/committee" },
+        { icon: EventNoteIcon, label: "Historial de Reuniones", path: "/director/meetings" },
     ],
 
     coordinador: [
@@ -50,6 +53,7 @@ export const menuConfig = {
             ]
         },
         { icon: GavelIcon, label: "Defensas", path: "/coordinador/defense" },
+        { icon: EventNoteIcon, label: "Historial de Reuniones", path: "/coordinador/meetings" },
     ],
 
     student: [
@@ -65,18 +69,23 @@ export const menuConfig = {
         { icon: DashboardIcon, label: "Dashboard", path: "/tutor/dashboard" },
         { icon: AssignmentIcon, label: "Planificar Actividades", path: "/tutor/planning" },
         { icon: RateReviewIcon, label: "Revisar Avances", path: "/tutor/review" },
+        { icon: DescriptionIcon, label: "Propuestas", path: "/tutor/proposals" },
         { icon: EventNoteIcon, label: "Bitácora de reuniones", path: "/tutor/meetings" },
     ],
 
+    // reviewer menu deleted
+    /* 
     reviewer: [
         { icon: DashboardIcon, label: "Dashboard", path: "/reviewer/dashboard" },
         { icon: AssignmentIcon, label: "Propuestas", path: "/reviewer/proposals" },
         { icon: GavelIcon, label: "Defensas", path: "/reviewer/defenses" },
     ],
+    */
 
     docente_integracion: [
         { icon: DashboardIcon, label: "Dashboard", path: "/docente-integracion/dashboard" },
         { icon: AssignmentIcon, label: "Avances", path: "/docente-integracion/advances" },
+        { icon: DescriptionIcon, label: "Propuestas", path: "/docente-integracion/proposals" },
         { icon: AssignmentIcon, label: "Planificar Actividades", path: "/docente-integracion/planning" },
     ],
 

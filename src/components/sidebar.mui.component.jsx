@@ -131,17 +131,10 @@ function SidebarMui({ onNavigate, currentPage, isExpanded, toggleSidebar }) {
 
             {/* BOTTOM - PERFIL DE USUARIO */}
             <Box sx={{ mt: "auto", width: "100%", px: 2, pb: 2 }}>
-                {/* Link al perfil */}
-                <MenuItem
-                    item={{ icon: PersonIcon, label: "Perfil", path: `/${userRole}/profile` }}
-                    isExpanded={isExpanded}
-                    currentPage={currentPage}
-                    onNavigate={onNavigate}
-                />
-
-                {/* Avatar y datos del usuario */}
+                {/* Avatar y datos del usuario - Clickeable */}
                 {isExpanded ? (
                     <Box
+                        onClick={() => onNavigate(`/${userRole}/profile`)}
                         sx={{
                             display: "flex",
                             alignItems: "center",
@@ -150,7 +143,12 @@ function SidebarMui({ onNavigate, currentPage, isExpanded, toggleSidebar }) {
                             backgroundColor: "rgba(255,255,255,0.1)",
                             borderRadius: 2,
                             mb: 1,
-                            mt: 1,
+                            cursor: "pointer",
+                            transition: "all 0.2s ease",
+                            "&:hover": {
+                                backgroundColor: "rgba(255,255,255,0.2)",
+                                transform: "translateX(4px)",
+                            },
                         }}
                     >
                         <Avatar
@@ -198,11 +196,16 @@ function SidebarMui({ onNavigate, currentPage, isExpanded, toggleSidebar }) {
                     </Box>
                 ) : (
                     <Box
+                        onClick={() => onNavigate(`/${userRole}/profile`)}
                         sx={{
                             display: "flex",
                             justifyContent: "center",
                             mb: 1,
-                            mt: 1,
+                            cursor: "pointer",
+                            transition: "all 0.2s ease",
+                            "&:hover": {
+                                transform: "scale(1.1)",
+                            },
                         }}
                     >
                         <Avatar
