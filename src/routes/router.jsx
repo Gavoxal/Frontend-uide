@@ -60,6 +60,7 @@ import DocenteDashboard from "../pages/DocenteIntegracion/Dashboard";
 import DocenteAdvances from "../pages/DocenteIntegracion/WeeklyAdvances";
 import ReviewAdvance from "../pages/DocenteIntegracion/ReviewAdvance";
 import DocenteActivityPlanning from "../pages/DocenteIntegracion/ActivityPlanning";
+import DocenteProfile from "../pages/DocenteIntegracion/Profile";
 
 // Coordinador pages
 import CoordinadorDashboard from "../pages/Coordinador/Dashboard";
@@ -70,6 +71,7 @@ import CoordinadorProposalDetail from "../pages/Coordinador/ProposalDetail";
 import CoordinadorAssignTutor from "../pages/Coordinador/AssignTutor";
 import CoordinadorThesisDefense from "../pages/Coordinador/ThesisDefense";
 import CoordinadorTutorList from "../pages/Coordinador/TutorList";
+import CoordinadorProfile from "../pages/Coordinador/Profile";
 
 // Old admin pages (temporarily keeping for transition)
 import OldDashboardPage from "../pages/Admin/dashboard.page";
@@ -152,6 +154,7 @@ function RouterPages() {
                         <Route path="review/:weekId/:studentId" element={<ReviewAdvance />} />
                         <Route path="proposals" element={<SharedProposalList />} />
                         <Route path="proposals/review/:id" element={<SharedProposalReview />} />
+                        <Route path="profile" element={<DocenteProfile />} />
                     </Route>
                 </Route>
 
@@ -180,6 +183,7 @@ function RouterPages() {
                         <Route path="tutors/assign" element={<CoordinadorAssignTutor />} />
                         <Route path="defense" element={<CoordinadorThesisDefense />} />
                         <Route path="meetings" element={<SharedMeetingHistory />} />
+                        <Route path="profile" element={<CoordinadorProfile />} />
                     </Route>
                 </Route>
 

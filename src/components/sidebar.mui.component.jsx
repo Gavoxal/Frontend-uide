@@ -36,9 +36,22 @@ const roleLabels = {
     user: 'Usuario'
 };
 
+// Mapeo de roles a rutas (para manejar diferencias entre nombres de roles y rutas)
+const roleToRoute = {
+    director: 'director',
+    coordinador: 'coordinador',
+    student: 'student',
+    tutor: 'tutor',
+    reviewer: 'reviewer',
+    docente_integracion: 'docente-integracion',
+    admin: 'admin',
+    user: 'user'
+};
+
 function SidebarMui({ onNavigate, currentPage, isExpanded, toggleSidebar }) {
     const user = getDataUser();
     const userRole = user?.role || "user";
+    const userRouteBase = roleToRoute[userRole] || userRole;
     const menuItems = getMenuByRole(userRole);
 
     // Solo para estudiantes, verificar permisos
@@ -134,7 +147,7 @@ function SidebarMui({ onNavigate, currentPage, isExpanded, toggleSidebar }) {
                 {/* Avatar y datos del usuario - Clickeable */}
                 {isExpanded ? (
                     <Box
-                        onClick={() => onNavigate(`/${userRole}/profile`)}
+                        onClick={() => onNavigate(`/${userRouteBase}/profile`)}
                         sx={{
                             display: "flex",
                             alignItems: "center",
@@ -196,7 +209,7 @@ function SidebarMui({ onNavigate, currentPage, isExpanded, toggleSidebar }) {
                     </Box>
                 ) : (
                     <Box
-                        onClick={() => onNavigate(`/${userRole}/profile`)}
+                        onClick={() => onNavigate(`/${userRouteBase}/profile`)}
                         sx={{
                             display: "flex",
                             justifyContent: "center",

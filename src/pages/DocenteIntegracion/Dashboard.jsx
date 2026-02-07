@@ -47,20 +47,11 @@ function Dashboard() {
                         color="info"
                     />
 
-                    <Box onClick={() => navigate('/docente-integracion/proposals')} sx={{ cursor: 'pointer' }}>
-                        <StatsCard
-                            title="Propuestas de Tesis"
-                            value="3"
-                            icon={<AssignmentIcon />}
-                            color="warning"
-                            subtitle="Por revisar"
-                        />
-                    </Box>
                 </Box>
 
                 <Box sx={{ mt: 4 }}>
                     <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', color: '#000A9B' }}>
-                        Actividad Reciente
+                        Mis Estudiantes
                     </Typography>
                     <RecentStudentsTable students={recentActivity} />
                 </Box>
