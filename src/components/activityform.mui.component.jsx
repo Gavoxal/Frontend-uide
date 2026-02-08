@@ -25,7 +25,7 @@ function ActivityForm({ students = [], onSubmit, onDraft, initialData = null }) 
         title: initialData?.title || '',
         description: initialData?.description || '',
         deadline: initialData?.deadline || new Date(),
-        priority: initialData?.priority || 'media',
+
         resources: initialData?.resources || []
     });
 
@@ -44,14 +44,7 @@ function ActivityForm({ students = [], onSubmit, onDraft, initialData = null }) 
         }
     };
 
-    const getPriorityColor = (priority) => {
-        const colors = {
-            alta: '#f44336',
-            media: '#ff9800',
-            baja: '#4caf50'
-        };
-        return colors[priority] || '#9e9e9e';
-    };
+
 
     return (
         <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
@@ -92,7 +85,7 @@ function ActivityForm({ students = [], onSubmit, onDraft, initialData = null }) 
                     onChange={(e) => handleChange('description', e.target.value)}
                 />
 
-                {/* Fecha límite y prioridad */}
+                {/* Fecha límite */}
                 <Box sx={{ display: 'flex', gap: 2 }}>
                     <DateTimePicker
                         label="Fecha Límite de Entrega"
@@ -101,34 +94,6 @@ function ActivityForm({ students = [], onSubmit, onDraft, initialData = null }) 
                         renderInput={(params) => <TextField {...params} fullWidth />}
                         sx={{ flex: 1 }}
                     />
-
-                    <FormControl sx={{ flex: 1 }}>
-                        <InputLabel>Prioridad</InputLabel>
-                        <Select
-                            value={formData.priority}
-                            label="Prioridad"
-                            onChange={(e) => handleChange('priority', e.target.value)}
-                        >
-                            <MenuItem value="alta">
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#f44336' }} />
-                                    Alta
-                                </Box>
-                            </MenuItem>
-                            <MenuItem value="media">
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#ff9800' }} />
-                                    Media
-                                </Box>
-                            </MenuItem>
-                            <MenuItem value="baja">
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#4caf50' }} />
-                                    Baja
-                                </Box>
-                            </MenuItem>
-                        </Select>
-                    </FormControl>
                 </Box>
 
                 {/* Recursos adjuntos */}
@@ -167,22 +132,6 @@ function ActivityForm({ students = [], onSubmit, onDraft, initialData = null }) 
                         </Box>
                     )}
                 </Paper>
-
-                {/* Vista previa de prioridad */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Typography variant="caption" color="text.secondary">
-                        Esta actividad será marcada como:
-                    </Typography>
-                    <Chip
-                        label={formData.priority.toUpperCase()}
-                        size="small"
-                        sx={{
-                            backgroundColor: getPriorityColor(formData.priority),
-                            color: 'white',
-                            fontWeight: 700
-                        }}
-                    />
-                </Box>
 
                 {/* Botones de acción */}
                 <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>

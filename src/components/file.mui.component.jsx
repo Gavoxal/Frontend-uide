@@ -50,11 +50,12 @@ export default function FileUpload({ onFileSelect, uploadedFile, onRemoveFile })
           justifyContent: 'space-between',
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, overflow: 'hidden' }}>
           <Box
             sx={{
               width: 40,
               height: 40,
+              minWidth: 40, // Prevent shrinking
               backgroundColor: '#FEE2E2',
               borderRadius: 1,
               display: 'flex',
@@ -64,8 +65,8 @@ export default function FileUpload({ onFileSelect, uploadedFile, onRemoveFile })
           >
             <DescriptionIcon sx={{ color: '#DC2626' }} />
           </Box>
-          <Box>
-            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant="body2" sx={{ fontWeight: 500 }} noWrap>
               {uploadedFile.name}
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
@@ -74,7 +75,7 @@ export default function FileUpload({ onFileSelect, uploadedFile, onRemoveFile })
           </Box>
         </Box>
 
-        <Box sx={{ display: 'flex', gap: 1 }}>
+        <Box sx={{ display: 'flex', gap: 1, flexShrink: 0 }}>
           <IconButton size="small">
             <VisibilityIcon fontSize="small" sx={{ color: '#6B7280' }} />
           </IconButton>

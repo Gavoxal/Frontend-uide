@@ -6,7 +6,7 @@ import { Box, Typography, TextField, Button as MuiButton, Link } from '@mui/mate
 import { useNavigate } from 'react-router-dom';
 import AlertMui from '../components/alert.mui.component.jsx';
 import LoadingScreen from '../components/load.mui.component.jsx';
-import { LoginService } from '../utils/login.js';
+import { AuthService } from '../services/auth.service.js';
 import { setUserData, rmDataUser } from '../storage/user.model.jsx';
 import uideImage from '../assets/uide3.svg';
 import studentimage from '../assets/uide.jpeg';
@@ -41,34 +41,48 @@ function LoginPage() {
     navigate('/registro');
   };
 
-  const handleSendform = () => {
-    const resLogin = LoginService(user, passwd);
-    console.log(resLogin);
+  const handleSendform = async () => {
+    setIsLoading(true);
+    try {
+      const resLogin = await AuthService.login(user, passwd);
+      setIsLoading(false);
 
-    if (resLogin == null) {
+      if (resLogin == null) {
+        setStateModal({
+          open: true,
+          title: 'Error de autenticación',
+          message: 'Usuario o contraseña inválidas',
+          status: 'error',
+          showbtnl: true,
+          showbtnr: true,
+          btnNameR: 'Registrarse',
+          actionBtnL: handleCloseModal,
+          actionBtnR: handleRegister,
+        });
+        return;
+      }
+
+      setUserData(resLogin);
+
+      // Mostrar loading screen brevemente o navegar directamente
+      setIsLoading(true);
+
+      // Esperar 1 segundo antes de navegar para UX
+      setTimeout(() => {
+        navigateUser(resLogin?.role);
+      }, 1000);
+
+    } catch (error) {
+      setIsLoading(false);
       setStateModal({
         open: true,
-        title: 'Error de autenticación',
-        message: 'Usuario o contraseña inválidas',
+        title: 'Error',
+        message: error.message || 'Error al conectar con el servidor',
         status: 'error',
         showbtnl: true,
-        showbtnr: true,
-        btnNameR: 'Registrarse',
         actionBtnL: handleCloseModal,
-        actionBtnR: handleRegister,
       });
-      return;
     }
-
-    setUserData(resLogin);
-
-    // Mostrar loading screen
-    setIsLoading(true);
-
-    // Esperar 2 segundos antes de navegar
-    setTimeout(() => {
-      navigateUser(resLogin?.role);
-    }, 2000);
   };
 
   const navigateUser = (role) => {

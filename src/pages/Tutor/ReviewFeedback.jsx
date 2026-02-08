@@ -2,20 +2,23 @@ import React, { useState } from 'react';
 import {
     Box,
     Typography,
-    Grid,
-    Card,
-    CardContent,
-    List,
-    ListItem,
-    ListItemButton,
-    ListItemText,
+    Button,
     Chip,
-    Divider,
-    Alert
+    Alert,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Paper,
+    Tooltip
 } from '@mui/material';
 import { useLocation } from 'react-router-dom';
 import FeedbackPanel from '../../components/feedbackpanel.mui.component';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 // Mock data de avances por revisar
 const MOCK_SUBMISSIONS = [
@@ -84,153 +87,154 @@ function ReviewFeedback() {
     const [submissions] = useState(MOCK_SUBMISSIONS);
     const [selectedSubmission, setSelectedSubmission] = useState(
         preselectedStudent
-            ? submissions.find(s => s.studentId === preselectedStudent.id) || submissions[0]
-            : submissions[0]
+            ? submissions.find(s => s.studentId === preselectedStudent.id)
+            : null
     );
+    const [view, setView] = useState(selectedSubmission ? 'detail' : 'list'); // 'list' | 'detail'
 
     const handleSelectSubmission = (submission) => {
         setSelectedSubmission(submission);
+        setView('detail');
+    };
+
+    const handleBackToList = () => {
+        setSelectedSubmission(null);
+        setView('list');
     };
 
     const handleSubmitFeedback = (feedback) => {
         console.log('Feedback enviado:', feedback);
         console.log('Para estudiante:', selectedSubmission.student);
 
-        let message = `Feedback enviado a ${selectedSubmission.student}`;
+        alert(`Feedback enviado a ${selectedSubmission.student}`);
 
-        if (feedback.readyForGrading) {
-            message += '\n\n✅ Se ha notificado a la Ing. Lorena que el avance está listo para calificación.';
-        }
+        // Actualizar estado del submission a "reviewed" (simulado)
+        // setSelectedSubmission({ ...selectedSubmission, status: 'reviewed' });
 
-        if (feedback.validationStatus === 'correcciones') {
-            message += '\n\n⚠️ El estudiante recibirá una notificación para realizar las correcciones solicitadas.';
-        }
-
-        alert(message);
-
-        // Actualizar estado del submission a "reviewed"
-        setSelectedSubmission({ ...selectedSubmission, status: 'reviewed' });
+        // Volver a la lista
+        setView('list');
+        setSelectedSubmission(null);
     };
 
     const handleCancelFeedback = () => {
-        console.log('Feedback cancelado');
+        setView('list');
+        setSelectedSubmission(null);
     };
 
-    const getPriorityColor = (priority) => {
-        const colors = {
-            alta: '#f44336',
-            media: '#ff9800',
-            baja: '#4caf50'
-        };
-        return colors[priority];
-    };
+
 
     const pendingSubmissions = submissions.filter(s => s.status === 'pending');
 
     return (
         <Box sx={{ maxWidth: 1600, mx: 'auto' }}>
             {/* Encabezado */}
-            <Box sx={{ mb: 4 }}>
-                <Typography variant="h4" fontWeight="bold" gutterBottom>
-                    Revisión y Feedback ✍️
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                    Valida avances de estudiantes y autoriza calificación
-                </Typography>
+            <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box>
+                    <Typography variant="h4" fontWeight="bold" gutterBottom>
+                        Revisión y Feedback ✍️
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary">
+                        {view === 'list'
+                            ? 'Gestiona las entregas y validaciones pendientes'
+                            : `Revisando avance de ${selectedSubmission?.student || 'Estudiante'}`}
+                    </Typography>
+                </Box>
+                {view === 'detail' && (
+                    <Button
+                        variant="outlined"
+                        startIcon={<ArrowBackIcon />}
+                        onClick={handleBackToList}
+                    >
+                        Volver a la Lista
+                    </Button>
+                )}
             </Box>
 
-            {/* Alerta de pendientes */}
-            {pendingSubmissions.length > 0 && (
-                <Alert severity="info" sx={{ mb: 3 }} icon={<AssignmentTurnedInIcon />}>
-                    Tienes <strong>{pendingSubmissions.length} avance(s)</strong> pendiente(s) de revisión
-                </Alert>
+            {/* Vista: Lista de Avances (Tabla) */}
+            {view === 'list' && (
+                <>
+                    {pendingSubmissions.length > 0 && (
+                        <Alert severity="info" sx={{ mb: 3 }} icon={<AssignmentTurnedInIcon />}>
+                            Tienes <strong>{pendingSubmissions.length} avance(s)</strong> pendiente(s) de revisión
+                        </Alert>
+                    )}
+
+                    <TableContainer component={Paper} sx={{ borderRadius: 3, boxShadow: 2 }}>
+                        <Table sx={{ minWidth: 650 }} aria-label="tabla de revisiones">
+                            <TableHead sx={{ backgroundColor: '#f9fafb' }}>
+                                <TableRow>
+                                    <TableCell sx={{ fontWeight: 'bold' }}>Estudiante</TableCell>
+                                    <TableCell sx={{ fontWeight: 'bold' }}>Actividad / Avance</TableCell>
+                                    <TableCell sx={{ fontWeight: 'bold' }}>Fecha de Entrega</TableCell>
+                                    <TableCell sx={{ fontWeight: 'bold' }} align="center">Acciones</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {submissions.map((submission) => (
+                                    <TableRow
+                                        key={submission.id}
+                                        sx={{ '&:last-child td, &:last-child th': { border: 0 }, '&:hover': { backgroundColor: '#f5f5f5' } }}
+                                    >
+                                        <TableCell component="th" scope="row">
+                                            <Typography variant="subtitle2" fontWeight="600">
+                                                {submission.student}
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                                Semana {submission.weekNumber}
+                                            </Typography>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Typography variant="body2" fontWeight="500">
+                                                {submission.title}
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary" sx={{
+                                                display: '-webkit-box',
+                                                overflow: 'hidden',
+                                                WebkitBoxOrient: 'vertical',
+                                                WebkitLineClamp: 1,
+                                                maxWidth: 300
+                                            }}>
+                                                {submission.comments}
+                                            </Typography>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Typography variant="body2">
+                                                {submission.submissionDate}
+                                            </Typography>
+                                        </TableCell>
+                                        <TableCell align="center">
+                                            <Tooltip title="Revisar Avance">
+                                                <Button
+                                                    variant="contained"
+                                                    size="small"
+                                                    onClick={() => handleSelectSubmission(submission)}
+                                                    startIcon={<VisibilityIcon />}
+                                                    sx={{
+                                                        backgroundColor: '#667eea',
+                                                        boxShadow: 'none',
+                                                        '&:hover': { backgroundColor: '#5a6fd6', boxShadow: 'none' }
+                                                    }}
+                                                >
+                                                    Revisar
+                                                </Button>
+                                            </Tooltip>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                </>
             )}
 
-            <Grid container spacing={3}>
-                {/* Sidebar - Lista de avances */}
-                <Grid item xs={12} md={4}>
-                    <Card sx={{ borderRadius: 3, boxShadow: 2, height: '100%' }}>
-                        <CardContent sx={{ p: 0 }}>
-                            <Box sx={{ p: 3, borderBottom: '1px solid #e0e0e0' }}>
-                                <Typography variant="h6" fontWeight="bold">
-                                    Avances por Revisar
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                    Selecciona un avance para revisar
-                                </Typography>
-                            </Box>
-
-                            <List sx={{ p: 0 }}>
-                                {submissions.map((submission, index) => (
-                                    <React.Fragment key={submission.id}>
-                                        <ListItemButton
-                                            selected={selectedSubmission?.id === submission.id}
-                                            onClick={() => handleSelectSubmission(submission)}
-                                            sx={{
-                                                py: 2,
-                                                px: 3,
-                                                '&.Mui-selected': {
-                                                    backgroundColor: '#f5f5f5',
-                                                    borderLeft: '4px solid #667eea'
-                                                }
-                                            }}
-                                        >
-                                            <ListItemText
-                                                primary={
-                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 0.5 }}>
-                                                        <Typography variant="subtitle2" fontWeight="600">
-                                                            {submission.student}
-                                                        </Typography>
-                                                        <Chip
-                                                            label={submission.priority}
-                                                            size="small"
-                                                            sx={{
-                                                                backgroundColor: getPriorityColor(submission.priority),
-                                                                color: 'white',
-                                                                fontWeight: 600,
-                                                                fontSize: '0.65rem',
-                                                                height: 18
-                                                            }}
-                                                        />
-                                                    </Box>
-                                                }
-                                                secondary={
-                                                    <Box>
-                                                        <Typography variant="caption" color="text.secondary" display="block">
-                                                            {submission.title}
-                                                        </Typography>
-                                                        <Typography variant="caption" color="text.secondary">
-                                                            {submission.submissionDate}
-                                                        </Typography>
-                                                    </Box>
-                                                }
-                                            />
-                                        </ListItemButton>
-                                        {index < submissions.length - 1 && <Divider />}
-                                    </React.Fragment>
-                                ))}
-                            </List>
-                        </CardContent>
-                    </Card>
-                </Grid>
-
-                {/* Panel principal - Feedback */}
-                <Grid item xs={12} md={8}>
-                    {selectedSubmission ? (
-                        <FeedbackPanel
-                            submission={selectedSubmission}
-                            onSubmit={handleSubmitFeedback}
-                            onCancel={handleCancelFeedback}
-                        />
-                    ) : (
-                        <Card sx={{ borderRadius: 3, boxShadow: 2, p: 6, textAlign: 'center' }}>
-                            <Typography variant="h6" color="text.secondary">
-                                Selecciona un avance de la lista para comenzar la revisión
-                            </Typography>
-                        </Card>
-                    )}
-                </Grid>
-            </Grid>
+            {/* Vista: Detalle de Feedback */}
+            {view === 'detail' && selectedSubmission && (
+                <FeedbackPanel
+                    submission={selectedSubmission}
+                    onSubmit={handleSubmitFeedback}
+                    onCancel={handleCancelFeedback}
+                />
+            )}
         </Box>
     );
 }

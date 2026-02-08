@@ -20,14 +20,20 @@ import StatusBadge from "../../components/common/StatusBadge";
 import FileUpload from "../../components/file.mui.component";
 import AlertMui from "../../components/alert.mui.component";
 import { getPrerequisites, savePrerequisites } from "../../storage/prerequisites.model";
+import { PrerequisiteService } from "../../services/prerequisites.service";
 
 function StudentPrerequisites() {
     const user = getDataUser();
 
-    // Cargar prerrequisitos desde el almacenamiento
-    const [prerequisites, setPrerequisites] = useState(getPrerequisites());
+    // Estado inicial vacío
+    const [prerequisites, setPrerequisites] = useState({
+        english: { completed: false, verified: false, file: null, id: null },
+        internship: { completed: false, verified: false, file: null, id: null },
+        community: { completed: false, verified: false, file: null, id: null }
+    });
 
     const [hasChanges, setHasChanges] = useState(false);
+    const [loading, setLoading] = useState(true); // Estado de carga
     const [alertState, setAlertState] = useState({
         open: false,
         title: '',
@@ -35,11 +41,70 @@ function StudentPrerequisites() {
         status: 'info'
     });
 
+    // Mapeo inverso para cargar datos
+    const reverseNameMapping = {
+        "CERTIFICADO_INGLES": "english",
+        "PRACTICAS_PREPROFESIONALES": "internship",
+        "VINCULACION": "community"
+    };
+
+    const nameMapping = {
+        english: "CERTIFICADO_INGLES",
+        internship: "PRACTICAS_PREPROFESIONALES",
+        community: "VINCULACION"
+    };
+
+    const viewNameMapping = {
+        english: "Certificado de Inglés",
+        internship: "Certificado de Prácticas",
+        community: "Certificado de Vinculación"
+    };
+
+    // Cargar datos del API
+    const fetchPrerequisites = async () => {
+        if (!user?.id) return;
+        setLoading(true);
+        try {
+            const data = await PrerequisiteService.getByStudent(user.id);
+
+            // Mapear respuesta del API al estado local
+            const newState = {
+                english: { completed: false, verified: false, file: null, id: null },
+                internship: { completed: false, verified: false, file: null, id: null },
+                community: { completed: false, verified: false, file: null, id: null }
+            };
+
+            data.forEach(item => {
+                const key = reverseNameMapping[item.nombre];
+                if (key) {
+                    newState[key] = {
+                        completed: true, // Si está en BD, está completado/subido
+                        verified: item.cumplido || false, // 'cumplido' es verificado por director
+                        file: {
+                            name: item.archivoUrl ? item.archivoUrl.split('/').pop() : "Archivo cargado",
+                            url: item.archivoUrl
+                        },
+                        id: item.id
+                    };
+                }
+            });
+
+            setPrerequisites(newState);
+        } catch (error) {
+            console.error("Error cargando prerrequisitos:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchPrerequisites();
+    }, [user?.id]);
+
     const handleCheck = (field) => {
-        // Si hay un archivo cargado, no permitir desmarcar manualmente
-        // El usuario debe eliminar el archivo primero
-        if (prerequisites[field].file && prerequisites[field].completed) {
-            return; // No hacer nada si intenta desmarcar con archivo cargado
+        // Si ya está guardado en BD (tiene ID), no permitir desmarcar fácilmente (o requerir borrado)
+        if (prerequisites[field].id) {
+            return;
         }
 
         setPrerequisites((prev) => ({
@@ -52,23 +117,51 @@ function StudentPrerequisites() {
         setHasChanges(true);
     };
 
-    const handleSave = () => {
-        // Guardar en localStorage
-        const saved = savePrerequisites(prerequisites);
+    const handleSave = async () => {
+        let successCount = 0;
+        let errorOccurred = false;
 
-        if (saved) {
+        const promises = Object.keys(prerequisites).map(async (key) => {
+            const item = prerequisites[key];
+            // Solo guardar si está completado, tiene archivo nuevo (raw) y NO tiene ID (no guardado aun)
+            if (item.completed && item.file && item.file.raw && !item.id) {
+                try {
+                    await PrerequisiteService.upload({
+                        nombre: nameMapping[key],
+                        descripcion: `Certificado de ${nameMapping[key]}`,
+                        archivo: item.file.raw
+                    });
+                    successCount++;
+                } catch (error) {
+                    console.error(`Error guardando ${key}:`, error);
+                    errorOccurred = true;
+                }
+            }
+        });
+
+        await Promise.all(promises);
+
+        if (!errorOccurred && successCount > 0) {
+            await fetchPrerequisites(); // Recargar datos reales del backend
             setHasChanges(false);
             setAlertState({
                 open: true,
                 title: '¡Guardado Exitoso!',
-                message: 'Los prerrequisitos han sido guardados correctamente. Los cambios se reflejarán en tu perfil.',
+                message: '¡Guardado Exitoso! Tus documentos han sido enviados correctamente para revisión.',
                 status: 'success'
+            });
+        } else if (successCount === 0 && !errorOccurred) {
+            setAlertState({
+                open: true,
+                title: 'Sin Cambios Nuevos',
+                message: 'No hay documentos nuevos para subir.',
+                status: 'info'
             });
         } else {
             setAlertState({
                 open: true,
-                title: 'Error al Guardar',
-                message: 'Hubo un problema al guardar los prerrequisitos. Por favor, intenta nuevamente.',
+                title: 'Error Parcial o Total',
+                message: 'Hubo un problema al subir algunos archivos. Verifique la consola.',
                 status: 'error'
             });
         }
@@ -79,7 +172,7 @@ function StudentPrerequisites() {
             ...prev,
             [field]: {
                 ...prev[field],
-                completed: true, // Auto-marcar como completado cuando se sube archivo
+                completed: true,
                 file: {
                     name: file.name,
                     size: `${(file.size / 1024).toFixed(2)} KB`,
@@ -91,11 +184,14 @@ function StudentPrerequisites() {
     };
 
     const handleFileRemove = (field) => {
+        // Si tiene ID, implica borrado en servidor (no implementado en este paso, solo local si no guardado)
+        if (prerequisites[field].id) return;
+
         setPrerequisites((prev) => ({
             ...prev,
             [field]: {
                 ...prev[field],
-                completed: false, // Desmarcar cuando se elimina el archivo
+                completed: false,
                 file: null
             },
         }));
@@ -169,181 +265,187 @@ function StudentPrerequisites() {
                             Checklist de Prerrequisitos
                         </Typography>
 
-                        <Box sx={{ mt: 3 }}>
+                        <Grid container spacing={3} sx={{ mt: 3 }}>
                             {/* Inglés */}
-                            <Box
-                                sx={{
-                                    p: 2,
-                                    mb: 2,
-                                    bgcolor: prerequisites.english.verified ? "#E8F5E9" : "#FFF8E1",
-                                    borderRadius: 1,
-                                    border: 1,
-                                    borderColor: prerequisites.english.verified ? "success.main" : "warning.main",
-                                }}
-                            >
-                                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-                                    <FormControlLabel
-                                        control={
-                                            <Checkbox
-                                                checked={prerequisites.english.completed}
-                                                onChange={() => handleCheck("english")}
-                                                disabled={prerequisites.english.verified}
-                                                color="success"
-                                            />
-                                        }
-                                        label={
-                                            <Box>
-                                                <Typography variant="body1" fontWeight="bold">
-                                                    Inglés Aprobado
-                                                </Typography>
-                                                <Typography variant="caption" color="text.secondary">
-                                                    Nivel B1 o superior requerido
-                                                </Typography>
-                                            </Box>
-                                        }
-                                    />
-                                    <StatusBadge
-                                        status={prerequisites.english.verified ? "approved" : prerequisites.english.completed ? "in-progress" : "pending"}
-                                        label={
-                                            prerequisites.english.verified
-                                                ? "Verificado"
-                                                : prerequisites.english.completed
-                                                    ? "En revisión"
-                                                    : "Pendiente"
-                                        }
-                                    />
-                                </Box>
-
-                                {!prerequisites.english.verified && (
-                                    <Box sx={{ mt: 2 }}>
-                                        <Typography variant="body2" fontWeight="500" gutterBottom>
-                                            Adjuntar certificado:
-                                        </Typography>
-                                        <FileUpload
-                                            onFileSelect={(file) => handleFileSelect("english", file)}
-                                            uploadedFile={prerequisites.english.file}
-                                            onRemoveFile={() => handleFileRemove("english")}
+                            <Grid item xs={12} md={4}>
+                                <Box
+                                    sx={{
+                                        p: 2,
+                                        height: '100%',
+                                        bgcolor: prerequisites.english.verified ? "#E8F5E9" : "#FFF8E1",
+                                        borderRadius: 1,
+                                        border: 1,
+                                        borderColor: prerequisites.english.verified ? "success.main" : "warning.main",
+                                    }}
+                                >
+                                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+                                        <FormControlLabel
+                                            control={
+                                                <Checkbox
+                                                    checked={prerequisites.english.completed}
+                                                    onChange={() => handleCheck("english")}
+                                                    disabled={prerequisites.english.verified}
+                                                    color="success"
+                                                />
+                                            }
+                                            label={
+                                                <Box>
+                                                    <Typography variant="body1" fontWeight="bold">
+                                                        Inglés
+                                                    </Typography>
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        Nivel B1+
+                                                    </Typography>
+                                                </Box>
+                                            }
+                                        />
+                                        <StatusBadge
+                                            status={prerequisites.english.verified ? "approved" : prerequisites.english.completed ? "in-progress" : "pending"}
+                                            label={
+                                                prerequisites.english.verified
+                                                    ? "Verificado"
+                                                    : prerequisites.english.completed
+                                                        ? "En revisión"
+                                                        : "Pendiente"
+                                            }
                                         />
                                     </Box>
-                                )}
-                            </Box>
+
+                                    {!prerequisites.english.verified && (
+                                        <Box sx={{ mt: 2 }}>
+                                            <Typography variant="body2" fontWeight="500" gutterBottom>
+                                                Adjuntar certificado:
+                                            </Typography>
+                                            <FileUpload
+                                                onFileSelect={(file) => handleFileSelect("english", file)}
+                                                uploadedFile={prerequisites.english.file}
+                                                onRemoveFile={() => handleFileRemove("english")}
+                                            />
+                                        </Box>
+                                    )}
+                                </Box>
+                            </Grid>
 
                             {/* Prácticas Laborales */}
-                            <Box
-                                sx={{
-                                    p: 2,
-                                    mb: 2,
-                                    bgcolor: prerequisites.internship.verified ? "#E8F5E9" : "#FFF8E1",
-                                    borderRadius: 1,
-                                    border: 1,
-                                    borderColor: prerequisites.internship.verified ? "success.main" : "warning.main",
-                                }}
-                            >
-                                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-                                    <FormControlLabel
-                                        control={
-                                            <Checkbox
-                                                checked={prerequisites.internship.completed}
-                                                onChange={() => handleCheck("internship")}
-                                                disabled={prerequisites.internship.verified}
-                                                color="success"
-                                            />
-                                        }
-                                        label={
-                                            <Box>
-                                                <Typography variant="body1" fontWeight="bold">
-                                                    Prácticas Laborales Aprobadas
-                                                </Typography>
-                                                <Typography variant="caption" color="text.secondary">
-                                                    Mínimo 240 horas requeridas
-                                                </Typography>
-                                            </Box>
-                                        }
-                                    />
-                                    <StatusBadge
-                                        status={prerequisites.internship.verified ? "approved" : prerequisites.internship.completed ? "in-progress" : "pending"}
-                                        label={
-                                            prerequisites.internship.verified
-                                                ? "Verificado"
-                                                : prerequisites.internship.completed
-                                                    ? "En revisión"
-                                                    : "Pendiente"
-                                        }
-                                    />
-                                </Box>
-
-                                {!prerequisites.internship.verified && (
-                                    <Box sx={{ mt: 2 }}>
-                                        <Typography variant="body2" fontWeight="500" gutterBottom>
-                                            Adjuntar certificado:
-                                        </Typography>
-                                        <FileUpload
-                                            onFileSelect={(file) => handleFileSelect("internship", file)}
-                                            uploadedFile={prerequisites.internship.file}
-                                            onRemoveFile={() => handleFileRemove("internship")}
+                            <Grid item xs={12} md={4}>
+                                <Box
+                                    sx={{
+                                        p: 2,
+                                        height: '100%',
+                                        bgcolor: prerequisites.internship.verified ? "#E8F5E9" : "#FFF8E1",
+                                        borderRadius: 1,
+                                        border: 1,
+                                        borderColor: prerequisites.internship.verified ? "success.main" : "warning.main",
+                                    }}
+                                >
+                                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+                                        <FormControlLabel
+                                            control={
+                                                <Checkbox
+                                                    checked={prerequisites.internship.completed}
+                                                    onChange={() => handleCheck("internship")}
+                                                    disabled={prerequisites.internship.verified}
+                                                    color="success"
+                                                />
+                                            }
+                                            label={
+                                                <Box>
+                                                    <Typography variant="body1" fontWeight="bold">
+                                                        Prácticas
+                                                    </Typography>
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        Min. 240 horas
+                                                    </Typography>
+                                                </Box>
+                                            }
+                                        />
+                                        <StatusBadge
+                                            status={prerequisites.internship.verified ? "approved" : prerequisites.internship.completed ? "in-progress" : "pending"}
+                                            label={
+                                                prerequisites.internship.verified
+                                                    ? "Verificado"
+                                                    : prerequisites.internship.completed
+                                                        ? "En revisión"
+                                                        : "Pendiente"
+                                            }
                                         />
                                     </Box>
-                                )}
-                            </Box>
+
+                                    {!prerequisites.internship.verified && (
+                                        <Box sx={{ mt: 2 }}>
+                                            <Typography variant="body2" fontWeight="500" gutterBottom>
+                                                Adjuntar certificado:
+                                            </Typography>
+                                            <FileUpload
+                                                onFileSelect={(file) => handleFileSelect("internship", file)}
+                                                uploadedFile={prerequisites.internship.file}
+                                                onRemoveFile={() => handleFileRemove("internship")}
+                                            />
+                                        </Box>
+                                    )}
+                                </Box>
+                            </Grid>
 
                             {/* Vinculación con la Comunidad */}
-                            <Box
-                                sx={{
-                                    p: 2,
-                                    mb: 2,
-                                    bgcolor: prerequisites.community.verified ? "#E8F5E9" : "#FFF8E1",
-                                    borderRadius: 1,
-                                    border: 1,
-                                    borderColor: prerequisites.community.verified ? "success.main" : "warning.main",
-                                }}
-                            >
-                                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-                                    <FormControlLabel
-                                        control={
-                                            <Checkbox
-                                                checked={prerequisites.community.completed}
-                                                onChange={() => handleCheck("community")}
-                                                disabled={prerequisites.community.verified}
-                                                color="success"
-                                            />
-                                        }
-                                        label={
-                                            <Box>
-                                                <Typography variant="body1" fontWeight="bold">
-                                                    Vinculación con la Comunidad Aprobada
-                                                </Typography>
-                                                <Typography variant="caption" color="text.secondary">
-                                                    Proyecto comunitario completado
-                                                </Typography>
-                                            </Box>
-                                        }
-                                    />
-                                    <StatusBadge
-                                        status={prerequisites.community.verified ? "approved" : prerequisites.community.completed ? "in-progress" : "pending"}
-                                        label={
-                                            prerequisites.community.verified
-                                                ? "Verificado"
-                                                : prerequisites.community.completed
-                                                    ? "En revisión"
-                                                    : "Pendiente"
-                                        }
-                                    />
-                                </Box>
-
-                                {!prerequisites.community.verified && (
-                                    <Box sx={{ mt: 2 }}>
-                                        <Typography variant="body2" fontWeight="500" gutterBottom>
-                                            Adjuntar certificado:
-                                        </Typography>
-                                        <FileUpload
-                                            onFileSelect={(file) => handleFileSelect("community", file)}
-                                            uploadedFile={prerequisites.community.file}
-                                            onRemoveFile={() => handleFileRemove("community")}
+                            <Grid item xs={12} md={4}>
+                                <Box
+                                    sx={{
+                                        p: 2,
+                                        height: '100%',
+                                        bgcolor: prerequisites.community.verified ? "#E8F5E9" : "#FFF8E1",
+                                        borderRadius: 1,
+                                        border: 1,
+                                        borderColor: prerequisites.community.verified ? "success.main" : "warning.main",
+                                    }}
+                                >
+                                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+                                        <FormControlLabel
+                                            control={
+                                                <Checkbox
+                                                    checked={prerequisites.community.completed}
+                                                    onChange={() => handleCheck("community")}
+                                                    disabled={prerequisites.community.verified}
+                                                    color="success"
+                                                />
+                                            }
+                                            label={
+                                                <Box>
+                                                    <Typography variant="body1" fontWeight="bold">
+                                                        Vinculación
+                                                    </Typography>
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        Proyecto completo
+                                                    </Typography>
+                                                </Box>
+                                            }
+                                        />
+                                        <StatusBadge
+                                            status={prerequisites.community.verified ? "approved" : prerequisites.community.completed ? "in-progress" : "pending"}
+                                            label={
+                                                prerequisites.community.verified
+                                                    ? "Verificado"
+                                                    : prerequisites.community.completed
+                                                        ? "En revisión"
+                                                        : "Pendiente"
+                                            }
                                         />
                                     </Box>
-                                )}
-                            </Box>
-                        </Box>
+
+                                    {!prerequisites.community.verified && (
+                                        <Box sx={{ mt: 2 }}>
+                                            <Typography variant="body2" fontWeight="500" gutterBottom>
+                                                Adjuntar certificado:
+                                            </Typography>
+                                            <FileUpload
+                                                onFileSelect={(file) => handleFileSelect("community", file)}
+                                                uploadedFile={prerequisites.community.file}
+                                                onRemoveFile={() => handleFileRemove("community")}
+                                            />
+                                        </Box>
+                                    )}
+                                </Box>
+                            </Grid>
+                        </Grid>
 
                         {hasChanges && (
                             <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>

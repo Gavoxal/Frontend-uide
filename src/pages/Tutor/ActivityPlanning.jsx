@@ -4,18 +4,15 @@ import {
     Typography,
     Card,
     CardContent,
-    Grid,
+    Button,
     Table,
     TableBody,
     TableCell,
     TableContainer,
     TableHead,
     TableRow,
-    Paper,
     Chip,
     IconButton,
-    Tabs,
-    Tab
 } from '@mui/material';
 import { useLocation } from 'react-router-dom';
 import ActivityForm from '../../components/activityform.mui.component';
@@ -25,6 +22,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import PendingIcon from '@mui/icons-material/Pending';
+import AddIcon from '@mui/icons-material/Add';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 // Mock data de estudiantes
 const MOCK_STUDENTS = [
@@ -89,18 +88,21 @@ function ActivityPlanning() {
     const location = useLocation();
     const preselectedStudent = location.state?.student;
 
-    const [tabValue, setTabValue] = useState(0);
+    // View state: 'history' | 'create'
+    // If student is passed in state, defaults to create to jump right in
+    const [view, setView] = useState(preselectedStudent ? 'create' : 'history');
     const [history] = useState(MOCK_HISTORY);
 
     const handleSubmit = (data) => {
         console.log('Actividad creada:', data);
-        // Aquí iría la lógica para guardar y notificar
         alert('Actividad asignada y estudiante notificado correctamente');
+        setView('history');
     };
 
     const handleDraft = (data) => {
         console.log('Borrador guardado:', data);
         alert('Borrador guardado correctamente');
+        setView('history');
     };
 
     const getStatusIcon = (status) => {
@@ -133,55 +135,59 @@ function ActivityPlanning() {
         );
     };
 
-    const getPriorityChip = (priority) => {
-        const config = {
-            alta: { label: 'Alta', color: '#f44336' },
-            media: { label: 'Media', color: '#ff9800' },
-            baja: { label: 'Baja', color: '#4caf50' }
-        };
-        const { label, color } = config[priority];
-        return (
-            <Chip
-                label={label}
-                size="small"
-                sx={{
-                    backgroundColor: color,
-                    color: 'white',
-                    fontWeight: 600
-                }}
-            />
-        );
-    };
+
 
     return (
         <Box sx={{ maxWidth: 1400, mx: 'auto' }}>
-            {/* Encabezado */}
-            <Box sx={{ mb: 4 }}>
-                <Typography variant="h4" fontWeight="bold" gutterBottom>
-                    Planificación de Actividades 📋
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                    Crea y gestiona tareas semanales para tus estudiantes
-                </Typography>
+            {/* Header with Navigation */}
+            <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box>
+                    <Typography variant="h4" fontWeight="bold" gutterBottom>
+                        Planificación de Actividades 📋
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary">
+                        {view === 'history'
+                            ? 'Gestiona y supervisa las tareas asignadas a tus estudiantes.'
+                            : 'Define la nueva tarea o acuerdo.'}
+                    </Typography>
+                </Box>
+
+                {view === 'history' ? (
+                    <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={() => setView('create')}
+                        sx={{
+                            backgroundColor: '#667eea',
+                            fontWeight: 600,
+                            boxShadow: '0 4px 14px 0 rgba(102, 126, 234, 0.39)',
+                            '&:hover': { backgroundColor: '#5a6fd6' }
+                        }}
+                    >
+                        Nueva Actividad
+                    </Button>
+                ) : (
+                    <Button
+                        variant="outlined"
+                        startIcon={<ArrowBackIcon />}
+                        onClick={() => setView('history')}
+                        sx={{ fontWeight: 600 }}
+                    >
+                        Volver al Historial
+                    </Button>
+                )}
             </Box>
 
-            {/* Tabs */}
-            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-                <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)}>
-                    <Tab label="Nueva Actividad" />
-                    <Tab label="Historial de Acuerdos" />
-                </Tabs>
-            </Box>
-
-            {/* Tab 1: Nueva Actividad */}
-            {tabValue === 0 && (
-                <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
+            {/* View: Create Activity */}
+            {view === 'create' && (
+                <Card sx={{ borderRadius: 3, boxShadow: 2, mb: 4 }}>
                     <CardContent sx={{ p: 4 }}>
                         <Typography variant="h6" fontWeight="bold" gutterBottom>
-                            Crear Nueva Actividad
+                            Crear Nueva Actividad/Acuerdo
                         </Typography>
                         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                            Define la tarea semanal que el estudiante debe completar. {preselectedStudent && `Actividad para: ${preselectedStudent.name}`}
+                            Completa el formulario para asignar una actividad.
+                            {preselectedStudent && view === 'create' && <strong style={{ color: '#667eea' }}> Asignando a: {preselectedStudent.name}</strong>}
                         </Typography>
 
                         <ActivityForm
@@ -194,17 +200,17 @@ function ActivityPlanning() {
                 </Card>
             )}
 
-            {/* Tab 2: Historial */}
-            {tabValue === 1 && (
+            {/* View: History (Main View) */}
+            {view === 'history' && (
                 <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
                     <CardContent sx={{ p: 3 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
                             <Box>
                                 <Typography variant="h6" fontWeight="bold">
-                                    Historial de Acuerdos
+                                    Historial de Actividades
                                 </Typography>
                                 <Typography variant="body2" color="text.secondary">
-                                    Actividades asignadas en semanas anteriores
+                                    Registro de actividades y su estado de cumplimiento
                                 </Typography>
                             </Box>
 
@@ -219,7 +225,7 @@ function ActivityPlanning() {
                                     sx={{ backgroundColor: '#fff3e0', color: '#ff9800', fontWeight: 600 }}
                                 />
                                 <Chip
-                                    label={`${history.filter(h => h.status === 'no_cumplido').length} No Cumplidos`}
+                                    label={`${history.filter(h => h.status === 'no_cumplido').length} Incumplidos`}
                                     sx={{ backgroundColor: '#ffebee', color: '#f44336', fontWeight: 600 }}
                                 />
                             </Box>
@@ -229,11 +235,10 @@ function ActivityPlanning() {
                             <Table>
                                 <TableHead>
                                     <TableRow>
-                                        <TableCell><strong>Asignación</strong></TableCell>
+                                        <TableCell><strong>Fecha</strong></TableCell>
                                         <TableCell><strong>Estudiante</strong></TableCell>
                                         <TableCell><strong>Actividad</strong></TableCell>
-                                        <TableCell><strong>Fecha Límite</strong></TableCell>
-                                        <TableCell><strong>Prioridad</strong></TableCell>
+                                        <TableCell><strong>Límite</strong></TableCell>
                                         <TableCell><strong>Estado</strong></TableCell>
                                         <TableCell align="center"><strong>Acciones</strong></TableCell>
                                     </TableRow>
@@ -253,7 +258,6 @@ function ActivityPlanning() {
                                                 </Typography>
                                             </TableCell>
                                             <TableCell>{item.deadline}</TableCell>
-                                            <TableCell>{getPriorityChip(item.priority)}</TableCell>
                                             <TableCell>{getStatusChip(item.status)}</TableCell>
                                             <TableCell align="center">
                                                 <IconButton size="small" color="primary">

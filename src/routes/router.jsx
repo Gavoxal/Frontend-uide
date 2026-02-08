@@ -34,6 +34,8 @@ import ActivityPlanning from "../pages/Tutor/ActivityPlanning";
 import ReviewFeedback from "../pages/Tutor/ReviewFeedback";
 import MeetingLog from "../pages/Tutor/MeetingLog";
 import TutorProfile from "../pages/Tutor/Profile";
+import TutorStudents from "../pages/Tutor/Students";
+import PublicDefense from "../pages/Tutor/PublicDefense";
 
 // Reviewer pages
 import ReviewerDashboard from "../pages/Reviewer/Dashboard";
@@ -107,8 +109,10 @@ function RouterPages() {
                     <Route element={<DashboardLayout />}>
                         <Route index element={<TutorDashboard />} />
                         <Route path="dashboard" element={<TutorDashboard />} />
+                        <Route path="students" element={<TutorStudents />} />
                         <Route path="planning" element={<ActivityPlanning />} />
                         <Route path="review" element={<ReviewFeedback />} />
+                        <Route path="defenses" element={<PublicDefense />} />
                         <Route path="meetings" element={<MeetingLog />} />
                         <Route path="profile" element={<TutorProfile />} />
                     </Route>

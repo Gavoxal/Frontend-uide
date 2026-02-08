@@ -51,7 +51,7 @@ function StudentDashboard() {
                 {/* Encabezado */}
                 <Box sx={{ mb: 4 }}>
                     <Typography variant="h4" fontWeight="bold" gutterBottom>
-                        ¡Bienvenido, {user?.name || "Estudiante"}! 👋
+                        ¡Bienvenido, {user?.nombres || user?.nombre || user?.name || "Estudiante"}! 👋
                     </Typography>
                     <Typography variant="body1" color="text.secondary">
                         Estás a un paso de comenzar tu trabajo de titulación
@@ -213,7 +213,7 @@ function StudentDashboard() {
             {/* Encabezado con saludo personalizado */}
             <Box sx={{ mb: 4 }}>
                 <Typography variant="h4" fontWeight="bold" gutterBottom>
-                    ¡Hola, {user?.name || "Estudiante"}! 👋
+                    ¡Hola, {user?.nombres || user?.nombre || user?.name || "Estudiante"}! 👋
                 </Typography>
                 <Typography variant="body1" color="text.secondary">
                     Panel de seguimiento de tu trabajo de titulación

@@ -12,25 +12,67 @@ import { getPrerequisites, prerequisitesToRequirements } from "../../storage/pre
 import ProfileHeader from "../../components/Profile/ProfileHeader";
 import InfoCard from "../../components/Profile/InfoCard";
 import RequirementsCard from "../../components/Profile/RequirementsCard";
+import { UserService } from "../../services/user.service";
 
 function StudentProfile() {
     const user = getDataUser();
 
-    // Datos del estudiante basados en la imagen de la cédula
-    const [studentData] = useState({
-        name: "Acacho Yangari Daddy Abel",
-        initials: "AY",
-        email: "oaaacachoya@uide.edu.ec",
-        cedula: "1900714773",
-        sede: "UIDE - Loja",
-        carrera: "Ingeniería en Tecnologías de Información",
-        matla: "ITIL_MAI.2019",
-        semestre: "8vo Semestre",
-        status: "Activo",
-        telefono: "+593 986288316",
-        direccion: "Loja",
-        ubicacion: "ZAMORA, ECUADOR"
+    const [studentData, setStudentData] = useState({
+        name: user?.nombres + " " + user?.apellidos || user?.nombre || "Cargando...",
+        initials: (user?.nombres?.[0] || "") + (user?.apellidos?.[0] || ""),
+        email: user?.correo || "",
+        cedula: user?.cedula || "No registrada",
+        sede: "UIDE - Loja", // Valor por defecto, ajustar si el backend lo devuelve
+        carrera: "Ingeniería en Tecnologías de Información", // Valor por defecto
+        matla: "ITIL_MAI.2019", // Valor por defecto
+        semestre: "8vo Semestre", // Valor por defecto
+        status: user?.estado || "Activo",
+        telefono: user?.telefono || "No registrado",
+        direccion: user?.ciudad || "No registrada",
+        ubicacion: "ZAMORA, ECUADOR" // Valor por defecto
     });
+
+
+
+    // Cargar datos frescos del backend
+    useEffect(() => {
+        const fetchUserData = async () => {
+            if (user?.id) {
+                try {
+                    const freshData = await UserService.getById(user.id);
+                    if (freshData) {
+                        console.log("Full User Data:", freshData);
+
+                        // Intentar obtener datos del perfil (si vienen anidados o planos)
+                        // Ajustado basado en logs: estudiantePerfil (camelCase, singular)
+                        const profile = freshData.estudiantePerfil || freshData.estudiantesperfil || freshData.estudiantesPerfil || freshData;
+                        console.log("Profile Data extracted:", profile);
+
+                        setStudentData(prev => ({
+                            ...prev,
+                            name: `${freshData.nombres} ${freshData.apellidos}`,
+                            initials: `${freshData.nombres?.[0] || ''}${freshData.apellidos?.[0] || ''}`,
+                            // Ajustado: correoInstitucional (camelCase)
+                            email: freshData.correoInstitucional || freshData.correo,
+                            cedula: freshData.cedula || prev.cedula,
+                            telefono: freshData.telefono || prev.telefono,
+                            // Mapeo de campos de estudiantesperfil
+                            sede: profile.sede || prev.sede,
+                            carrera: profile.escuela || prev.carrera,
+                            matla: profile.mallla || profile.malla || prev.matla,
+                            direccion: profile.ciudad || prev.direccion, // Mapear ciudad a dirección
+                            ubicacion: profile.ciudad ? `${profile.ciudad.toUpperCase()}, ECUADOR` : prev.ubicacion,
+                            status: freshData.estado || prev.status
+                        }));
+                    }
+                } catch (error) {
+                    console.error("Error cargando perfil:", error);
+                }
+            }
+        };
+
+        fetchUserData();
+    }, [user?.id]);
 
     // Cargar requisitos desde prerrequisitos guardados
     const [requirements, setRequirements] = useState(() => {
@@ -60,7 +102,6 @@ function StudentProfile() {
     // Preparar items de información personal
     const personalInfoItems = [
         { icon: <EmailIcon color="primary" />, label: "Email", value: studentData.email },
-        { icon: <PhoneIcon color="primary" />, label: "Teléfono", value: studentData.telefono },
         { icon: <LocationIcon color="primary" />, label: "Dirección", value: studentData.direccion },
         { icon: <SchoolIcon color="primary" />, label: "Sede", value: studentData.sede },
         { icon: <AssignmentIcon color="primary" />, label: "Cédula", value: studentData.cedula },
@@ -115,7 +156,7 @@ function StudentProfile() {
             {/* Main Content Grid */}
             <Grid container spacing={3}>
                 {/* Personal Information */}
-                <Grid item xs={12} md={8}>
+                <Grid item xs={12} sm={6} md={6}>
                     <InfoCard
                         title="Información Personal"
                         items={personalInfoItems}
@@ -124,7 +165,7 @@ function StudentProfile() {
                 </Grid>
 
                 {/* Requirements List */}
-                <Grid item xs={12} md={4}>
+                <Grid item xs={12} sm={6} md={6}>
                     <RequirementsCard
                         requirements={requirements}
                         onView={handleRequirementView}

@@ -5,51 +5,22 @@ import {
     Typography,
     TextField,
     Button,
-    Radio,
-    RadioGroup,
-    FormControlLabel,
-    FormControl,
-    FormLabel,
-    Checkbox,
     Divider,
-    Chip,
-    IconButton,
-    Link
+    IconButton
 } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import WarningIcon from '@mui/icons-material/Warning';
-import CancelIcon from '@mui/icons-material/Cancel';
-import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 
 function FeedbackPanel({ submission, onSubmit, onCancel }) {
     const [feedback, setFeedback] = useState({
-        observations: '',
-        validationStatus: 'aprobado', // aprobado, correcciones, no_cumplido
-        readyForGrading: false
+        observations: ''
     });
 
     const handleSubmit = () => {
         onSubmit?.(feedback);
     };
 
-    const getValidationIcon = (status) => {
-        const icons = {
-            aprobado: <CheckCircleIcon sx={{ color: '#4caf50' }} />,
-            correcciones: <WarningIcon sx={{ color: '#ff9800' }} />,
-            no_cumplido: <CancelIcon sx={{ color: '#f44336' }} />
-        };
-        return icons[status];
-    };
 
-    const getValidationColor = (status) => {
-        const colors = {
-            aprobado: '#4caf50',
-            correcciones: '#ff9800',
-            no_cumplido: '#f44336'
-        };
-        return colors[status];
-    };
 
     return (
         <Box sx={{ display: 'flex', gap: 3, height: '100%' }}>
@@ -121,13 +92,7 @@ function FeedbackPanel({ submission, onSubmit, onCancel }) {
                         </IconButton>
                     </Paper>
 
-                    {submission?.fileLink && (
-                        <Box sx={{ mt: 1 }}>
-                            <Link href={submission.fileLink} target="_blank" rel="noopener">
-                                Abrir enlace del repositorio
-                            </Link>
-                        </Box>
-                    )}
+                    {/* Link eliminado */}
                 </Box>
 
                 {/* Comentarios del estudiante */}
@@ -174,105 +139,7 @@ function FeedbackPanel({ submission, onSubmit, onCancel }) {
                     />
                 </Box>
 
-                {/* Estado de Validación */}
-                <Box sx={{ mb: 3 }}>
-                    <FormControl component="fieldset">
-                        <FormLabel component="legend">
-                            <Typography variant="subtitle2" fontWeight="600">
-                                Estado de Validación
-                            </Typography>
-                        </FormLabel>
-                        <RadioGroup
-                            value={feedback.validationStatus}
-                            onChange={(e) => setFeedback({ ...feedback, validationStatus: e.target.value })}
-                        >
-                            <FormControlLabel
-                                value="aprobado"
-                                control={<Radio />}
-                                label={
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <CheckCircleIcon sx={{ color: '#4caf50' }} />
-                                        <Box>
-                                            <Typography variant="body2" fontWeight="600">
-                                                Aprobado (Visto Bueno)
-                                            </Typography>
-                                            <Typography variant="caption" color="text.secondary">
-                                                El avance es sólido y cumple con lo solicitado
-                                            </Typography>
-                                        </Box>
-                                    </Box>
-                                }
-                            />
-                            <FormControlLabel
-                                value="correcciones"
-                                control={<Radio />}
-                                label={
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <WarningIcon sx={{ color: '#ff9800' }} />
-                                        <Box>
-                                            <Typography variant="body2" fontWeight="600">
-                                                Requiere Correcciones
-                                            </Typography>
-                                            <Typography variant="caption" color="text.secondary">
-                                                El estudiante debe volver a subir con ajustes
-                                            </Typography>
-                                        </Box>
-                                    </Box>
-                                }
-                            />
-                            <FormControlLabel
-                                value="no_cumplido"
-                                control={<Radio />}
-                                label={
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <CancelIcon sx={{ color: '#f44336' }} />
-                                        <Box>
-                                            <Typography variant="body2" fontWeight="600">
-                                                No Cumplido
-                                            </Typography>
-                                            <Typography variant="caption" color="text.secondary">
-                                                No se presentó lo solicitado
-                                            </Typography>
-                                        </Box>
-                                    </Box>
-                                }
-                            />
-                        </RadioGroup>
-                    </FormControl>
-                </Box>
-
-                <Divider sx={{ my: 2 }} />
-
-                {/* Check de "Listo para Calificación" */}
-                <Paper sx={{
-                    p: 2,
-                    backgroundColor: feedback.readyForGrading ? '#e8f5e9' : 'white',
-                    border: `2px solid ${feedback.readyForGrading ? '#4caf50' : '#e0e0e0'}`,
-                    transition: 'all 0.3s'
-                }}>
-                    <FormControlLabel
-                        control={
-                            <Checkbox
-                                checked={feedback.readyForGrading}
-                                onChange={(e) => setFeedback({ ...feedback, readyForGrading: e.target.checked })}
-                                disabled={feedback.validationStatus !== 'aprobado'}
-                            />
-                        }
-                        label={
-                            <Box>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <NotificationsActiveIcon sx={{ fontSize: 20 }} />
-                                    <Typography variant="body2" fontWeight="600">
-                                        Listo para Calificación
-                                    </Typography>
-                                </Box>
-                                <Typography variant="caption" color="text.secondary">
-                                    Al marcar esto, se notificará automáticamente a la Ing. Lorena (Coordinadora de Integración)
-                                </Typography>
-                            </Box>
-                        }
-                    />
-                </Paper>
+                {/* Secciones de Validación y Listo para Calificación eliminadas */}
 
                 {/* Botones de acción */}
                 <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
@@ -289,15 +156,14 @@ function FeedbackPanel({ submission, onSubmit, onCancel }) {
                         onClick={handleSubmit}
                         disabled={!feedback.observations.trim()}
                         sx={{
-                            backgroundColor: getValidationColor(feedback.validationStatus),
+                            backgroundColor: '#667eea',
                             '&:hover': {
-                                backgroundColor: getValidationColor(feedback.validationStatus),
-                                filter: 'brightness(0.9)'
+                                backgroundColor: '#5a6fd6',
                             }
                         }}
-                        startIcon={getValidationIcon(feedback.validationStatus)}
+                        startIcon={<CheckCircleIcon />}
                     >
-                        Enviar Feedback
+                        Enviar Observaciones
                     </Button>
                 </Box>
             </Paper>

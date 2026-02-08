@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardContent, Box, Typography, Chip, IconButton, Divider } from '@mui/material';
+import { Card, CardContent, Box, Typography, Chip, IconButton, Divider, Grid } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
@@ -72,68 +72,74 @@ function MeetingCard({ meeting, onView, onEdit, onExportPdf }) {
                     </Typography>
                 </Box>
 
-                {/* Resumen de la reunión */}
-                <Box sx={{ mb: 2 }}>
-                    <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
-                        Resumen
-                    </Typography>
-                    <Typography
-                        variant="body2"
-                        sx={{
-                            display: '-webkit-box',
-                            WebkitLineClamp: 3,
-                            WebkitBoxOrient: 'vertical',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis'
-                        }}
-                    >
-                        {meeting.summary}
-                    </Typography>
-                </Box>
-
-                {/* Compromisos */}
-                {meeting.commitments && meeting.commitments.length > 0 && (
-                    <Box sx={{ mb: 2 }}>
-                        <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
-                            Compromisos ({meeting.commitments.length})
-                        </Typography>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                            {meeting.commitments.slice(0, 2).map((commitment, index) => (
-                                <Box key={index} sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-                                    <Box sx={{
-                                        width: 6,
-                                        height: 6,
-                                        borderRadius: '50%',
-                                        backgroundColor: '#667eea',
-                                        mt: 0.7,
-                                        flexShrink: 0
-                                    }} />
-                                    <Typography variant="caption" color="text.secondary">
-                                        {commitment}
-                                    </Typography>
-                                </Box>
-                            ))}
-                            {meeting.commitments.length > 2 && (
-                                <Typography variant="caption" color="primary" sx={{ ml: 2 }}>
-                                    +{meeting.commitments.length - 2} más
-                                </Typography>
-                            )}
+                <Grid container spacing={2}>
+                    {/* Columna Izquierda: Resumen */}
+                    <Grid item xs={12} md={6}>
+                        <Box sx={{ mb: 2 }}>
+                            <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
+                                Resumen
+                            </Typography>
+                            <Typography
+                                variant="body2"
+                                sx={{
+                                    display: '-webkit-box',
+                                    WebkitLineClamp: 4,
+                                    WebkitBoxOrient: 'vertical',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis'
+                                }}
+                            >
+                                {meeting.summary}
+                            </Typography>
                         </Box>
-                    </Box>
-                )}
+                    </Grid>
 
-                {/* Asistencia */}
-                <Box sx={{ mb: 2 }}>
-                    <Chip
-                        label={meeting.attended ? 'Estudiante asistió' : 'No asistió'}
-                        size="small"
-                        sx={{
-                            backgroundColor: meeting.attended ? '#e8f5e9' : '#ffebee',
-                            color: meeting.attended ? '#4caf50' : '#f44336',
-                            fontWeight: 600
-                        }}
-                    />
-                </Box>
+                    {/* Columna Derecha: Compromisos y Asistencia */}
+                    <Grid item xs={12} md={6} sx={{ borderLeft: { md: '1px solid #eee' }, pl: { md: 2 } }}>
+                        {meeting.commitments && meeting.commitments.length > 0 && (
+                            <Box sx={{ mb: 2 }}>
+                                <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
+                                    Compromisos ({meeting.commitments.length})
+                                </Typography>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                                    {meeting.commitments.slice(0, 3).map((commitment, index) => (
+                                        <Box key={index} sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                                            <Box sx={{
+                                                width: 6,
+                                                height: 6,
+                                                borderRadius: '50%',
+                                                backgroundColor: '#667eea',
+                                                mt: 0.7,
+                                                flexShrink: 0
+                                            }} />
+                                            <Typography variant="caption" color="text.secondary">
+                                                {commitment}
+                                            </Typography>
+                                        </Box>
+                                    ))}
+                                    {meeting.commitments.length > 3 && (
+                                        <Typography variant="caption" color="primary" sx={{ ml: 2 }}>
+                                            +{meeting.commitments.length - 3} más
+                                        </Typography>
+                                    )}
+                                </Box>
+                            </Box>
+                        )}
+
+                        {/* Asistencia */}
+                        <Box sx={{ mb: 2 }}>
+                            <Chip
+                                label={meeting.attended ? 'Estudiante asistió' : 'No asistió'}
+                                size="small"
+                                sx={{
+                                    backgroundColor: meeting.attended ? '#e8f5e9' : '#ffebee',
+                                    color: meeting.attended ? '#4caf50' : '#f44336',
+                                    fontWeight: 600
+                                }}
+                            />
+                        </Box>
+                    </Grid>
+                </Grid>
 
                 {/* Botones de acción */}
                 <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>

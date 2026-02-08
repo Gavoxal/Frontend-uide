@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { Box, Typography, Grid, Card, CardContent, Alert, AlertTitle, List, ListItem, ListItemText, Chip } from '@mui/material';
+import { Box, Typography, Grid, Card, CardContent } from '@mui/material';
 import { getDataUser } from '../../storage/user.model.jsx';
 import StudentCard from '../../components/studentcard.mui.component';
-import WarningIcon from '@mui/icons-material/Warning';
-import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
+
 import { useNavigate } from 'react-router-dom';
 
 // Mock data de estudiantes asignados
@@ -99,12 +98,7 @@ function TutorDashboard() {
     const delayed = students.filter(s => s.status === 'red').length;
     const onTrack = students.filter(s => s.status === 'green').length;
 
-    // Alertas/Notificaciones
-    const alerts = [
-        { id: 1, type: 'review', message: `${pendingReview} avances pendientes de revisión`, severity: 'warning' },
-        { id: 2, type: 'delayed', message: `${delayed} estudiantes con retraso`, severity: 'error' },
-        { id: 3, type: 'meeting', message: 'Reunión con Juan Pérez programada para mañana', severity: 'info' }
-    ];
+
 
     const handleViewStudent = (student) => {
         console.log('Ver detalles de:', student.name);
@@ -207,27 +201,7 @@ function TutorDashboard() {
             </Grid>
 
             {/* Sección de Alertas */}
-            {alerts.length > 0 && (
-                <Card sx={{ borderRadius: 3, boxShadow: 2, mb: 3 }}>
-                    <CardContent sx={{ p: 3 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                            <NotificationsActiveIcon sx={{ color: '#667eea' }} />
-                            <Typography variant="h6" fontWeight="bold">
-                                Notificaciones y Alertas
-                            </Typography>
-                        </Box>
-                        <List>
-                            {alerts.map((alert) => (
-                                <ListItem key={alert.id} sx={{ px: 0 }}>
-                                    <Alert severity={alert.severity} sx={{ width: '100%' }}>
-                                        {alert.message}
-                                    </Alert>
-                                </ListItem>
-                            ))}
-                        </List>
-                    </CardContent>
-                </Card>
-            )}
+            {/* Sección de Alertas eliminada */}
 
             {/* Lista de Estudiantes */}
             <Box sx={{ mb: 3 }}>

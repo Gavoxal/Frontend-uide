@@ -55,8 +55,10 @@ const MENU_BY_ROLE = {
     ],
     tutor: [
         { icon: <DashboardIcon />, label: "Dashboard", path: "/tutor/dashboard" },
-        { icon: <AssignmentIcon />, label: "Planificar Actividades", path: "/tutor/planning" },
+        { icon: <PeopleIcon />, label: "Estudiantes Asignados", path: "/tutor/students" },
+        { icon: <AssignmentIcon />, label: "Actividades", path: "/tutor/planning" },
         { icon: <RateReviewIcon />, label: "Revisar Avances", path: "/tutor/review" },
+        { icon: <GavelIcon />, label: "Defensas Públicas", path: "/tutor/defenses" },
         { icon: <EventNoteIcon />, label: "Bitácora de Reuniones", path: "/tutor/meetings" },
     ],
 
