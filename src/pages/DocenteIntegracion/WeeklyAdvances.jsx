@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Box,
     Accordion,
@@ -12,44 +12,95 @@ import {
     ListItemText,
     ListItemAvatar,
     Avatar,
-    Divider
+    Divider,
+    CircularProgress
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PendingIcon from '@mui/icons-material/Pending';
-import { weeksData } from './mockWeeks';
 import { useNavigate } from 'react-router-dom';
+import { ActivityService } from '../../services/activity.service';
 
 function WeeklyAdvances() {
     const navigate = useNavigate();
     const [expanded, setExpanded] = useState(false);
+    const [weeks, setWeeks] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    const loadData = async () => {
+        setLoading(true);
+        try {
+            const data = await ActivityService.getAllEvidencias();
+
+            // Agrupar por semana
+            const grouped = data.reduce((acc, ev) => {
+                const weekNum = ev.semana || 0;
+                if (!acc[weekNum]) {
+                    acc[weekNum] = {
+                        id: weekNum,
+                        label: `Semana ${weekNum}`,
+                        students: []
+                    };
+                }
+
+                acc[weekNum].students.push({
+                    id: ev.id, // ID de la evidencia
+                    name: ev.actividad?.propuesta?.estudiante
+                        ? `${ev.actividad.propuesta.estudiante.nombres} ${ev.actividad.propuesta.estudiante.apellidos}`
+                        : 'Estudiante Desconocido',
+                    tema: ev.actividad?.propuesta?.titulo || ev.actividad?.nombre || 'Sin título',
+                    status: ev.estadoRevisionDocente?.toLowerCase() || 'pending',
+                    submittedAt: ev.fechaEntrega?.split('T')[0] || 'N/A'
+                });
+                return acc;
+            }, {});
+
+            const sortedWeeks = Object.values(grouped).sort((a, b) => b.id - a.id);
+            setWeeks(sortedWeeks);
+        } catch (error) {
+            console.error("Error loading weekly advances:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        loadData();
+    }, []);
 
     const handleChange = (panel) => (event, isExpanded) => {
         setExpanded(isExpanded ? panel : false);
     };
 
-    const handleReviewClick = (weekId, studentId) => {
-        navigate(`/docente-integracion/review/${weekId}/${studentId}`);
+    const handleReviewClick = (evidenciaId) => {
+        navigate(`/docente-integracion/review/0/${evidenciaId}`); // weekId is 0 because we have evidenciaId specifically
     };
 
     const getStatusChip = (status) => {
-        switch (status) {
-            case 'reviewed':
-                return <Chip icon={<CheckCircleIcon />} label="Revisado" color="success" size="small" />;
-            case 'pending':
-                return <Chip icon={<PendingIcon />} label="Pendiente" color="warning" size="small" />;
-            default:
-                return <Chip label={status} size="small" />;
-        }
+        const config = {
+            aprobado: { icon: <CheckCircleIcon />, label: 'Aprobado', color: 'success' },
+            rechazado: { icon: <PendingIcon />, label: 'Rechazado', color: 'error' },
+            pendiente: { icon: <PendingIcon />, label: 'Pendiente', color: 'warning' },
+            pending: { icon: <PendingIcon />, label: 'Pendiente', color: 'warning' }
+        };
+        const current = config[status] || config.pendiente;
+        return <Chip icon={current.icon} label={current.label} color={current.color} size="small" />;
     };
 
-    // Validación de seguridad para la data
-    if (!weeksData || weeksData.length === 0) {
+    if (loading) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 8 }}>
+                <CircularProgress />
+            </Box>
+        );
+    }
+
+    if (weeks.length === 0) {
         return (
             <Box sx={{ p: 4, textAlign: 'center' }}>
-                <Typography variant="h6" color="error">
-                    No se pudieron cargar los datos de las semanas.
+                <Typography variant="h6" color="text.secondary">
+                    No se han encontrado entregas de avances todavía.
                 </Typography>
             </Box>
         );
@@ -58,7 +109,10 @@ function WeeklyAdvances() {
     return (
         <Box>
             <Box sx={{ p: 3 }}>
-                {weeksData.map((week) => {
+                <Typography variant="h4" sx={{ mb: 4, fontWeight: 'bold' }}>
+                    Avances Semanales 📅
+                </Typography>
+                {weeks.map((week) => {
                     const pendingCount = week.students.filter(s => s.status === 'pending').length;
 
                     return (
@@ -99,9 +153,9 @@ function WeeklyAdvances() {
                                     ) : (
                                         week.students.map((student, index) => (
                                             <Box key={student.id}>
-                                                <ListItem alignItems="flex-start">
+                                                <ListItem alignItems="flex-start" sx={{ py: 2 }}>
                                                     <ListItemAvatar>
-                                                        <Avatar sx={{ bgcolor: student.status === 'reviewed' ? '#4caf50' : '#ff9800' }}>
+                                                        <Avatar sx={{ bgcolor: student.status === 'aprobado' ? '#4caf50' : '#ff9800' }}>
                                                             <AssignmentIcon />
                                                         </Avatar>
                                                     </ListItemAvatar>
@@ -117,10 +171,12 @@ function WeeklyAdvances() {
                                                         }
                                                         secondary={
                                                             <>
-                                                                <Typography component="span" variant="body2" color="text.primary">
+                                                                <Typography component="span" variant="body2" color="text.primary" sx={{ display: 'block', mt: 0.5 }}>
                                                                     {student.tema}
                                                                 </Typography>
-                                                                {` — Enviado el: ${student.submittedAt}`}
+                                                                <Typography variant="caption">
+                                                                    Enviado el: {student.submittedAt}
+                                                                </Typography>
                                                             </>
                                                         }
                                                     />
@@ -128,10 +184,10 @@ function WeeklyAdvances() {
                                                     <Button
                                                         variant="contained"
                                                         size="small"
-                                                        sx={{ ml: 2, alignSelf: 'center', bgcolor: '#000A9B' }}
-                                                        onClick={() => handleReviewClick(week.id, student.id)}
+                                                        sx={{ ml: 2, alignSelf: 'center', bgcolor: '#000A9B', textTransform: 'none' }}
+                                                        onClick={() => handleReviewClick(student.id)}
                                                     >
-                                                        Revisar
+                                                        Revisar Avance
                                                     </Button>
                                                 </ListItem>
                                                 {index < week.students.length - 1 && <Divider variant="inset" component="li" />}

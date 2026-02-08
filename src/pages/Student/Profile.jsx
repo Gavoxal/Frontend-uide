@@ -10,25 +10,27 @@ import { useState, useEffect } from "react";
 import { getDataUser } from "../../storage/user.model.jsx";
 import { getPrerequisites, prerequisitesToRequirements } from "../../storage/prerequisites.model";
 import ProfileHeader from "../../components/Profile/ProfileHeader";
-import InfoCard from "../../components/Profile/InfoCard";
-import RequirementsCard from "../../components/Profile/RequirementsCard";
+import InfoCardModern from "../../components/Profile/InfoCardModern";
+import RequirementsCardModern from "../../components/Profile/RequirementsCardModern";
+import { UserService } from "../../services/user.service";
+import { PrerequisiteService } from "../../services/prerequisites.service";
 
 function StudentProfile() {
     const user = getDataUser();
 
     const [studentData, setStudentData] = useState({
-        name: user?.nombres + " " + user?.apellidos || user?.nombre || "Cargando...",
-        initials: (user?.nombres?.[0] || "") + (user?.apellidos?.[0] || ""),
-        email: user?.correo || "",
+        name: (user?.nombres && user?.apellidos) ? `${user.nombres} ${user.apellidos}` : (user?.name || "Cargando..."),
+        initials: ((user?.nombres?.[0] || user?.name?.[0] || "") + (user?.apellidos?.[0] || user?.lastName?.[0] || "")) || "U",
+        email: user?.correo || user?.email || "",
         cedula: user?.cedula || "No registrada",
-        sede: "UIDE - Loja", // Valor por defecto, ajustar si el backend lo devuelve
-        carrera: "Ingeniería en Tecnologías de Información", // Valor por defecto
-        matla: "ITIL_MAI.2019", // Valor por defecto
-        semestre: "8vo Semestre", // Valor por defecto
+        sede: user?.sede || "UIDE - Loja",
+        carrera: user?.carrera || "Ingeniería en Tecnologías de Información",
+        matla: user?.malla || "ITIL_MAI.2019",
+        semestre: user?.semestre || "8vo Semestre",
         status: user?.estado || "Activo",
         telefono: user?.telefono || "No registrado",
-        direccion: user?.ciudad || "No registrada",
-        ubicacion: "ZAMORA, ECUADOR" // Valor por defecto
+        direccion: user?.direccion || user?.ciudad || "No registrada",
+        ubicacion: user?.ubicacion || (user?.ciudad ? `${user.ciudad.toUpperCase()}, ECUADOR` : "ZAMORA, ECUADOR")
     });
 
 
@@ -47,12 +49,15 @@ function StudentProfile() {
                         const profile = freshData.estudiantePerfil || freshData.estudiantesperfil || freshData.estudiantesPerfil || freshData;
                         console.log("Profile Data extracted:", profile);
 
+                        const firstName = freshData.nombres || freshData.nombre || user.nombres || user.name || "";
+                        const lastName = freshData.apellidos || freshData.apellido || user.apellidos || user.lastName || "";
+
                         setStudentData(prev => ({
                             ...prev,
-                            name: `${freshData.nombres} ${freshData.apellidos}`,
-                            initials: `${freshData.nombres?.[0] || ''}${freshData.apellidos?.[0] || ''}`,
+                            name: (firstName && lastName) ? `${firstName} ${lastName}` : (firstName || lastName || "Usuario Estudiante"),
+                            initials: ((firstName?.[0] || "") + (lastName?.[0] || "")) || "U",
                             // Ajustado: correoInstitucional (camelCase)
-                            email: freshData.correoInstitucional || freshData.correo,
+                            email: freshData.correoInstitucional || freshData.correo || prev.email,
                             cedula: freshData.cedula || prev.cedula,
                             telefono: freshData.telefono || prev.telefono,
                             // Mapeo de campos de estudiantesperfil
@@ -73,50 +78,69 @@ function StudentProfile() {
         fetchUserData();
     }, [user?.id]);
 
-    // Cargar requisitos desde prerrequisitos guardados
-    const [requirements, setRequirements] = useState(() => {
-        const prerequisites = getPrerequisites();
-        return prerequisitesToRequirements(prerequisites);
-    });
+    // Cargar requisitos desde backend (Endpoint optimizado)
+    const [requirements, setRequirements] = useState([]);
 
-    // Actualizar requisitos cuando se recarga la página o cambian los datos
     useEffect(() => {
-        const updateRequirements = () => {
-            const prerequisites = getPrerequisites();
-            setRequirements(prerequisitesToRequirements(prerequisites));
+        const fetchStatus = async () => {
+            if (!user?.id) return;
+
+            try {
+                // Usar getByStudent que ya tiene el mapeo dinámico y robusto
+                const data = await PrerequisiteService.getByStudent(user.id);
+                console.log("Prerequisites Profile Load:", data);
+
+                const apiPrerequisites = {
+                    english: { completed: false, verified: false },
+                    internship: { completed: false, verified: false },
+                    community: { completed: false, verified: false }
+                };
+
+                if (Array.isArray(data)) {
+                    data.forEach(item => {
+                        const key = item.name; // 'english', 'internship', 'community' mapeado por el servicio
+                        if (apiPrerequisites[key]) {
+                            apiPrerequisites[key] = {
+                                completed: item.status === 'pending' || item.status === 'approved', // Tiene archivo o está aprobado
+                                verified: item.status === 'approved'    // Está verificado/aprobado
+                            };
+                        }
+                    });
+                }
+
+                // Convertir al formato de la tarjeta
+                setRequirements(prerequisitesToRequirements(apiPrerequisites));
+
+            } catch (error) {
+                console.error("Error fetching prerequisites status:", error);
+                setRequirements(prerequisitesToRequirements({
+                    english: { completed: false, verified: false },
+                    internship: { completed: false, verified: false },
+                    community: { completed: false, verified: false }
+                }));
+            }
         };
 
-        // Actualizar al montar
-        updateRequirements();
-
-        // Escuchar cambios en localStorage desde otras pestañas
-        window.addEventListener('storage', updateRequirements);
-
-        // Limpiar listener al desmontar
-        return () => {
-            window.removeEventListener('storage', updateRequirements);
-        };
-    }, []);
+        fetchStatus();
+    }, [user?.id]);
 
     // Preparar items de información personal
     const personalInfoItems = [
-        { icon: <EmailIcon color="primary" />, label: "Email", value: studentData.email },
-        { icon: <LocationIcon color="primary" />, label: "Dirección", value: studentData.direccion },
-        { icon: <SchoolIcon color="primary" />, label: "Sede", value: studentData.sede },
-        { icon: <AssignmentIcon color="primary" />, label: "Cédula", value: studentData.cedula },
-        { icon: <SchoolIcon color="primary" />, label: "Carrera", value: studentData.carrera },
-        { icon: <AssignmentIcon color="primary" />, label: "Matla", value: studentData.matla }
+        { icon: <EmailIcon />, label: "Email", value: studentData.email },
+        { icon: <LocationIcon />, label: "Dirección", value: studentData.direccion },
+        { icon: <SchoolIcon />, label: "Sede", value: studentData.sede },
+        { icon: <AssignmentIcon />, label: "Cédula", value: studentData.cedula },
+        { icon: <SchoolIcon />, label: "Carrera", value: studentData.carrera },
+        { icon: <AssignmentIcon />, label: "Malla", value: studentData.matla }
     ];
 
-    // State for password change dialog
-    const [openPasswordDialog, setOpenPasswordDialog] = useState(false);
-
     // Handlers
-    const handleChangePassword = () => setOpenPasswordDialog(true);
-    const handlePasswordSubmit = (passwordData) => {
-        console.log("Cambiar contraseña:", passwordData);
-        // TODO: Implement API call to change password
-        alert("Contraseña cambiada exitosamente");
+    const handleEditProfile = () => {
+        console.log("Editar perfil");
+    };
+
+    const handleEditCover = () => {
+        console.log("Editar portada");
     };
 
     const handleEditPersonalInfo = () => {
@@ -149,18 +173,16 @@ function StudentProfile() {
 
             {/* Profile Header Card */}
             <ProfileHeader
-                name={studentData.name}
-                subtitle={`Estudiante de ${studentData.carrera}`}
-                initials={studentData.initials}
-                tags={[studentData.semestre, studentData.status]}
-                onChangePassword={handleChangePassword}
+                studentData={studentData}
+                onEditProfile={handleEditProfile}
+                onEditCover={handleEditCover}
             />
 
             {/* Main Content Grid */}
             <Grid container spacing={3}>
                 {/* Personal Information */}
                 <Grid item xs={12} sm={6} md={6}>
-                    <InfoCard
+                    <InfoCardModern
                         title="Información Personal"
                         items={personalInfoItems}
                         onEdit={handleEditPersonalInfo}
@@ -169,7 +191,7 @@ function StudentProfile() {
 
                 {/* Requirements List */}
                 <Grid item xs={12} sm={6} md={6}>
-                    <RequirementsCard
+                    <RequirementsCardModern
                         requirements={requirements}
                         onView={handleRequirementView}
                         onEdit={handleRequirementEdit}
@@ -177,13 +199,6 @@ function StudentProfile() {
                     />
                 </Grid>
             </Grid>
-
-            {/* Password Change Dialog */}
-            <ChangePasswordDialog
-                open={openPasswordDialog}
-                onClose={() => setOpenPasswordDialog(false)}
-                onSubmit={handlePasswordSubmit}
-            />
         </Box>
     );
 }

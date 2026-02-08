@@ -24,84 +24,153 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import PendingIcon from '@mui/icons-material/Pending';
 import AddIcon from '@mui/icons-material/Add';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { useEffect } from 'react';
+import { ActivityService } from '../../services/activity.service';
+import { TutorService } from '../../services/tutor.service';
+import LinearProgress from '@mui/material/LinearProgress';
+import Alert from '@mui/material/Alert';
+import Snackbar from '@mui/material/Snackbar';
 
-// Mock data de estudiantes
-const MOCK_STUDENTS = [
-    { id: 1, name: "Juan Pérez", thesis: "Sistema de IoT para agricultura" },
-    { id: 2, name: "María García", thesis: "App móvil de gestión académica" },
-    { id: 3, name: "Carlos López", thesis: "Reconocimiento facial con Deep Learning" },
-    { id: 4, name: "Ana Martínez", thesis: "E-commerce con microservicios" },
-    { id: 5, name: "Luis Rodríguez", thesis: "Gestión hospitalaria con blockchain" },
-    { id: 6, name: "Sofia Hernández", thesis: "Chatbot con NLP" }
-];
-
-// Mock data de historial de acuerdos
-const MOCK_HISTORY = [
-    {
-        id: 1,
-        assignedDate: "2026-01-27",
-        studentName: "Juan Pérez",
-        activity: "Implementación de sensores DHT22",
-        deadline: "2026-02-03",
-        status: "cumplido",
-        priority: "alta"
-    },
-    {
-        id: 2,
-        assignedDate: "2026-01-27",
-        studentName: "María García",
-        activity: "Módulo de autenticación JWT",
-        deadline: "2026-02-03",
-        status: "pendiente",
-        priority: "media"
-    },
-    {
-        id: 3,
-        assignedDate: "2026-01-20",
-        studentName: "Carlos López",
-        activity: "Entrenamiento de modelo CNN",
-        deadline: "2026-01-27",
-        status: "no_cumplido",
-        priority: "alta"
-    },
-    {
-        id: 4,
-        assignedDate: "2026-01-27",
-        studentName: "Ana Martínez",
-        activity: "Implementación de Gateway API",
-        deadline: "2026-02-03",
-        status: "cumplido",
-        priority: "media"
-    },
-    {
-        id: 5,
-        assignedDate: "2026-01-27",
-        studentName: "Luis Rodríguez",
-        activity: "Smart Contracts en Solidity",
-        deadline: "2026-02-03",
-        status: "pendiente",
-        priority: "alta"
-    }
-];
 
 function ActivityPlanning() {
     const location = useLocation();
     const preselectedStudent = location.state?.student;
 
-    // View state: 'history' | 'create'
-    // If student is passed in state, defaults to create to jump right in
     const [view, setView] = useState(preselectedStudent ? 'create' : 'history');
-    const [history] = useState(MOCK_HISTORY);
+    const [history, setHistory] = useState([]);
+    const [students, setStudents] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [alertState, setAlertState] = useState({ open: false, message: '', severity: 'success' });
 
-    const handleSubmit = (data) => {
-        console.log('Actividad creada:', data);
-        alert('Actividad asignada y estudiante notificado correctamente');
-        setView('history');
+    const loadHistory = async (studentList, preselected = null) => {
+        try {
+            let allActivities = [];
+            if (preselected?.propuesta?.id) {
+                const activities = await ActivityService.getByPropuesta(preselected.propuesta.id);
+                allActivities = activities.map(a => ({
+                    ...a,
+                    studentName: preselected.name
+                }));
+            } else {
+                // Fetch activities for all students who have a proposal
+                const historyPromises = studentList
+                    .filter(s => s.propuestaId)
+                    .map(async (s) => {
+                        try {
+                            const activities = await ActivityService.getByPropuesta(s.propuestaId);
+                            return activities.map(a => ({
+                                ...a,
+                                studentName: s.name
+                            }));
+                        } catch (e) {
+                            return [];
+                        }
+                    });
+                const results = await Promise.all(historyPromises);
+                allActivities = results.flat();
+            }
+
+            allActivities.sort((a, b) => {
+                const dateA = a.createdAt || a.fechaAsignacion || a.fecha_asignacion || a.fechaCreacion || a.fecha_creacion || 0;
+                const dateB = b.createdAt || b.fechaAsignacion || b.fecha_asignacion || b.fechaCreacion || b.fecha_creacion || 0;
+                return new Date(dateB) - new Date(dateA);
+            });
+
+            setHistory(allActivities.map(a => {
+                // Extremely greedy date mapping
+                const createDate = a.createdAt || a.fechaAsignacion || a.fecha_asignacion || a.fechaCreacion || a.fecha_creacion;
+                const deliveryDate = a.fechaEntrega || a.fecha_entrega || a.fechaVencimiento || a.fecha_vencimiento || a.deadline;
+
+                const formatDate = (dateValue) => {
+                    if (!dateValue) return null;
+                    const d = new Date(dateValue);
+                    return isNaN(d.getTime()) ? null : d.toLocaleDateString();
+                };
+
+                return {
+                    id: a.id,
+                    assignedDate: formatDate(createDate) || 'N/A',
+                    studentName: a.studentName,
+                    activity: a.nombre,
+                    description: a.descripcion,
+                    deadline: formatDate(deliveryDate) || 'Sin fecha',
+                    status: a.estado?.toLowerCase() || 'pendiente',
+                    priority: 'media'
+                };
+            }));
+        } catch (error) {
+            console.error("Error loading history:", error);
+        }
+    };
+
+    useEffect(() => {
+        const loadInitialData = async () => {
+            setLoading(true);
+            try {
+                // 1. Cargar lista de estudiantes
+                const tutorStudents = await TutorService.getAssignedStudents();
+                const mappedStudents = tutorStudents.map(s => ({
+                    id: s.id,
+                    name: `${s.nombres} ${s.apellidos}`,
+                    thesis: s.propuesta?.titulo || 'Sin propuesta',
+                    propuestaId: s.propuesta?.id
+                }));
+                setStudents(mappedStudents);
+
+                // 2. Cargar historial (específico o general)
+                await loadHistory(mappedStudents, preselectedStudent);
+            } catch (error) {
+                console.error("Error loading initial data:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadInitialData();
+    }, [preselectedStudent]);
+
+    const handleSubmit = async (formData) => {
+        setLoading(true);
+        try {
+            // Encontrar el estudiante para obtener el propuestaId
+            const student = students.find(s => s.id === formData.studentId);
+            if (!student?.propuestaId) {
+                throw new Error("El estudiante seleccionado no tiene una propuesta activa vinculada.");
+            }
+
+            const activityData = {
+                nombre: formData.title,
+                descripcion: formData.description,
+                propuestaId: student.propuestaId,
+                tipo: 'DOCENCIA',
+                fechaEntrega: formData.deadline // Agregamos la fecha de entrega
+            };
+
+            await ActivityService.create(activityData);
+
+            setAlertState({
+                open: true,
+                message: 'Actividad asignada y estudiante notificado correctamente',
+                severity: 'success'
+            });
+
+            // Recargar historial antes de cambiar la vista
+            await loadHistory(students, preselectedStudent);
+            setView('history');
+        } catch (error) {
+            setAlertState({
+                open: true,
+                message: error.message || 'Error al crear la actividad',
+                severity: 'error'
+            });
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleDraft = (data) => {
         console.log('Borrador guardado:', data);
-        alert('Borrador guardado correctamente');
+        setAlertState({ open: true, message: 'Borrador guardado localmente (simulado)', severity: 'info' });
         setView('history');
     };
 
@@ -109,18 +178,23 @@ function ActivityPlanning() {
         const icons = {
             cumplido: <CheckCircleIcon sx={{ color: '#4caf50' }} />,
             no_cumplido: <CancelIcon sx={{ color: '#f44336' }} />,
-            pendiente: <PendingIcon sx={{ color: '#ff9800' }} />
+            pendiente: <PendingIcon sx={{ color: '#ff9800' }} />,
+            entregado: <CheckCircleIcon sx={{ color: '#2196f3' }} />,
+            no_entregado: <CancelIcon sx={{ color: '#9e9e9e' }} />
         };
-        return icons[status];
+        return icons[status] || icons.pendiente;
     };
 
     const getStatusChip = (status) => {
         const config = {
             cumplido: { label: 'Cumplido', color: '#4caf50' },
             no_cumplido: { label: 'No Cumplido', color: '#f44336' },
-            pendiente: { label: 'Pendiente', color: '#ff9800' }
+            pendiente: { label: 'Pendiente', color: '#ff9800' },
+            entregado: { label: 'Entregado', color: '#2196f3' },
+            no_entregado: { label: 'Sin Entregar', color: '#9e9e9e' }
         };
-        const { label, color } = config[status];
+        const statusConfig = config[status] || config.pendiente;
+        const { label, color } = statusConfig;
         return (
             <Chip
                 icon={getStatusIcon(status)}
@@ -139,6 +213,17 @@ function ActivityPlanning() {
 
     return (
         <Box sx={{ maxWidth: 1400, mx: 'auto' }}>
+            {loading && <LinearProgress sx={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999 }} />}
+            <Snackbar
+                open={alertState.open}
+                autoHideDuration={6000}
+                onClose={() => setAlertState(prev => ({ ...prev, open: false }))}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            >
+                <Alert onClose={() => setAlertState(prev => ({ ...prev, open: false }))} severity={alertState.severity} sx={{ width: '100%' }}>
+                    {alertState.message}
+                </Alert>
+            </Snackbar>
             {/* Header with Navigation */}
             <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Box>
@@ -191,7 +276,7 @@ function ActivityPlanning() {
                         </Typography>
 
                         <ActivityForm
-                            students={MOCK_STUDENTS}
+                            students={students}
                             onSubmit={handleSubmit}
                             onDraft={handleDraft}
                             initialData={preselectedStudent ? { studentId: preselectedStudent.id } : null}
@@ -244,8 +329,8 @@ function ActivityPlanning() {
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {history.map((item) => (
-                                        <TableRow key={item.id} hover>
+                                    {history.map((item, idx) => (
+                                        <TableRow key={item.id || `act-${idx}`} hover>
                                             <TableCell>{item.assignedDate}</TableCell>
                                             <TableCell>
                                                 <Typography variant="body2" fontWeight="600">

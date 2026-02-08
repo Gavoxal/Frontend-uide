@@ -38,6 +38,13 @@ function StudentProyecto() {
         versions: [] // Historial de versiones del anteproyecto
     });
 
+    const handleRemoveFile = (type) => {
+        setAnteproyecto(prev => ({
+            ...prev,
+            [`${type}File`]: null
+        }));
+    };
+
     const handleFileSelect = (file, type) => {
         const fileData = {
             name: file.name,
@@ -234,63 +241,70 @@ function StudentProyecto() {
                             /* Formulario de carga */
                             <>
                                 {/* Información */}
-                                <Alert severity="info" sx={{ mb: 3 }}>
+                                <Alert severity="info" sx={{ mb: 4 }}>
                                     Debes subir tu proyecto aprobado y los documentos complementarios. Solo se aceptan archivos en formato PDF.
                                 </Alert>
 
-                                {/* Anteproyecto */}
-                                <Card sx={{ mb: 3, borderRadius: 3, boxShadow: 2 }}>
-                                    <CardContent sx={{ p: 4 }}>
-                                        <Typography variant="h6" fontWeight="bold" gutterBottom>
-                                            Proyecto *
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                                            Documento principal del proyecto aprobado por el director
-                                        </Typography>
-                                        <FileUpload
-                                            onFileSelect={(file) => handleFileSelect(file, 'anteproyecto')}
-                                            uploadedFile={anteproyecto.anteproyectoFile}
-                                            onRemoveFile={() => handleRemoveFile('anteproyecto')}
-                                        />
-                                    </CardContent>
-                                </Card>
-
-                                {/* Manual y Plan de Pruebas */}
                                 <Grid container spacing={3}>
+                                    {/* Proyecto */}
+                                    <Grid item xs={12} md={4}>
+                                        <Card sx={{ height: '100%', borderRadius: 3, boxShadow: 2, display: 'flex', flexDirection: 'column' }}>
+                                            <CardContent sx={{ p: 4, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+                                                <Typography variant="h6" fontWeight="bold" gutterBottom>
+                                                    Proyecto *
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary" sx={{ mb: 2, height: '3.6em', overflow: 'hidden' }}>
+                                                    Documento principal del proyecto aprobado por el director
+                                                </Typography>
+                                                <Box sx={{ mt: 'auto' }}>
+                                                    <FileUpload
+                                                        onFileSelect={(file) => handleFileSelect(file, 'anteproyecto')}
+                                                        uploadedFile={anteproyecto.anteproyectoFile}
+                                                        onRemoveFile={() => handleRemoveFile('anteproyecto')}
+                                                    />
+                                                </Box>
+                                            </CardContent>
+                                        </Card>
+                                    </Grid>
+
                                     {/* Manual de Usuario/Programador */}
-                                    <Grid item xs={12} md={6}>
-                                        <Card sx={{ height: '100%', borderRadius: 3, boxShadow: 2 }}>
-                                            <CardContent sx={{ p: 4 }}>
+                                    <Grid item xs={12} md={4}>
+                                        <Card sx={{ height: '100%', borderRadius: 3, boxShadow: 2, display: 'flex', flexDirection: 'column' }}>
+                                            <CardContent sx={{ p: 4, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
                                                 <Typography variant="h6" fontWeight="bold" gutterBottom>
                                                     Manual de Usuario/Programador
                                                 </Typography>
-                                                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                                <Typography variant="body2" color="text.secondary" sx={{ mb: 2, height: '3.6em', overflow: 'hidden' }}>
                                                     Documentación técnica del sistema
                                                 </Typography>
-                                                <FileUpload
-                                                    onFileSelect={(file) => handleFileSelect(file, 'manual')}
-                                                    uploadedFile={anteproyecto.manualFile}
-                                                    onRemoveFile={() => handleRemoveFile('manual')}
-                                                />
+                                                <Box sx={{ mt: 'auto' }}>
+                                                    <FileUpload
+                                                        onFileSelect={(file) => handleFileSelect(file, 'manual')}
+                                                        uploadedFile={anteproyecto.manualFile}
+                                                        onRemoveFile={() => handleRemoveFile('manual')}
+                                                    />
+                                                </Box>
                                             </CardContent>
                                         </Card>
                                     </Grid>
 
                                     {/* Articulo Cientifico */}
-                                    <Grid item xs={12} md={6}>
-                                        <Card sx={{ height: '100%', borderRadius: 3, boxShadow: 2 }}>
-                                            <CardContent sx={{ p: 4 }}>
+                                    <Grid item xs={12} md={4}>
+                                        <Card sx={{ height: '100%', borderRadius: 3, boxShadow: 2, display: 'flex', flexDirection: 'column' }}>
+                                            <CardContent sx={{ p: 4, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
                                                 <Typography variant="h6" fontWeight="bold" gutterBottom>
                                                     Articulo Cientifico
                                                 </Typography>
-                                                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                                <Typography variant="body2" color="text.secondary" sx={{ mb: 2, height: '3.6em', overflow: 'hidden' }}>
                                                     Documento cientifico del proyecto
                                                 </Typography>
-                                                <FileUpload
-                                                    onFileSelect={(file) => handleFileSelect(file, 'planPruebas')}
-                                                    uploadedFile={anteproyecto.planPruebasFile}
-                                                    onRemoveFile={() => handleRemoveFile('planPruebas')}
-                                                />
+                                                <Box sx={{ mt: 'auto' }}>
+                                                    <FileUpload
+                                                        onFileSelect={(file) => handleFileSelect(file, 'planPruebas')}
+                                                        uploadedFile={anteproyecto.planPruebasFile}
+                                                        onRemoveFile={() => handleRemoveFile('planPruebas')}
+                                                    />
+                                                </Box>
                                             </CardContent>
                                         </Card>
                                     </Grid>
@@ -384,7 +398,7 @@ function StudentProyecto() {
                                             sx={{
                                                 textTransform: 'none',
                                                 fontWeight: 600,
-                                                color: '#667eea',
+                                                color: '#667eea'
                                             }}
                                         >
                                             Editar y Reenviar

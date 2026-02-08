@@ -1,25 +1,16 @@
 import React, { useState } from 'react';
-<<<<<<< HEAD
-import { Box, Card, CardContent, Grid, Tooltip } from '@mui/material';
-=======
 import { Box, Grid, Chip, Card, CardContent } from '@mui/material';
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
 import { useNavigate } from 'react-router-dom';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
-import SearchIcon from '@mui/icons-material/Search';
 
 import ButtonMui from '../../components/button.mui.component';
 import TableMui from '../../components/table.mui.component';
-<<<<<<< HEAD
-=======
 import TooltipMui from '../../components/tooltip.mui.component';
 import SearchBar from '../../components/SearchBar.component';
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
 import TextMui from '../../components/text.mui.component';
-import StatsCard from '../../components/common/StatsCard'; // Assumed path/component exists based on Prerequisites
-import InputMui from '../../components/input.mui.component';
+import StatsCard from '../../components/common/StatsCard';
 
 function ProposalReview() {
     const navigate = useNavigate();
@@ -78,11 +69,7 @@ function ProposalReview() {
     };
 
     const handleReview = (student) => {
-<<<<<<< HEAD
         navigate(`/director/proposals/detail/${student.id}`);
-=======
-        navigate(`/ director / proposals / detail / ${student.id} `);
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
     };
 
     return (
@@ -95,11 +82,7 @@ function ProposalReview() {
             {/* Dashboard Stats */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
                 <Grid item xs={12} sm={6}>
-<<<<<<< HEAD
-                    <Tooltip title="Filtrar pendientes" placement="top">
-=======
                     <TooltipMui title="Filtrar pendientes" placement="top">
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
                         <Box
                             onClick={() => setFilterStatus(filterStatus === 'pending' ? 'all' : 'pending')}
                             sx={{
@@ -116,17 +99,10 @@ function ProposalReview() {
                                 color="warning"
                             />
                         </Box>
-<<<<<<< HEAD
-                    </Tooltip>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                    <Tooltip title="Filtrar revisados" placement="top">
-=======
                     </TooltipMui>
                 </Grid>
                 <Grid item xs={12} sm={6}>
                     <TooltipMui title="Filtrar revisados" placement="top">
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
                         <Box
                             onClick={() => setFilterStatus(filterStatus === 'reviewed' ? 'all' : 'reviewed')}
                             sx={{
@@ -143,28 +119,11 @@ function ProposalReview() {
                                 color="success"
                             />
                         </Box>
-<<<<<<< HEAD
-                    </Tooltip>
-=======
                     </TooltipMui>
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
                 </Grid>
             </Grid>
 
             {/* Filtros y Tabla */}
-<<<<<<< HEAD
-            <Card>
-                <CardContent>
-                    <Box sx={{ mb: 3 }}>
-                        <InputMui
-                            placeholder="Buscar por nombre de estudiante..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            startIcon={<SearchIcon color="action" />}
-                        />
-                    </Box>
-
-=======
             <SearchBar
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -173,7 +132,6 @@ function ProposalReview() {
             />
             <Card>
                 <CardContent>
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
                     <TableMui
                         headers={headers}
                         data={filteredStudents.map(({ id, ...rest }) => rest)}

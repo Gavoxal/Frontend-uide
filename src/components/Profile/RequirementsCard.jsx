@@ -9,119 +9,89 @@ import {
     List,
     ListItem,
     ListItemIcon,
-    ListItemText
+    ListItemText,
+    Tooltip
 } from "@mui/material";
 import {
     CheckCircle as CheckCircleIcon,
-    Warning as WarningIcon,
-    Cancel as CancelIcon,
+    Cancel as CancelIcon, // Using Cancel (X) instead of Warning for missing
     OpenInNew as OpenInNewIcon,
     Edit as EditIcon,
     Visibility as VisibilityIcon
 } from "@mui/icons-material";
 
 function RequirementItem({ requirement, onView, onEdit, onAction }) {
-    const getStatusIcon = (status) => {
-        switch (status) {
-            case "complete":
-                return <CheckCircleIcon sx={{ color: "#4caf50" }} />;
-            case "pending":
-                return <WarningIcon sx={{ color: "#ff9800" }} />;
-            case "missing":
-                return <CancelIcon sx={{ color: "#f44336" }} />;
-            default:
-                return null;
-        }
-    };
+    // Status Logic
+    const isComplete = requirement.status === "complete";
+    const statusLabel = isComplete ? "Completo" : "Falta";
 
-    const getStatusText = (status) => {
-        switch (status) {
-            case "complete":
-                return "Completo";
-            case "pending":
-                return "Tensión";
-            case "missing":
-                return "Falta";
-            default:
-                return "";
-        }
-    };
+    // Icons
+    const StatusIcon = isComplete ? CheckCircleIcon : CancelIcon;
+    const iconColor = isComplete ? "#4caf50" : "#f44336";
 
-    const getBackgroundColor = (status) => {
-        switch (status) {
-            case "complete":
-                return "#e8f5e9";
-            case "pending":
-                return "#fff3e0";
-            case "missing":
-                return "#ffebee";
-            default:
-                return "#f5f5f5";
-        }
-    };
+    // Badge Styles
+    const badgeBg = isComplete ? "#e8f5e9" : "#ffebee";
+    const badgeColor = isComplete ? "#2e7d32" : "#c62828";
 
     return (
         <ListItem
             sx={{
                 px: 0,
-                py: 2,
+                py: 2.5,
                 display: "flex",
                 alignItems: "center",
                 gap: 2
             }}
         >
-            <ListItemIcon sx={{ minWidth: 40 }}>
-                {getStatusIcon(requirement.status)}
+            {/* Status Icon (Left) */}
+            <ListItemIcon sx={{ minWidth: 40, color: iconColor }}>
+                <StatusIcon fontSize="medium" />
             </ListItemIcon>
 
+            {/* Title */}
             <ListItemText
                 primary={
-                    <Typography variant="body1" fontWeight="500">
+                    <Typography variant="body1" color="text.primary">
                         {requirement.name}
                     </Typography>
                 }
             />
 
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            {/* Right Side: Badge + Actions */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                {/* Status Badge */}
                 <Chip
-                    label={getStatusText(requirement.status)}
+                    label={statusLabel}
                     size="small"
                     sx={{
-                        backgroundColor: getBackgroundColor(requirement.status),
-                        color: requirement.color,
-                        fontWeight: "bold"
+                        backgroundColor: badgeBg,
+                        color: badgeColor,
+                        fontWeight: "bold",
+                        borderRadius: "12px",
+                        px: 1
                     }}
                 />
-                {onView && (
-                    <IconButton
-                        size="small"
-                        sx={{ color: "text.secondary" }}
-                        onClick={() => onView(requirement.id)}
-                        title="Visualizar"
-                    >
-                        <VisibilityIcon fontSize="small" />
-                    </IconButton>
-                )}
-                {onEdit && (
-                    <IconButton
-                        size="small"
-                        sx={{ color: "text.secondary" }}
-                        onClick={() => onEdit(requirement.id)}
-                        title="Editar"
-                    >
-                        <EditIcon fontSize="small" />
-                    </IconButton>
-                )}
-                {onAction && (
-                    <IconButton
-                        size="small"
-                        sx={{ color: "text.secondary" }}
-                        onClick={() => onAction(requirement.id)}
-                        title="Abrir enlace"
-                    >
-                        <OpenInNewIcon fontSize="small" />
-                    </IconButton>
-                )}
+
+                {/* Actions */}
+                <Box sx={{ display: "flex", gap: 1 }}>
+                    <Tooltip title="Ver">
+                        <IconButton size="small" onClick={() => onView && onView(requirement.id)}>
+                            <VisibilityIcon fontSize="small" sx={{ color: "#757575" }} />
+                        </IconButton>
+                    </Tooltip>
+
+                    <Tooltip title="Editar">
+                        <IconButton size="small" onClick={() => onEdit && onEdit(requirement.id)}>
+                            <EditIcon fontSize="small" sx={{ color: "#757575" }} />
+                        </IconButton>
+                    </Tooltip>
+
+                    <Tooltip title="Abrir enlace">
+                        <IconButton size="small" onClick={() => onAction && onAction(requirement.id)}>
+                            <OpenInNewIcon fontSize="small" sx={{ color: "#757575" }} />
+                        </IconButton>
+                    </Tooltip>
+                </Box>
             </Box>
         </ListItem>
     );
@@ -129,13 +99,13 @@ function RequirementItem({ requirement, onView, onEdit, onAction }) {
 
 function RequirementsCard({ requirements, onView, onEdit, onAction }) {
     return (
-        <Card>
-            <CardContent>
+        <Card sx={{ height: '100%', boxShadow: 2 }}>
+            <CardContent sx={{ p: 3 }}>
                 <Typography variant="h6" fontWeight="bold" gutterBottom>
                     Lista de Requisitos
                 </Typography>
 
-                <Divider sx={{ mb: 2 }} />
+                <Divider sx={{ mb: 1 }} />
 
                 <List sx={{ p: 0 }}>
                     {requirements.map((req, index) => (
@@ -146,7 +116,7 @@ function RequirementsCard({ requirements, onView, onEdit, onAction }) {
                                 onEdit={onEdit}
                                 onAction={onAction}
                             />
-                            {index < requirements.length - 1 && <Divider />}
+                            {index < requirements.length - 1 && <Divider component="li" />}
                         </Box>
                     ))}
                 </List>

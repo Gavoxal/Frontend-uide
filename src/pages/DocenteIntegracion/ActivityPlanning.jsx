@@ -87,18 +87,23 @@ function DocenteActivityPlanning() {
         const icons = {
             cumplido: <CheckCircleIcon sx={{ color: '#4caf50' }} />,
             no_cumplido: <CancelIcon sx={{ color: '#f44336' }} />,
-            pendiente: <PendingIcon sx={{ color: '#ff9800' }} />
+            pendiente: <PendingIcon sx={{ color: '#ff9800' }} />,
+            entregado: <CheckCircleIcon sx={{ color: '#2196f3' }} />,
+            no_entregado: <CancelIcon sx={{ color: '#9e9e9e' }} />
         };
-        return icons[status];
+        return icons[status] || icons.pendiente;
     };
 
     const getStatusChip = (status) => {
         const config = {
             cumplido: { label: 'Cumplido', color: '#4caf50' },
             no_cumplido: { label: 'No Cumplido', color: '#f44336' },
-            pendiente: { label: 'Pendiente', color: '#ff9800' }
+            pendiente: { label: 'Pendiente', color: '#ff9800' },
+            entregado: { label: 'Entregado', color: '#2196f3' },
+            no_entregado: { label: 'Sin Entregar', color: '#9e9e9e' }
         };
-        const { label, color } = config[status];
+        const statusConfig = config[status] || config.pendiente;
+        const { label, color } = statusConfig;
         return (
             <Chip
                 icon={getStatusIcon(status)}
@@ -219,8 +224,8 @@ function DocenteActivityPlanning() {
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {history.map((item) => (
-                                        <TableRow key={item.id} hover>
+                                    {history.map((item, idx) => (
+                                        <TableRow key={item.id || `doc-act-${idx}`} hover>
                                             <TableCell>{item.assignedDate}</TableCell>
                                             <TableCell>
                                                 <Typography variant="body2" fontWeight="600">

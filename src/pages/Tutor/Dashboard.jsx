@@ -4,6 +4,9 @@ import { getDataUser } from '../../storage/user.model.jsx';
 import StudentCard from '../../components/studentcard.mui.component';
 
 import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { TutorService } from '../../services/tutor.service';
+import LinearProgress from '@mui/material/LinearProgress';
 
 // Mock data de estudiantes asignados
 const MOCK_STUDENTS = [
@@ -90,7 +93,36 @@ const MOCK_STUDENTS = [
 function TutorDashboard() {
     const user = getDataUser();
     const navigate = useNavigate();
-    const [students] = useState(MOCK_STUDENTS);
+    const [students, setStudents] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchStudents = async () => {
+            try {
+                const data = await TutorService.getAssignedStudents();
+                const mappedStudents = data.map(s => ({
+                    id: s.id,
+                    name: `${s.nombres} ${s.apellidos}`,
+                    email: s.correo,
+                    thesis: s.propuesta?.titulo || 'Sin propuesta',
+                    career: s.perfil?.escuela || 'UIDE',
+                    status: s.propuesta?.estado === 'APROBADA' ? 'green' : 'yellow',
+                    lastActivity: {
+                        date: s.actividadResumen?.ultimaFecha ? new Date(s.actividadResumen.ultimaFecha).toLocaleDateString() : 'N/A',
+                        title: s.actividadResumen?.ultimoContenido || 'Sin actividad'
+                    },
+                    weekNumber: s.actividadResumen?.totalEvidencias || 0
+                }));
+                setStudents(mappedStudents);
+            } catch (error) {
+                console.error("Error al cargar dashboard de tutor:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchStudents();
+    }, []);
 
     // Calcular estadísticas
     const totalStudents = students.length;
@@ -115,6 +147,7 @@ function TutorDashboard() {
 
     return (
         <Box sx={{ maxWidth: 1400, mx: 'auto' }}>
+            {loading && <LinearProgress sx={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999 }} />}
             {/* Encabezado */}
             <Box sx={{ mb: 4 }}>
                 <Typography variant="h4" fontWeight="bold" gutterBottom>

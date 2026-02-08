@@ -48,6 +48,7 @@ export default function FileUpload({ onFileSelect, uploadedFile, onRemoveFile })
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          minHeight: 114, // Coincidir con el estado vacío aproximado
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, overflow: 'hidden' }}>
@@ -103,6 +104,7 @@ export default function FileUpload({ onFileSelect, uploadedFile, onRemoveFile })
         justifyContent: 'center',
         cursor: 'pointer',
         transition: 'all 0.2s',
+        minHeight: 114, // Estabilizar
         '&:hover': {
           borderColor: '#000A9B',
           backgroundColor: '#F9FAFB',

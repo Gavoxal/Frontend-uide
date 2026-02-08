@@ -18,51 +18,121 @@ import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import LockIcon from "@mui/icons-material/Lock";
 import PersonIcon from "@mui/icons-material/Person";
-import { useState } from "react";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import PeopleIcon from "@mui/icons-material/People";
+import ChecklistIcon from "@mui/icons-material/Checklist";
+import AssignmentIcon from "@mui/icons-material/Assignment";
+import SchoolIcon from "@mui/icons-material/School";
+import GavelIcon from "@mui/icons-material/Gavel";
+import RateReviewIcon from "@mui/icons-material/RateReview";
+import EventNoteIcon from "@mui/icons-material/EventNote";
+import { useState, useEffect } from "react";
 import { getDataUser } from "../storage/user.model.jsx";
 import { useUserProgress } from "../contexts/UserProgressContext";
+import { UserService } from "../services/user.service";
 import uideImage from "../assets/uide3.svg";
+
+// Mapeo de roles a rutas base
+const roleToRoute = {
+    admin: 'director', // Temporal redirect
+    director: 'director',
+    student: 'student',
+    tutor: 'tutor',
+    reviewer: 'reviewer',
+    coordinador: 'coordinador',
+    docente_integracion: 'docente-integracion'
+};
+
+const roleLabels = {
+    admin: 'Administrador',
+    director: 'Director de Carrera',
+    student: 'Estudiante',
+    tutor: 'Tutor',
+    reviewer: 'Revisor',
+    coordinador: 'Coordinador',
+    docente_integracion: 'Docente Integración'
+};
 
 // Configuración de menús por rol
 const MENU_BY_ROLE = {
     director: [
-        { icon: <DashboardIcon />, label: "Dashboard", path: "/director/dashboard" },
-        { icon: <PeopleIcon />, label: "Estudiantes", path: "/director/students" },
-        { icon: <ChecklistIcon />, label: "Prerrequisitos", path: "/director/prerequisites" },
-        { icon: <AssignmentIcon />, label: "Propuestas", path: "/director/proposals" },
-        { icon: <SchoolIcon />, label: "Tutores", path: "/director/tutors" },
-        { icon: <GavelIcon />, label: "Defensas", path: "/director/defenses" },
+        { icon: DashboardIcon, label: "Dashboard", path: "/director/dashboard" },
+        { icon: PeopleIcon, label: "Estudiantes", path: "/director/students" },
+        { icon: ChecklistIcon, label: "Prerrequisitos", path: "/director/prerequisites" },
+        { icon: AssignmentIcon, label: "Propuestas", path: "/director/proposals" },
+        { icon: SchoolIcon, label: "Tutores", path: "/director/tutors" },
+        { icon: GavelIcon, label: "Defensas", path: "/director/defenses" },
     ],
     student: [
-        { icon: <DashboardIcon />, label: "Dashboard", path: "/student/dashboard" },
-        { icon: <ChecklistIcon />, label: "Prerrequisitos", path: "/student/prerequisites" },
-        { icon: <AssignmentIcon />, label: "Mis Propuestas", path: "/student/proposals" },
-        { icon: <AssignmentIcon />, label: "Avances", path: "/student/avances" },
-        { icon: <SchoolIcon />, label: "Proyecto", path: "/student/proyecto" },
-        { icon: <GavelIcon />, label: "Defensa", path: "/student/defensa" },
+        { icon: DashboardIcon, label: "Dashboard", path: "/student/dashboard" },
+        { icon: ChecklistIcon, label: "Prerrequisitos", path: "/student/prerequisites" },
+        { icon: AssignmentIcon, label: "Mis Propuestas", path: "/student/proposals" },
+        { icon: AssignmentIcon, label: "Avances", path: "/student/avances" },
+        { icon: SchoolIcon, label: "Proyecto", path: "/student/proyecto" },
+        { icon: GavelIcon, label: "Defensa", path: "/student/defensa" },
     ],
     tutor: [
-        { icon: <DashboardIcon />, label: "Dashboard", path: "/tutor/dashboard" },
-        { icon: <AssignmentIcon />, label: "Planificar Actividades", path: "/tutor/planning" },
-        { icon: <RateReviewIcon />, label: "Revisar Avances", path: "/tutor/review" },
-        { icon: <EventNoteIcon />, label: "Bitácora de Reuniones", path: "/tutor/meetings" },
+        { icon: DashboardIcon, label: "Dashboard", path: "/tutor/dashboard" },
+        { icon: AssignmentIcon, label: "Planificar Actividades", path: "/tutor/planning" },
+        { icon: RateReviewIcon, label: "Revisar Avances", path: "/tutor/review" },
+        { icon: EventNoteIcon, label: "Bitácora de Reuniones", path: "/tutor/meetings" },
     ],
     reviewer: [
-        { icon: <DashboardIcon />, label: "Dashboard", path: "/reviewer/dashboard" },
-        { icon: <AssignmentIcon />, label: "Propuestas", path: "/reviewer/proposals" },
-        { icon: <GavelIcon />, label: "Defensas", path: "/reviewer/defenses" },
+        { icon: DashboardIcon, label: "Dashboard", path: "/reviewer/dashboard" },
+        { icon: AssignmentIcon, label: "Propuestas", path: "/reviewer/proposals" },
+        { icon: GavelIcon, label: "Defensas", path: "/reviewer/defenses" },
     ],
     admin: [
-        { icon: <DashboardIcon />, label: "Dashboard", path: "/director/dashboard" },
-        { icon: <PeopleIcon />, label: "Estudiantes", path: "/director/students" },
+        { icon: DashboardIcon, label: "Dashboard", path: "/director/dashboard" },
+        { icon: PeopleIcon, label: "Estudiantes", path: "/director/students" },
     ],
 };
+
+function getMenuByRole(role) {
+    return MENU_BY_ROLE[role] || [];
+}
 
 function SidebarMui({ onNavigate, currentPage, isExpanded, toggleSidebar }) {
     const user = getDataUser();
     const userRole = user?.role || "user";
     const userRouteBase = roleToRoute[userRole] || userRole;
     const menuItems = getMenuByRole(userRole);
+
+    // State for user display name to allow updates from ID fetch
+    const [userData, setUserData] = useState({
+        name: user?.nombres || user?.name || "Usuario",
+        lastName: user?.apellidos || user?.lastName || "",
+        initials: (user?.nombres?.[0] || user?.name?.[0] || "U") + (user?.apellidos?.[0] || user?.lastName?.[0] || "")
+    });
+
+    // Fetch fresh user data if we have an ID but generic/missing names
+    useEffect(() => {
+        const fetchUserData = async () => {
+            if (user?.id && (userData.name === "Usuario" || !userData.lastName)) {
+                try {
+                    const freshData = await UserService.getById(user.id);
+                    if (freshData) {
+                        const newName = freshData.nombres || freshData.nombre || userData.name;
+                        const newLast = freshData.apellidos || freshData.apellido || userData.lastName;
+
+                        setUserData({
+                            name: newName,
+                            lastName: newLast,
+                            initials: (newName?.[0] || "") + (newLast?.[0] || "")
+                        });
+
+                        // Optionally update session storage to persist across reloads
+                        // const updatedSession = { ...user, ...freshData, nombres: newName, apellidos: newLast };
+                        // sessionStorage.setItem("sessionUser", JSON.stringify(updatedSession));
+                    }
+                } catch (error) {
+                    console.error("Error fetching user data for sidebar:", error);
+                }
+            }
+        };
+
+        fetchUserData();
+    }, [user?.id]);
 
     // Solo para estudiantes, verificar permisos
     const progressContext = userRole === 'student' ? useUserProgress() : null;
@@ -183,7 +253,7 @@ function SidebarMui({ onNavigate, currentPage, isExpanded, toggleSidebar }) {
                                 fontWeight: "bold",
                             }}
                         >
-                            {user?.name?.charAt(0)}{user?.lastName?.charAt(0)}
+                            {userData.initials}
                         </Avatar>
                         <Box sx={{ flexGrow: 1, minWidth: 0 }}>
                             <Typography
@@ -198,7 +268,8 @@ function SidebarMui({ onNavigate, currentPage, isExpanded, toggleSidebar }) {
                                     whiteSpace: "nowrap",
                                 }}
                             >
-                                {user?.name} {user?.lastName}
+                                {userData.name}{" "}
+                                {userData.lastName}
                             </Typography>
                             <Chip
                                 label={roleLabels[user?.role] || 'Usuario'}
@@ -240,7 +311,7 @@ function SidebarMui({ onNavigate, currentPage, isExpanded, toggleSidebar }) {
                                 fontWeight: "bold",
                             }}
                         >
-                            {user?.name?.charAt(0)}{user?.lastName?.charAt(0)}
+                            {userData.initials}
                         </Avatar>
                     </Box>
                 )}
@@ -279,7 +350,7 @@ function MenuItem({ item, isExpanded, currentPage, onNavigate, blocked = false, 
     };
 
     const listItemContent = (
-        <>
+        <Box sx={{ width: '100%' }}>
             <ListItem
                 onClick={handleClick}
                 sx={{
@@ -339,7 +410,7 @@ function MenuItem({ item, isExpanded, currentPage, onNavigate, blocked = false, 
                     </List>
                 </Collapse>
             )}
-        </>
+        </Box>
     );
 
     if (blocked && blockReason) {

@@ -13,7 +13,8 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 function FeedbackPanel({ submission, onSubmit, onCancel }) {
     const [feedback, setFeedback] = useState({
-        observations: ''
+        observations: submission?.tutorComments || '',
+        rating: submission?.grade || ''
     });
 
     const handleSubmit = () => {
@@ -116,10 +117,54 @@ function FeedbackPanel({ submission, onSubmit, onCancel }) {
 
                 <Divider sx={{ my: 2 }} />
 
-                {/* Observaciones Técnicas */}
+                {/* Calificación */}
                 <Box sx={{ mb: 3 }}>
                     <Typography variant="subtitle2" fontWeight="600" gutterBottom>
-                        Observaciones Técnicas
+                        Calificación (0 - 10)
+                    </Typography>
+                    <TextField
+                        type="number"
+                        fullWidth
+                        placeholder="10"
+                        inputProps={{ min: 0, max: 10 }}
+                        value={feedback.rating}
+                        onChange={(e) => setFeedback({ ...feedback, rating: e.target.value })}
+                        sx={{
+                            backgroundColor: 'white'
+                        }}
+                    />
+                </Box>
+
+                {/* Historial de Observaciones Técnicas */}
+                {submission?.historicalComments?.length > 0 && (
+                    <Box sx={{ mb: 3 }}>
+                        <Typography variant="subtitle2" fontWeight="600" gutterBottom>
+                            Historial de Observaciones Técnicas
+                        </Typography>
+                        <Box sx={{ maxHeight: 200, overflowY: 'auto', p: 1, backgroundColor: '#f0f2f5', borderRadius: 2 }}>
+                            {submission.historicalComments.map((c, i) => (
+                                <Box key={i} sx={{ mb: 1, p: 1.5, backgroundColor: 'white', borderRadius: 1, boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                                        <Typography variant="caption" color="primary" sx={{ fontWeight: 'bold' }}>
+                                            {c.usuario?.rol || 'Usuario'}
+                                        </Typography>
+                                        <Typography variant="caption" color="text.secondary">
+                                            {c.usuario ? `${c.usuario.nombres} ${c.usuario.apellidos}` : ''}
+                                        </Typography>
+                                    </Box>
+                                    <Typography variant="body2" sx={{ color: '#444', lineHeight: 1.4 }}>
+                                        {c.descripcion}
+                                    </Typography>
+                                </Box>
+                            ))}
+                        </Box>
+                    </Box>
+                )}
+
+                {/* Observaciones Técnicas (Nuevo Feedback) */}
+                <Box sx={{ mb: 3 }}>
+                    <Typography variant="subtitle2" fontWeight="600" gutterBottom>
+                        Nueva Observación Técnica
                     </Typography>
                     <TextField
                         fullWidth
@@ -139,8 +184,6 @@ function FeedbackPanel({ submission, onSubmit, onCancel }) {
                     />
                 </Box>
 
-                {/* Secciones de Validación y Listo para Calificación eliminadas */}
-
                 {/* Botones de acción */}
                 <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
                     <Button
@@ -154,7 +197,7 @@ function FeedbackPanel({ submission, onSubmit, onCancel }) {
                         variant="contained"
                         fullWidth
                         onClick={handleSubmit}
-                        disabled={!feedback.observations.trim()}
+                        disabled={!feedback.observations.trim() || !feedback.rating}
                         sx={{
                             backgroundColor: '#667eea',
                             '&:hover': {
@@ -163,7 +206,7 @@ function FeedbackPanel({ submission, onSubmit, onCancel }) {
                         }}
                         startIcon={<CheckCircleIcon />}
                     >
-                        Enviar Observaciones
+                        Enviar Evaluación
                     </Button>
                 </Box>
             </Paper>

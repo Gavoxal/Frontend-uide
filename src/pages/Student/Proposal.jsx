@@ -14,8 +14,10 @@ import {
     Chip,
     Divider,
     Alert,
+    LinearProgress
 } from '@mui/material';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { ProposalService } from '../../services/proposal.service';
 import FileUpload from '../../components/file.mui.component';
 import CommentSection from '../../components/comment.mui.component';
 import AlertMui from '../../components/alert.mui.component';
@@ -28,6 +30,8 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 
 function ThesisProposal() {
     const [currentTab, setCurrentTab] = useState(0);
+    const [loading, setLoading] = useState(false);
+    const [knowledgeAreas, setKnowledgeAreas] = useState([]);
     const [alertState, setAlertState] = useState({
         open: false,
         title: '',
@@ -35,40 +39,58 @@ function ThesisProposal() {
         status: 'info'
     });
     const [proposals, setProposals] = useState([
-        {
-            titulo: '',
-            areaInvestigacion: '',
-            objetivo: '',
-            problematica: '',
-            alcance: '',
-            file: null,
-            status: 'draft', // draft, submitted, approved, rejected
-            submittedDate: null,
-            versions: [] // Para versionamiento futuro si se requiere
-        },
-        {
-            titulo: '',
-            areaInvestigacion: '',
-            objetivo: '',
-            problematica: '',
-            alcance: '',
-            file: null,
-            status: 'draft',
-            submittedDate: null,
-            versions: []
-        },
-        {
-            titulo: '',
-            areaInvestigacion: '',
-            objetivo: '',
-            problematica: '',
-            alcance: '',
-            file: null,
-            status: 'draft',
-            submittedDate: null,
-            versions: []
-        },
+        { titulo: '', areaConocimientoId: '', objetivo: '', problematica: '', alcance: '', file: null, status: 'draft', id: null },
+        { titulo: '', areaConocimientoId: '', objetivo: '', problematica: '', alcance: '', file: null, status: 'draft', id: null },
+        { titulo: '', areaConocimientoId: '', objetivo: '', problematica: '', alcance: '', file: null, status: 'draft', id: null },
     ]);
+
+    // Cargar propuestas y áreas desde el backend
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            const [proposalsData, areasData] = await Promise.all([
+                ProposalService.getAll(),
+                ProposalService.getKnowledgeAreas()
+            ]);
+
+            setKnowledgeAreas(areasData);
+
+            if (Array.isArray(proposalsData)) {
+                const updatedProposals = [...proposals];
+                proposalsData.forEach((item, index) => {
+                    if (index < 3) {
+                        const areaName = item.areaConocimiento?.nombre ||
+                            areasData.find(a => String(a.id) === String(item.areaConocimientoId || item.area_conocimiento_id))?.nombre ||
+                            'No asignada';
+
+                        const archivoUrl = item.archivoUrl || item.archivo_url;
+
+                        updatedProposals[index] = {
+                            id: item.id,
+                            titulo: item.titulo || '',
+                            areaConocimientoId: item.areaConocimientoId || item.area_conocimiento_id || '',
+                            areaInvestigacion: areaName,
+                            objetivo: item.objetivos || item.objetivo || '',
+                            problematica: item.problematica || '',
+                            alcance: item.alcance || '',
+                            file: archivoUrl ? { name: archivoUrl.split('/').pop(), url: archivoUrl } : null,
+                            status: item.estado?.toLowerCase() || 'submitted',
+                            submittedDate: item.fechaPublicacion ? item.fechaPublicacion.split('T')[0] : (item.createdAt ? item.createdAt.split('T')[0] : null)
+                        };
+                    }
+                });
+                setProposals(updatedProposals);
+            }
+        } catch (error) {
+            console.error("Error al cargar datos:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, []);
 
     const handleTabChange = (_event, newValue) => {
         setCurrentTab(newValue);
@@ -110,24 +132,24 @@ function ThesisProposal() {
             const updated = [...prev];
             updated[currentTab] = {
                 titulo: '',
-                areaInvestigacion: '',
+                areaConocimientoId: '',
                 objetivo: '',
                 problematica: '',
                 alcance: '',
                 file: null,
                 status: 'draft',
                 submittedDate: null,
-                versions: []
+                id: null
             };
             return updated;
         });
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         const currentProposal = proposals[currentTab];
 
         // Validaciones básicas
-        if (!currentProposal.titulo || !currentProposal.areaInvestigacion || !currentProposal.objetivo) {
+        if (!currentProposal.titulo || !currentProposal.areaConocimientoId || !currentProposal.objetivo) {
             setAlertState({
                 open: true,
                 title: 'Campos Incompletos',
@@ -137,22 +159,52 @@ function ThesisProposal() {
             return;
         }
 
-        setProposals((prev) => {
-            const updated = [...prev];
-            updated[currentTab] = {
-                ...updated[currentTab],
-                status: 'submitted',
-                submittedDate: new Date().toISOString().split('T')[0]
-            };
-            return updated;
-        });
+        setLoading(true);
+        try {
+            const result = await ProposalService.create(currentProposal);
 
-        setAlertState({
-            open: true,
-            title: '¡Propuesta Enviada!',
-            message: 'Tu propuesta ha sido enviada correctamente. El comité académico la revisará pronto y recibirás comentarios.',
-            status: 'success'
-        });
+            setProposals((prev) => {
+                const updated = [...prev];
+                const areaName = result.areaConocimiento?.nombre ||
+                    knowledgeAreas.find(a => String(a.id) === String(currentProposal.areaConocimientoId))?.nombre ||
+                    'No asignada';
+
+                const archivoUrl = result.archivoUrl || result.archivo_url;
+
+                updated[currentTab] = {
+                    ...updated[currentTab],
+                    id: result.id,
+                    status: result.estado?.toLowerCase() || 'submitted',
+                    areaInvestigacion: areaName,
+                    submittedDate: new Date().toISOString().split('T')[0],
+                    objetivo: result.objetivos || result.objetivo || updated[currentTab].objetivo,
+                    problematica: result.problematica || updated[currentTab].problematica,
+                    alcance: result.alcance || updated[currentTab].alcance,
+                    file: archivoUrl ? {
+                        name: archivoUrl.split('/').pop(),
+                        url: archivoUrl,
+                        size: updated[currentTab].file?.size // Mantener tamaño si lo teníamos
+                    } : updated[currentTab].file
+                };
+                return updated;
+            });
+
+            setAlertState({
+                open: true,
+                title: '¡Propuesta Enviada!',
+                message: 'Tu propuesta ha sido enviada correctamente. El comité académico la revisará pronto y recibirás comentarios.',
+                status: 'success'
+            });
+        } catch (error) {
+            setAlertState({
+                open: true,
+                title: 'Error al enviar',
+                message: error.message || 'Ocurrió un error al procesar tu propuesta. Por favor intenta de nuevo.',
+                status: 'error'
+            });
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleResubmit = () => {
@@ -172,9 +224,13 @@ function ThesisProposal() {
 
     const getStatusColor = (status) => {
         switch (status) {
+            case 'pendiente':
             case 'submitted': return '#ff9800';
+            case 'aprobada':
             case 'approved': return '#4caf50';
+            case 'rechazada':
             case 'rejected': return '#f44336';
+            case 'aprobada_con_comentarios': return '#2196f3';
             default: return '#9e9e9e';
         }
     };
@@ -182,15 +238,20 @@ function ThesisProposal() {
     const getStatusLabel = (status) => {
         switch (status) {
             case 'draft': return 'Borrador';
+            case 'pendiente':
             case 'submitted': return 'En Revisión';
+            case 'aprobada':
             case 'approved': return 'Aprobada';
+            case 'rechazada':
             case 'rejected': return 'Requiere Cambios';
-            default: return 'Borrador';
+            case 'aprobada_con_comentarios': return 'Aprobada con Observaciones';
+            default: return status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Borrador';
         }
     };
 
     return (
         <>
+            {loading && <LinearProgress sx={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, height: 4 }} />}
             <Box sx={{ p: 3, maxWidth: 1400, mx: 'auto' }}>
                 {/* Header Section */}
                 <Box sx={{ mb: 4 }}>
@@ -297,18 +358,17 @@ function ThesisProposal() {
                                             </Typography>
                                             <FormControl fullWidth>
                                                 <Select
-                                                    value={currentProposal.areaInvestigacion}
-                                                    onChange={(e) => handleInputChange('areaInvestigacion', e.target.value)}
+                                                    value={currentProposal.areaConocimientoId}
+                                                    onChange={(e) => handleInputChange('areaConocimientoId', e.target.value)}
                                                     displayEmpty
                                                     sx={{ backgroundColor: '#F9FAFB' }}
                                                 >
                                                     <MenuItem value=""><em>Seleccionar área</em></MenuItem>
-                                                    <MenuItem value="desarrollo-software">Desarrollo de Software</MenuItem>
-                                                    <MenuItem value="inteligencia-artificial">Inteligencia Artificial</MenuItem>
-                                                    <MenuItem value="redes-comunicaciones">Redes y Comunicaciones</MenuItem>
-                                                    <MenuItem value="seguridad-informatica">Seguridad Informática</MenuItem>
-                                                    <MenuItem value="base-datos">Base de Datos</MenuItem>
-                                                    <MenuItem value="sistemas-informacion">Sistemas de Información</MenuItem>
+                                                    {knowledgeAreas.map((area) => (
+                                                        <MenuItem key={area.id} value={area.id}>
+                                                            {area.nombre}
+                                                        </MenuItem>
+                                                    ))}
                                                 </Select>
                                             </FormControl>
                                         </Box>
@@ -461,7 +521,7 @@ function ThesisProposal() {
                                             Área de Investigación
                                         </Typography>
                                         <Typography variant="body1" sx={{ textTransform: 'capitalize' }}>
-                                            {currentProposal.areaInvestigacion.replace('-', ' ')}
+                                            {currentProposal.areaInvestigacion?.replace('-', ' ') || 'No especificada'}
                                         </Typography>
                                     </Box>
 

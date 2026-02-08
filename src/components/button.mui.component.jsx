@@ -4,29 +4,25 @@ import SendIcon from '@mui/icons-material/Send';
 
 
 function ButtonMUI({
-    name, 
-    onClick= () => {}, 
-    backgroundColor = 'white', 
-    color ='white', 
-    type='submit'
+    name,
+    onClick = () => { },
+    backgroundColor = 'white',
+    color = 'white',
+    type = 'submit'
 }) {
     return (
-        <>
-
-            <Button
-                fullWidth
-                type={type}
-                onClick={onClick} 
-                variant= "contained"
-                sx={{
-                    color:color,
-                    backgroundColor:backgroundColor
-                }}
-            > 
-                {name} 
-            </Button>
-
-        </>
+        <Button
+            fullWidth
+            type={type}
+            onClick={onClick}
+            variant="contained"
+            sx={{
+                color: color,
+                backgroundColor: backgroundColor
+            }}
+        >
+            {name}
+        </Button>
     );
 }
 

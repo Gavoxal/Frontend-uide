@@ -1,77 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Typography, Grid, Card, CardContent, InputAdornment, TextField } from '@mui/material';
 import StudentCard from '../../components/studentcard.mui.component';
 import SearchIcon from '@mui/icons-material/Search';
 import { useNavigate } from 'react-router-dom';
-
-// Mock data (mismo que en Dashboard por ahora, idealmente vendría de un servicio/contexto compartido)
-const MOCK_STUDENTS = [
-    {
-        id: 1,
-        name: "Juan Pérez",
-        email: "juan@uide.edu.ec",
-        thesis: "Sistema de IoT para agricultura inteligente",
-        career: "Ingeniería de Software",
-        status: "green",
-        lastActivity: { date: "Hace 2 días", title: "Implementación de sensores DHT22" },
-        weekNumber: 8
-    },
-    {
-        id: 2,
-        name: "María García",
-        email: "maria@uide.edu.ec",
-        thesis: "Aplicación móvil de gestión académica con React Native",
-        career: "Ingeniería de Software",
-        status: "yellow",
-        lastActivity: { date: "Hace 5 días", title: "Módulo de autenticación" },
-        weekNumber: 12
-    },
-    {
-        id: 3,
-        name: "Carlos López",
-        email: "carlos@uide.edu.ec",
-        thesis: "Sistema de reconocimiento facial con Deep Learning",
-        career: "Ingeniería de Software",
-        status: "red",
-        lastActivity: { date: "Hace 10 días", title: "Entrenamiento de modelo CNN" },
-        weekNumber: 6
-    },
-    {
-        id: 4,
-        name: "Ana Martínez",
-        email: "ana@uide.edu.ec",
-        thesis: "Plataforma de e-commerce con microservicios",
-        career: "Ingeniería de Software",
-        status: "green",
-        lastActivity: { date: "Hace 1 día", title: "Implementación de gateway API" },
-        weekNumber: 10
-    },
-    {
-        id: 5,
-        name: "Luis Rodríguez",
-        email: "luis@uide.edu.ec",
-        thesis: "Sistema de gestión hospitalaria con blockchain",
-        career: "Ingeniería de Software",
-        status: "yellow",
-        lastActivity: { date: "Hace 4 días", title: "Smart contracts en Solidity" },
-        weekNumber: 9
-    },
-    {
-        id: 6,
-        name: "Sofia Hernández",
-        email: "sofia@uide.edu.ec",
-        thesis: "Chatbot inteligente con NLP para atención al cliente",
-        career: "Ingeniería de Software",
-        status: "green",
-        lastActivity: { date: "Hace 3 días", title: "Integración con RASA Framework" },
-        weekNumber: 11
-    }
-];
+import { TutorService } from '../../services/tutor.service';
+import LinearProgress from '@mui/material/LinearProgress';
 
 function TutorStudents() {
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState('');
-    const [students] = useState(MOCK_STUDENTS);
+    const [students, setStudents] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchStudents = async () => {
+            try {
+                const data = await TutorService.getAssignedStudents();
+                // Mapear el formato del backend al formato que espera StudentCard
+                const mappedStudents = data.map(s => ({
+                    id: s.id,
+                    name: `${s.nombres} ${s.apellidos}`,
+                    email: s.correo,
+                    thesis: s.propuesta?.titulo || 'Sin propuesta',
+                    career: s.perfil?.escuela || 'UIDE',
+                    status: s.propuesta?.estado === 'APROBADA' ? 'green' : 'yellow',
+                    lastActivity: {
+                        date: s.actividadResumen?.ultimaFecha ? new Date(s.actividadResumen.ultimaFecha).toLocaleDateString() : 'N/A',
+                        title: s.actividadResumen?.ultimoContenido || 'Sin actividad'
+                    },
+                    weekNumber: s.actividadResumen?.totalEvidencias || 0
+                }));
+                setStudents(mappedStudents);
+            } catch (error) {
+                console.error("Error al cargar estudiantes:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchStudents();
+    }, []);
 
     const handleViewStudent = (student) => {
         console.log('Ver detalles de:', student.name);
@@ -92,6 +60,7 @@ function TutorStudents() {
 
     return (
         <Box sx={{ maxWidth: 1400, mx: 'auto' }}>
+            {loading && <LinearProgress sx={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999 }} />}
             <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
                 <Box>
                     <Typography variant="h4" fontWeight="bold" gutterBottom>

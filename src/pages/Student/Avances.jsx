@@ -5,6 +5,7 @@ import {
     Card,
     CardContent,
     Button,
+    Grid,
     LinearProgress,
     Chip,
     Stepper,
@@ -24,10 +25,20 @@ import CalendarMui from '../../components/calendar.mui.component';
 import DetailsModal from '../../components/details.mui.component';
 import AlertMui from '../../components/alert.mui.component';
 
+import { useEffect } from 'react';
+import { ActivityService } from '../../services/activity.service';
+import { ProposalService } from '../../services/proposal.service';
+import { UserService } from '../../services/user.service';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
+
 function StudentAvances() {
     const [selectedProgress, setSelectedProgress] = useState(null);
     const [detailModalOpen, setDetailModalOpen] = useState(false);
     const [initialTab, setInitialTab] = useState(0);
+    const [loading, setLoading] = useState(true);
+    const [weeklyProgress, setWeeklyProgress] = useState([]);
+    const [proposal, setProposal] = useState(null);
     const [alertState, setAlertState] = useState({
         open: false,
         title: '',
@@ -35,158 +46,171 @@ function StudentAvances() {
         status: 'info'
     });
 
-    // Datos de ejemplo - En producción vendrían del backend
-    const progressData = {
-        completedWeeks: 2,
-        totalWeeks: 15,
-        currentWeek: 3
+    // Cargar datos reales
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            // 1. Obtener la propuesta del estudiante
+            const proposals = await ProposalService.getAll();
+            if (proposals.length === 0) {
+                setWeeklyProgress([]);
+                setLoading(false);
+                return;
+            }
+            let activeProposal = proposals[0]; // Tomamos la primera/activa
+
+            // Extraer tutor de la relación trabajosTitulacion si existe
+            if (!activeProposal.tutor && activeProposal.trabajosTitulacion?.length > 0) {
+                activeProposal.tutor = activeProposal.trabajosTitulacion[0].tutor;
+            }
+
+            setProposal(activeProposal);
+
+            // 2. Obtener actividades de esa propuesta
+            const activities = await ActivityService.getByPropuesta(activeProposal.id);
+
+            // 3. Mapear a la estructura del frontend
+            const mapped = activities.map((act, index) => {
+                // Obtener la evidencia más reciente si existe
+                const evidence = act.evidencias && act.evidencias.length > 0
+                    ? act.evidencias[act.evidencias.length - 1]
+                    : act.evidencia;
+
+                let currentState = "pending_upload";
+                if (evidence) {
+                    currentState = (evidence.calificacionTutor !== null || evidence.calificacionDocente !== null) ? "graded" : "pending_tutor_review";
+                }
+
+                // CAMPOS DE FECHA DE LA TABLA 'actividades' (Asignación y Entrega Límite)
+                const createDate = act.fechaAsignacion || act.createdAt || act.fechaCreacion;
+                const dueDate = act.fechaEntrega || act.deadline;
+
+                // FECHAS DE LA TABLA 'evidencia' (Entrega y Calificación)
+                const submissionDate = evidence?.fechaEntrega || evidence?.fecha_entrega || evidence?.createdAt;
+                const gradingDate = evidence?.fechaCalificacionTutor || evidence?.fecha_calificacion_tutor || evidence?.updatedAt;
+
+                // EXTRAER TUTOR (Relación anidada en actividad o del estado global de la propuesta)
+                let tutorName = "Tutor Asignado";
+                if (act.propuesta?.trabajosTitulacion?.[0]?.tutor) {
+                    const t = act.propuesta.trabajosTitulacion[0].tutor;
+                    tutorName = `${t.nombres} ${t.apellidos}`;
+                } else if (activeProposal.tutor) {
+                    tutorName = `${activeProposal.tutor.nombres} ${activeProposal.tutor.apellidos}`;
+                }
+
+                return {
+                    id: act.id,
+                    weekNumber: act.semana || evidence?.semana || (index + 1),
+                    title: act.nombre,
+                    assignmentDate: createDate ? new Date(createDate) : null,
+                    dueDate: dueDate ? (function (d) {
+                        const parts = String(d).split('T')[0].split('-');
+                        if (parts.length === 3) {
+                            return new Date(parts[0], parts[1] - 1, parts[2]);
+                        }
+                        return new Date(d);
+                    })(dueDate) : null,
+
+                    tutorAssignment: {
+                        description: act.descripcion,
+                        requirements: act.requisitos || [],
+                        assignedBy: tutorName,
+                        assignedDate: createDate ? new Date(createDate) : null,
+                    },
+
+                    studentSubmission: evidence ? {
+                        id: evidence.id,
+                        uploadedFile: evidence.archivoUrl?.split('/').pop() || "archivo",
+                        submittedDate: submissionDate ? new Date(submissionDate) : null,
+                        comments: evidence.contenido || "",
+                        semana: evidence.semana
+                    } : null,
+
+                    grading: evidence && (evidence.calificacionTutor !== null || evidence.calificacionDocente !== null) ? {
+                        score: evidence.calificacionTutor || evidence.calificacionDocente,
+                        gradedBy: tutorName,
+                        gradedDate: gradingDate ? new Date(gradingDate) : null,
+                        feedback: evidence.feedbackTutor || evidence.feedbackDocente || "Sin observaciones",
+                        status: (Number(evidence.calificacionTutor) >= 7 || Number(evidence.calificacionDocente) >= 7) ? "approved" : "rejected"
+                    } : null,
+
+                    currentState: currentState
+                };
+            });
+
+            // Ordenar por fecha o ID si es necesario
+            setWeeklyProgress(mapped);
+        } catch (error) {
+            console.error("Error fetching progress data:", error);
+            setAlertState({
+                open: true,
+                title: 'Error',
+                message: 'No se pudo cargar la información de avances.',
+                status: 'error'
+            });
+        } finally {
+            setLoading(false);
+        }
     };
 
-    // Estructura unificada de avances semanales
-    const weeklyProgress = [
-        {
-            id: 1,
-            weekNumber: 1,
-            title: "Autenticación de Usuarios",
-            assignmentDate: new Date(2026, 0, 20),
-            dueDate: new Date(2026, 0, 27),
+    useEffect(() => {
+        fetchData();
+    }, []);
 
-            tutorAssignment: {
-                description: "Implementar sistema de autenticación completo con JWT",
-                requirements: [
-                    "Login con email y contraseña",
-                    "Registro de usuarios",
-                    "Implementar JWT para sesiones",
-                    "Recuperación de contraseña"
-                ],
-                assignedBy: "Ing. Carlos Pérez",
-                assignedDate: new Date(2026, 0, 20),
-            },
+    const handleCloseModal = () => {
+        setDetailModalOpen(false);
+        setSelectedProgress(null);
+        setInitialTab(0);
+    };
 
-            studentSubmission: {
-                uploadedFile: "avance_semana1.pdf",
-                submittedDate: new Date(2026, 0, 26),
-                comments: "Implementación completa con pruebas unitarias incluidas",
-            },
-
-            tutorReview: {
-                status: "approved",
-                feedback: "Excelente trabajo. La implementación es sólida y las pruebas son adecuadas.",
-                reviewDate: new Date(2026, 0, 27),
-                technicalScore: "Cumple",
-            },
-
-            integrationGrade: {
-                score: 95,
-                gradedBy: "Ing. Lorena García",
-                gradedDate: new Date(2026, 0, 28),
-                feedback: "Muy buen trabajo, cumple con todos los criterios de la rúbrica.",
-            },
-
-            currentState: "graded"
-        },
-        {
-            id: 2,
-            weekNumber: 2,
-            title: "Dashboard y Gestión de Perfiles",
-            assignmentDate: new Date(2026, 0, 27),
-            dueDate: new Date(2026, 1, 3),
-
-            tutorAssignment: {
-                description: "Crear dashboard principal y sistema de perfiles de usuario",
-                requirements: [
-                    "Dashboard con estadísticas básicas",
-                    "Página de perfil de usuario",
-                    "Edición de perfil",
-                    "Carga de imagen de perfil"
-                ],
-                assignedBy: "Ing. Carlos Pérez",
-                assignedDate: new Date(2026, 0, 27),
-            },
-
-            studentSubmission: {
-                uploadedFile: "avance_semana2.pdf",
-                submittedDate: new Date(2026, 1, 2),
-                comments: "Dashboard implementado con gráficos interactivos",
-            },
-
-            tutorReview: {
-                status: "approved",
-                feedback: "Buen trabajo. Considera mejorar la responsividad en móviles.",
-                reviewDate: new Date(2026, 1, 3),
-                technicalScore: "Cumple pero falta",
-            },
-
-            integrationGrade: null,
-            currentState: "pending_integration_grade"
-        },
-        {
-            id: 3,
-            weekNumber: 3,
-            title: "Sistema de Reportes",
-            assignmentDate: new Date(2026, 1, 3),
-            dueDate: new Date(2026, 1, 10),
-
-            tutorAssignment: {
-                description: "Implementar módulo de generación de reportes",
-                requirements: [
-                    "Reportes en PDF",
-                    "Filtros por fecha",
-                    "Exportación a Excel",
-                    "Gráficos estadísticos"
-                ],
-                assignedBy: "Ing. Carlos Pérez",
-                assignedDate: new Date(2026, 1, 3),
-            },
-
-            studentSubmission: {
-                uploadedFile: "avance_semana3.pdf",
-                submittedDate: new Date(2026, 1, 9),
-                comments: "Implementación con librería jsPDF",
-            },
-
-            tutorReview: null,
-            integrationGrade: null,
-            currentState: "pending_tutor_review"
-        },
-        {
-            id: 4,
-            weekNumber: 4,
-            title: "API REST y Endpoints",
-            assignmentDate: new Date(2026, 1, 10),
-            dueDate: new Date(2026, 1, 17),
-
-            tutorAssignment: {
-                description: "Desarrollar API REST para el backend del sistema",
-                requirements: [
-                    "CRUD completo para entidades principales",
-                    "Validación de datos con Zod",
-                    "Documentación con Swagger",
-                    "Manejo de errores estándar"
-                ],
-                assignedBy: "Ing. Carlos Pérez",
-                assignedDate: new Date(2026, 1, 10),
-            },
-
-            studentSubmission: null,
-            tutorReview: null,
-            integrationGrade: null,
-            currentState: "pending_upload"
-        },
-        {
-            id: 5,
-            weekNumber: 5,
-            title: "Optimización y Testing",
-            assignmentDate: new Date(2026, 1, 17),
-            dueDate: new Date(2026, 1, 24),
-
-            tutorAssignment: null,
-            studentSubmission: null,
-            tutorReview: null,
-            integrationGrade: null,
-            currentState: "pending_assignment"
+    const handleSubmitProgress = async (uploadedFile, comment = '') => {
+        if (!uploadedFile) {
+            setAlertState({
+                open: true,
+                title: 'Archivo Faltante',
+                message: 'Por favor, sube el archivo de tu avance antes de enviar.',
+                status: 'warning'
+            });
+            return;
         }
-    ];
+
+        setLoading(true);
+        try {
+            const formData = new FormData();
+            formData.append('file', uploadedFile);
+            // Calculamos la semana basada en el progreso actual o la asignada
+            formData.append('semana', selectedProgress.weekNumber || (weeklyProgress.length + 1));
+            formData.append('contenido', comment || 'Avance semanal subido desde el frontend');
+
+            await ActivityService.createEvidencia(selectedProgress.id, formData);
+
+            setDetailModalOpen(false);
+            setAlertState({
+                open: true,
+                title: '¡Avance Enviado!',
+                message: 'Tu avance semanal ha sido enviado correctamente. Tu tutor lo revisará pronto.',
+                status: 'success'
+            });
+
+            // Recargar datos
+            fetchData();
+        } catch (error) {
+            setAlertState({
+                open: true,
+                title: 'Error al enviar',
+                message: error.message || 'Hubo un problema al subir tu evidencia.',
+                status: 'error'
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const progressData = {
+        completedWeeks: weeklyProgress.filter(p => p.currentState === 'graded').length,
+        totalWeeks: 16,
+        currentWeek: weeklyProgress.filter(p => p.studentSubmission).length + 1
+    };
 
     // Convertir avances a eventos del calendario
     const calendarEvents = weeklyProgress
@@ -198,9 +222,6 @@ function StudentAvances() {
             switch (progress.currentState) {
                 case 'graded':
                     color = '#4caf50';
-                    break;
-                case 'pending_integration_grade':
-                    color = '#2196f3';
                     break;
                 case 'pending_tutor_review':
                     color = '#ff9800';
@@ -214,7 +235,7 @@ function StudentAvances() {
 
             return {
                 title: `S${progress.weekNumber}: ${title}`,
-                date: progress.dueDate,
+                date: progress.dueDate ? new Date(progress.dueDate) : null,
                 color: color,
                 progressId: progress.id
             };
@@ -224,14 +245,10 @@ function StudentAvances() {
         switch (state) {
             case 'graded':
                 return { label: 'Calificado', color: '#4caf50', icon: CheckCircle };
-            case 'pending_integration_grade':
-                return { label: 'Esperando Calificación', color: '#2196f3', icon: Grade };
             case 'pending_tutor_review':
                 return { label: 'En Revisión', color: '#ff9800', icon: PlayCircleOutline };
             case 'pending_upload':
                 return { label: 'Pendiente de Entrega', color: '#f44336', icon: UploadFile };
-            case 'pending_assignment':
-                return { label: 'Sin Asignar', color: '#9e9e9e', icon: RadioButtonUnchecked };
             default:
                 return { label: 'Desconocido', color: '#9e9e9e', icon: RadioButtonUnchecked };
         }
@@ -245,10 +262,16 @@ function StudentAvances() {
     };
 
     const handleDateClick = (date) => {
+        if (!date) return;
         // Buscar avance en esa fecha
-        const progress = weeklyProgress.find(p =>
-            p.dueDate.toDateString() === date.toDateString()
-        );
+        const progress = weeklyProgress.find(p => {
+            if (!p.dueDate) return false;
+            try {
+                return new Date(p.dueDate).toDateString() === date.toDateString();
+            } catch (e) {
+                return false;
+            }
+        });
         if (progress && progress.tutorAssignment) {
             openDetailModal(progress);
         }
@@ -261,42 +284,11 @@ function StudentAvances() {
         // Determinar pestaña inicial según el estado
         if (!progress.studentSubmission) {
             setInitialTab(1); // Ir a "Mi Entrega"
-        } else if (!progress.tutorReview) {
-            setInitialTab(2); // Ir a "Revisión del Tutor"
-        } else if (!progress.integrationGrade) {
-            setInitialTab(3); // Ir a "Calificación Final"
+        } else if (!progress.grading) {
+            setInitialTab(1); // Ir a "Mi Entrega" (estado revisión)
         } else {
-            setInitialTab(0); // Mostrar asignación
+            setInitialTab(2); // Ir a "Calificación"
         }
-    };
-
-    const handleCloseModal = () => {
-        setDetailModalOpen(false);
-        setSelectedProgress(null);
-        setInitialTab(0);
-    };
-
-    const handleSubmitProgress = (uploadedFile) => {
-        if (!uploadedFile) {
-            setAlertState({
-                open: true,
-                title: 'Archivo Faltante',
-                message: 'Por favor, sube el archivo de tu avance antes de enviar.',
-                status: 'warning'
-            });
-            return;
-        }
-
-        // Aquí iría la lógica para enviar al backend
-        console.log('Enviando avance:', uploadedFile);
-
-        setDetailModalOpen(false);
-        setAlertState({
-            open: true,
-            title: '¡Avance Enviado!',
-            message: 'Tu avance semanal ha sido enviado correctamente. Tu tutor lo revisará pronto.',
-            status: 'success'
-        });
     };
 
     const progressPercentage = (progressData.completedWeeks / progressData.totalWeeks) * 100;
@@ -446,10 +438,9 @@ function StudentAvances() {
                                             {progress.tutorAssignment && (
                                                 <Box sx={{ mb: 2 }}>
                                                     <Stepper activeStep={
-                                                        progress.currentState === 'graded' ? 4 :
-                                                            progress.currentState === 'pending_integration_grade' ? 3 :
-                                                                progress.currentState === 'pending_tutor_review' ? 2 :
-                                                                    progress.currentState === 'pending_upload' ? 1 : 0
+                                                        progress.currentState === 'graded' ? 3 :
+                                                            progress.currentState === 'pending_tutor_review' ? 2 :
+                                                                progress.currentState === 'pending_upload' ? 1 : 0
                                                     } alternativeLabel>
                                                         <Step completed={!!progress.tutorAssignment}>
                                                             <StepLabel>Asignado</StepLabel>
@@ -457,10 +448,7 @@ function StudentAvances() {
                                                         <Step completed={!!progress.studentSubmission}>
                                                             <StepLabel>Entregado</StepLabel>
                                                         </Step>
-                                                        <Step completed={!!progress.tutorReview}>
-                                                            <StepLabel>Revisado</StepLabel>
-                                                        </Step>
-                                                        <Step completed={!!progress.integrationGrade}>
+                                                        <Step completed={!!progress.grading}>
                                                             <StepLabel>Calificado</StepLabel>
                                                         </Step>
                                                     </Stepper>

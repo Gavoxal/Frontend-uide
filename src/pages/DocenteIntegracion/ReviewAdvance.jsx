@@ -1,78 +1,95 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-<<<<<<< HEAD
-    Box, Typography, Paper, Grid, TextField, Button, IconButton, Divider, Chip
-=======
-    Box, Typography, Paper, Grid, TextField, Button, IconButton, Divider, Chip, Tooltip
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
+    Box, Typography, Paper, TextField, Button, IconButton, Divider, Chip, CircularProgress, Alert, Snackbar
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
-import VisibilityIcon from '@mui/icons-material/Visibility';
 import DownloadIcon from '@mui/icons-material/Download';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import SaveIcon from '@mui/icons-material/Save';
-import SendIcon from '@mui/icons-material/Send';
-<<<<<<< HEAD
-=======
-import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
-import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
-import { weeksData } from './mockWeeks';
+import { ActivityService } from '../../services/activity.service';
 
 function ReviewAdvance() {
-    const { weekId, studentId } = useParams();
+    const { studentId: evidenciaId } = useParams();
     const navigate = useNavigate();
-    const [student, setStudent] = useState(null);
-    const [week, setWeek] = useState(null);
+    const [evidencia, setEvidencia] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
     const [grade, setGrade] = useState('');
     const [comment, setComment] = useState('');
+    const [alert, setAlert] = useState({ open: false, message: '', severity: 'success' });
+
+    const loadData = async () => {
+        setLoading(true);
+        try {
+            const data = await ActivityService.getById(evidenciaId);
+            setEvidencia(data);
+            setGrade(data.calificacionDocente || '');
+            setComment(data.feedbackDocente || '');
+        } catch (error) {
+            console.error("Error loading evidence:", error);
+            setAlert({ open: true, message: 'Error al cargar la evidencia', severity: 'error' });
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        // Simular búsqueda de datos
-        const foundWeek = weeksData.find(w => w.id === parseInt(weekId));
-        if (foundWeek) {
-            setWeek(foundWeek);
-            const foundStudent = foundWeek.students.find(s => s.id === studentId);
-            setStudent(foundStudent);
-        }
-    }, [weekId, studentId]);
+        if (evidenciaId) loadData();
+    }, [evidenciaId]);
 
-    if (!student || !week) return <Typography>Cargando...</Typography>;
-
-    const getFileIcon = (type) => {
-        if (type === 'pdf') return <PictureAsPdfIcon sx={{ color: '#F40F02', fontSize: 30 }} />;
-        if (type === 'zip') return <InsertDriveFileIcon sx={{ color: '#4CAF50', fontSize: 30 }} />;
+    const getFileIcon = (url) => {
+        if (!url) return <InsertDriveFileIcon sx={{ fontSize: 30 }} />;
+        const lowerUrl = url.toLowerCase();
+        if (lowerUrl.endsWith('.pdf')) return <PictureAsPdfIcon sx={{ color: '#F40F02', fontSize: 30 }} />;
+        if (lowerUrl.endsWith('.zip') || lowerUrl.endsWith('.rar')) return <InsertDriveFileIcon sx={{ color: '#4CAF50', fontSize: 30 }} />;
         return <InsertDriveFileIcon sx={{ fontSize: 30 }} />;
     };
 
-<<<<<<< HEAD
-=======
-    // Lógica de navegación entre estudiantes
-    const currentIndex = week.students.findIndex(s => s.id === studentId);
-    const prevStudent = currentIndex > 0 ? week.students[currentIndex - 1] : null;
-    const nextStudent = currentIndex < week.students.length - 1 ? week.students[currentIndex + 1] : null;
+    const handleSave = async () => {
+        if (!grade || isNaN(grade) || grade < 0 || grade > 10) {
+            setAlert({ open: true, message: 'Por favor ingresa una calificación válida (0-10)', severity: 'warning' });
+            return;
+        }
 
-    const handleNavigate = (newStudentId) => {
-        navigate(`/docente-integracion/review/${weekId}/${newStudentId}`);
+        setSaving(true);
+        try {
+            await ActivityService.gradeEvidenciaDocente(evidenciaId, {
+                grade: Number(grade),
+                comment: comment
+            });
+            setAlert({ open: true, message: 'Evaluación guardada correctamente', severity: 'success' });
+            loadData();
+        } catch (error) {
+            console.error("Error saving evaluation:", error);
+            setAlert({ open: true, message: 'Error al guardar la evaluación', severity: 'error' });
+        } finally {
+            setSaving(false);
+        }
     };
 
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
+    if (loading) return (
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+            <CircularProgress />
+        </Box>
+    );
+
+    if (!evidencia) return (
+        <Box sx={{ p: 4, textAlign: 'center' }}>
+            <Typography variant="h6" color="error">Evidencia no encontrada</Typography>
+            <Button onClick={() => navigate(-1)} sx={{ mt: 2 }}>Volver</Button>
+        </Box>
+    );
+
+    const student = evidencia.actividad?.propuesta?.estudiante;
+    const studentName = student ? `${student.nombres} ${student.apellidos}` : 'Estudiante';
+    const fileName = evidencia.archivoUrl ? evidencia.archivoUrl.split('/').pop() : 'documento';
+
     return (
         <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', bgcolor: '#F4F6F8' }}>
-            {/* Header Personalizado */}
-            <Paper
-                elevation={1}
-                sx={{
-                    p: 2,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    bgcolor: 'white'
-                }}
-            >
+            <Paper elevation={1} sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: 'white' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     <IconButton onClick={() => navigate(-1)} sx={{ color: '#000A9B' }}>
                         <ArrowBackIcon />
@@ -81,222 +98,116 @@ function ReviewAdvance() {
                         Revisión de Avances
                     </Typography>
                 </Box>
-                <IconButton>
-                    <NotificationsNoneIcon />
-                </IconButton>
+                <IconButton><NotificationsNoneIcon /></IconButton>
             </Paper>
 
             <Box sx={{ p: 3, flex: 1, overflow: 'auto' }}>
-<<<<<<< HEAD
-                <Grid container spacing={3} sx={{ height: '100%' }}>
-                    {/* Panel Izquierdo: Contenido */}
-                    <Grid item xs={12} md={8}>
-                        <Box sx={{ mb: 3 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                                <Typography variant="h4" fontWeight="bold" color="text.primary">
-                                    Semana {week.id}: Integración
-                                </Typography>
-                                <Chip
-                                    label="PENDIENTE"
-                                    sx={{
-                                        bgcolor: '#FFF9C4',
-                                        color: '#FBC02D',
-                                        fontWeight: 'bold',
-                                        borderRadius: 1
-                                    }}
-                                />
-=======
                 <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
-                    {/* Panel Izquierdo: Contenido */}
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                         <Box sx={{ mb: 3 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                    <Typography variant="h4" fontWeight="bold" color="text.primary">
-                                        Semana {week.id}: Integración
-                                    </Typography>
-                                    <Chip
-                                        label="PENDIENTE"
-                                        sx={{
-                                            bgcolor: '#FFF9C4',
-                                            color: '#FBC02D',
-                                            fontWeight: 'bold',
-                                            borderRadius: 1
-                                        }}
-                                    />
-                                </Box>
-
-                                {/* Flechas de Navegación */}
-                                <Box sx={{ display: 'flex', gap: 1 }}>
-                                    <Tooltip title="Estudiante anterior">
-                                        <span>
-                                            <IconButton
-                                                onClick={() => handleNavigate(prevStudent.id)}
-                                                disabled={!prevStudent}
-                                                sx={{
-                                                    bgcolor: 'white',
-                                                    border: '1px solid #e0e0e0',
-                                                    '&:hover': { bgcolor: '#f5f5f5' }
-                                                }}
-                                            >
-                                                <KeyboardArrowLeftIcon />
-                                            </IconButton>
-                                        </span>
-                                    </Tooltip>
-                                    <Tooltip title="Siguiente estudiante">
-                                        <span>
-                                            <IconButton
-                                                onClick={() => handleNavigate(nextStudent.id)}
-                                                disabled={!nextStudent}
-                                                sx={{
-                                                    bgcolor: 'white',
-                                                    border: '1px solid #e0e0e0',
-                                                    '&:hover': { bgcolor: '#f5f5f5' }
-                                                }}
-                                            >
-                                                <KeyboardArrowRightIcon />
-                                            </IconButton>
-                                        </span>
-                                    </Tooltip>
-                                </Box>
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                                <Typography variant="h4" fontWeight="bold">
+                                    Semana {evidencia.semana}: {evidencia.actividad?.nombre || 'Entrega'}
+                                </Typography>
+                                <Chip
+                                    label={evidencia.estadoRevisionDocente || 'PENDIENTE'}
+                                    color={evidencia.estadoRevisionDocente === 'APROBADO' ? 'success' : 'warning'}
+                                    sx={{ fontWeight: 'bold', borderRadius: 1 }}
+                                />
                             </Box>
                             <Typography variant="body1" color="text.secondary">
-                                Estudiante: <b>{student.name}</b> • Ene 12 - Ene 19
+                                Estudiante: <b>{studentName}</b>
                             </Typography>
                         </Box>
 
-                        <Paper variant="outlined" sx={{ p: 3, mb: 3, bgcolor: 'white', borderRadius: 2 }}>
-                            <Typography variant="h6" color="text.secondary" gutterBottom>
-                                Resumen del Estudiante
-                            </Typography>
-                            <Typography variant="body1" sx={{ mt: 2, lineHeight: 1.6 }}>
-                                {student.summary || 'El estudiante no ha proporcionado un resumen.'}
+                        <Paper variant="outlined" sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+                            <Typography variant="h6" color="text.secondary" gutterBottom>Contenido de la Entrega</Typography>
+                            <Divider sx={{ my: 1 }} />
+                            <Typography variant="body1" sx={{ mt: 2, whiteSpace: 'pre-wrap' }}>
+                                {evidencia.contenido || 'Sin descripción.'}
                             </Typography>
                         </Paper>
 
-                        <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
-                            Archivos entregados
-                        </Typography>
-
-                        {student.files?.map((file, index) => (
-                            <Paper
-                                key={index}
-                                variant="outlined"
-                                sx={{
-                                    p: 2,
-                                    mb: 2,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    borderRadius: 2
-                                }}
-                            >
+                        <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>Archivo entregado</Typography>
+                        {evidencia.archivoUrl ? (
+                            <Paper variant="outlined" sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: 2 }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                    <Box sx={{
-                                        width: 48,
-                                        height: 48,
-                                        bgcolor: file.type === 'pdf' ? '#FFEBEE' : '#E8F5E9',
-                                        borderRadius: 1,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center'
-                                    }}>
-                                        {getFileIcon(file.type)}
-                                    </Box>
-                                    <Box>
-                                        <Typography variant="subtitle1" fontWeight="bold">
-                                            {file.name}
-                                        </Typography>
-                                        <Typography variant="caption" color="text.secondary">
-                                            {file.size}
-                                        </Typography>
-                                    </Box>
+                                    {getFileIcon(evidencia.archivoUrl)}
+                                    <Typography variant="subtitle1" fontWeight="bold">{fileName}</Typography>
                                 </Box>
                                 <Button
-                                    startIcon={file.type === 'pdf' ? <VisibilityIcon /> : <DownloadIcon />}
-                                    sx={{ textTransform: 'none' }}
+                                    component="a"
+                                    href={evidencia.archivoUrl}
+                                    target="_blank"
+                                    startIcon={<DownloadIcon />}
                                 >
-                                    {file.type === 'pdf' ? 'Previsualizar' : 'Descargar'}
+                                    Abrir
                                 </Button>
                             </Paper>
-                        ))}
-<<<<<<< HEAD
-                    </Grid>
+                        ) : (
+                            <Typography variant="body2" color="gray">No hay archivo.</Typography>
+                        )}
 
-                    {/* Panel Derecho: Calificación */}
-                    <Grid item xs={12} md={4}>
-                        <Paper variant="outlined" sx={{ p: 3, height: '100%', bgcolor: 'white', borderRadius: 2 }}>
-=======
+                        <Box sx={{ mt: 4 }}>
+                            <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>Historial de Observaciones</Typography>
+                            {evidencia.comentarios?.length > 0 ? (
+                                evidencia.comentarios.map((c, i) => (
+                                    <Paper key={i} sx={{ p: 2, mb: 1, bgcolor: '#f5f5f5' }}>
+                                        <Typography variant="caption" color="primary" sx={{ fontWeight: 'bold' }}>
+                                            {c.usuario?.nombres} ({c.usuario?.rol})
+                                        </Typography>
+                                        <Typography variant="body2">{c.descripcion}</Typography>
+                                    </Paper>
+                                ))
+                            ) : (
+                                <Typography variant="body2" color="gray">Sin observaciones.</Typography>
+                            )}
+                        </Box>
                     </Box>
 
-                    {/* Panel Derecho: Calificación */}
                     <Box sx={{ width: { xs: '100%', md: 350 }, flexShrink: 0 }}>
-                        <Paper variant="outlined" sx={{ p: 3, bgcolor: 'white', borderRadius: 2, position: 'sticky', top: 24 }}>
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
-                            <Typography variant="h6" gutterBottom fontWeight="bold">
-                                ✏️ Panel de Calificación
-                            </Typography>
-
-                            <Box sx={{ my: 4, textAlign: 'center' }}>
-                                <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-                                    Calificación (0-10)
-                                </Typography>
-                                <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center' }}>
-                                    <TextField
-                                        value={grade}
-                                        onChange={(e) => setGrade(e.target.value)}
-                                        placeholder="0.0"
-                                        variant="standard"
-                                        inputProps={{
-                                            style: { fontSize: 40, textAlign: 'center', width: 80, fontWeight: 'bold', color: '#555' }
-                                        }}
-                                        InputProps={{ disableUnderline: true }}
-                                    />
-                                    <Typography variant="h4" color="text.secondary">/10</Typography>
-                                </Box>
+                        <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
+                            <Typography variant="h6" gutterBottom fontWeight="bold">✏️ Evaluación</Typography>
+                            <Box sx={{ my: 3, textAlign: 'center' }}>
+                                <TextField
+                                    value={grade}
+                                    onChange={(e) => setGrade(e.target.value)}
+                                    type="number"
+                                    label="Nota (0-10)"
+                                    fullWidth
+                                    sx={{ mb: 2 }}
+                                />
+                                {evidencia.calificacionTutor && (
+                                    <Typography variant="caption" display="block">
+                                        Nota Tutor: {evidencia.calificacionTutor}
+                                    </Typography>
+                                )}
                             </Box>
-
-                            <Typography variant="body2" color="text.secondary" gutterBottom>
-                                Comentarios
-                            </Typography>
                             <TextField
-                                multiline
-                                rows={6}
-                                fullWidth
-                                placeholder="Escribe tus observaciones aqui..."
+                                multiline rows={4} fullWidth
+                                label="Observaciones Técnicas"
                                 value={comment}
                                 onChange={(e) => setComment(e.target.value)}
-                                variant="outlined"
-                                sx={{ mb: 3, bgcolor: '#F9FAFB' }}
+                                sx={{ mb: 3 }}
                             />
-
                             <Button
                                 variant="contained"
                                 fullWidth
-                                endIcon={<SendIcon />}
-                                sx={{ mb: 2, bgcolor: '#C2185B', '&:hover': { bgcolor: '#880E4F' }, borderRadius: 2, py: 1.5 }}
+                                onClick={handleSave}
+                                disabled={saving}
+                                startIcon={<SaveIcon />}
+                                sx={{ bgcolor: '#000A9B' }}
                             >
-                                Enviar Comentario
-                            </Button>
-
-                            <Button
-                                variant="contained"
-                                fullWidth
-                                endIcon={<SaveIcon />}
-                                sx={{ bgcolor: '#000A9B', borderRadius: 2, py: 1.5 }}
-                            >
-                                Guardar Calificación
+                                {saving ? 'Guardando...' : 'Guardar'}
                             </Button>
                         </Paper>
-<<<<<<< HEAD
-                    </Grid>
-                </Grid>
-=======
                     </Box>
                 </Box>
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
             </Box>
+
+            <Snackbar open={alert.open} autoHideDuration={4000} onClose={() => setAlert({ ...alert, open: false })}>
+                <Alert severity={alert.severity}>{alert.message}</Alert>
+            </Snackbar>
         </Box>
     );
 }

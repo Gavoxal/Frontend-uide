@@ -84,13 +84,16 @@ function CalendarMui({ events = [], onDateClick, onEventClick, showViewToggle = 
 
     // Obtener eventos para una fecha específica
     const getEventsForDate = (date) => {
+        if (!date) return [];
+        const dateString = date.toDateString();
         return events.filter(event => {
-            const eventDate = new Date(event.date);
-            return (
-                eventDate.getDate() === date.getDate() &&
-                eventDate.getMonth() === date.getMonth() &&
-                eventDate.getFullYear() === date.getFullYear()
-            );
+            if (!event.date) return false;
+            try {
+                const eventDate = new Date(event.date);
+                return eventDate.toDateString() === dateString;
+            } catch (e) {
+                return false;
+            }
         });
     };
 
@@ -219,7 +222,8 @@ function CalendarMui({ events = [], onDateClick, onEventClick, showViewToggle = 
                             textAlign: "center",
                             fontSize: "0.75rem",
                             fontWeight: 600,
-                            color: "rgba(255,255,255,0.6)",
+                            fontWeight: 600,
+                            color: "text.secondary",
                         }}
                     >
                         {day}

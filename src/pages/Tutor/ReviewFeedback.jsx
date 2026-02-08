@@ -12,13 +12,18 @@ import {
     TableHead,
     TableRow,
     Paper,
-    Tooltip
+    Tooltip,
+    IconButton
 } from '@mui/material';
 import { useLocation } from 'react-router-dom';
 import FeedbackPanel from '../../components/feedbackpanel.mui.component';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { useEffect } from 'react';
+import { ActivityService } from '../../services/activity.service';
+import LinearProgress from '@mui/material/LinearProgress';
+import Snackbar from '@mui/material/Snackbar';
 
 // Mock data de avances por revisar
 const MOCK_SUBMISSIONS = [
@@ -84,42 +89,154 @@ function ReviewFeedback() {
     const location = useLocation();
     const preselectedStudent = location.state?.student;
 
-    const [submissions] = useState(MOCK_SUBMISSIONS);
-    const [selectedSubmission, setSelectedSubmission] = useState(
-        preselectedStudent
-            ? submissions.find(s => s.studentId === preselectedStudent.id)
-            : null
-    );
-    const [view, setView] = useState(selectedSubmission ? 'detail' : 'list'); // 'list' | 'detail'
+    const [submissions, setSubmissions] = useState([]);
+    const [selectedSubmission, setSelectedSubmission] = useState(null);
+    const [view, setView] = useState('list');
+    const [loading, setLoading] = useState(true);
+    const [alertState, setAlertState] = useState({ open: false, message: '', severity: 'success' });
+
+    const loadSubmissions = async (studentList, preselected = null) => {
+        try {
+            let allSubmissions = [];
+
+            if (preselected?.propuesta?.id) {
+                const activities = await ActivityService.getByPropuesta(preselected.propuesta.id);
+                allSubmissions = activities
+                    .filter(a => a.evidencias && a.evidencias.length > 0)
+                    .flatMap(a => a.evidencias.map(e => ({
+                        id: e.id,
+                        activityId: a.id,
+                        student: preselected.name,
+                        studentId: preselected.id,
+                        title: a.nombre,
+                        submissionDate: e.fechaEntrega?.split('T')[0] || 'N/A',
+                        fileName: e.archivoUrl?.split('/').pop() || 'archivo.bin',
+                        fileSize: 'N/A',
+                        fileLink: e.archivoUrl,
+                        comments: e.contenido || 'Sin comentarios adicionales',
+                        weekNumber: e.semana || a.semana || 0,
+                        status: e.calificacionTutor !== null ? 'reviewed' : 'pending',
+                        grade: e.calificacionTutor,
+                        tutorComments: e.feedbackTutor || '',
+                        historicalComments: e.comentarios || []
+                    })));
+            } else {
+                // Fetch for all students
+                const submissionPromises = studentList
+                    .filter(s => {
+                        if (!s.propuestaId) console.warn(`Student ${s.name} has no proposal ID`);
+                        return s.propuestaId;
+                    })
+                    .map(async (s) => {
+                        try {
+                            const activities = await ActivityService.getByPropuesta(s.propuestaId);
+
+                            const activitiesWithEvidence = activities.filter(a => a.evidencias && a.evidencias.length > 0);
+
+                            return activitiesWithEvidence
+                                .flatMap(a => a.evidencias.map(e => ({
+                                    id: e.id,
+                                    activityId: a.id,
+                                    student: s.name,
+                                    studentId: s.id,
+                                    title: a.nombre,
+                                    submissionDate: e.fechaEntrega?.split('T')[0] || 'N/A',
+                                    fileName: e.archivoUrl?.split('/').pop() || 'archivo.bin',
+                                    fileSize: 'N/A',
+                                    fileLink: e.archivoUrl,
+                                    comments: e.contenido || 'Sin comentarios adicionales',
+                                    weekNumber: e.semana || a.semana || 0,
+                                    status: e.calificacionTutor !== null ? 'reviewed' : 'pending',
+                                    grade: e.calificacionTutor,
+                                    tutorComments: e.feedbackTutor || '',
+                                    historicalComments: e.comentarios || []
+                                })));
+                        } catch (e) {
+                            console.error(`Error fetching for student ${s.name}`, e);
+                            return [];
+                        }
+                    });
+                const results = await Promise.all(submissionPromises);
+                allSubmissions = results.flat();
+            }
+
+            allSubmissions.sort((a, b) => {
+                const dateA = a.submissionDate || a.updatedAt || a.fecha_actualizacion || 0;
+                const dateB = b.submissionDate || b.updatedAt || b.fecha_actualizacion || 0;
+                return new Date(dateB) - new Date(dateA);
+            });
+
+            setSubmissions(allSubmissions);
+        } catch (error) {
+            console.error("Error loading submissions:", error);
+        }
+    };
 
     const handleSelectSubmission = (submission) => {
         setSelectedSubmission(submission);
         setView('detail');
     };
 
-    const handleBackToList = () => {
-        setSelectedSubmission(null);
-        setView('list');
+    const handleSubmitFeedback = async (feedbackData) => {
+        setLoading(true);
+        try {
+            await ActivityService.gradeEvidencia(selectedSubmission.id, {
+                calificacion: Number(feedbackData.rating), // Asegurar que sea número
+                observaciones: feedbackData.observations
+            });
+
+            setAlertState({
+                open: true,
+                message: `Feedback enviado correctamente para ${selectedSubmission.student}`,
+                severity: 'success'
+            });
+
+            // Volver a la lista
+            setView('list');
+            setSelectedSubmission(null);
+
+            // Refrescar lista de evidencias
+            await loadInitialData();
+        } catch (error) {
+            setAlertState({
+                open: true,
+                message: error.message || 'Error al enviar feedback',
+                severity: 'error'
+            });
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleSubmitFeedback = (feedback) => {
-        console.log('Feedback enviado:', feedback);
-        console.log('Para estudiante:', selectedSubmission.student);
+    const loadInitialData = async () => {
+        setLoading(true);
+        try {
+            const { TutorService } = await import('../../services/tutor.service');
+            const tutorStudents = await TutorService.getAssignedStudents();
+            const mappedStudents = tutorStudents.map(s => ({
+                id: s.id,
+                name: `${s.nombres} ${s.apellidos}`,
+                propuestaId: s.propuesta?.id
+            }));
 
-        alert(`Feedback enviado a ${selectedSubmission.student}`);
-
-        // Actualizar estado del submission a "reviewed" (simulado)
-        // setSelectedSubmission({ ...selectedSubmission, status: 'reviewed' });
-
-        // Volver a la lista
-        setView('list');
-        setSelectedSubmission(null);
+            await loadSubmissions(mappedStudents, preselectedStudent);
+        } catch (error) {
+            console.error("Error in ReviewFeedback loadInitialData:", error);
+        } finally {
+            setLoading(false);
+        }
     };
+
+    useEffect(() => {
+        loadInitialData();
+    }, [preselectedStudent]);
 
     const handleCancelFeedback = () => {
         setView('list');
         setSelectedSubmission(null);
     };
+
+    const handleBackToList = handleCancelFeedback;
 
 
 
@@ -127,6 +244,17 @@ function ReviewFeedback() {
 
     return (
         <Box sx={{ maxWidth: 1600, mx: 'auto' }}>
+            {loading && <LinearProgress sx={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999 }} />}
+            <Snackbar
+                open={alertState.open}
+                autoHideDuration={6000}
+                onClose={() => setAlertState(prev => ({ ...prev, open: false }))}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            >
+                <Alert onClose={() => setAlertState(prev => ({ ...prev, open: false }))} severity={alertState.severity} sx={{ width: '100%' }}>
+                    {alertState.message}
+                </Alert>
+            </Snackbar>
             {/* Encabezado */}
             <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Box>
@@ -203,21 +331,36 @@ function ReviewFeedback() {
                                             </Typography>
                                         </TableCell>
                                         <TableCell align="center">
-                                            <Tooltip title="Revisar Avance">
-                                                <Button
-                                                    variant="contained"
-                                                    size="small"
-                                                    onClick={() => handleSelectSubmission(submission)}
-                                                    startIcon={<VisibilityIcon />}
-                                                    sx={{
-                                                        backgroundColor: '#667eea',
-                                                        boxShadow: 'none',
-                                                        '&:hover': { backgroundColor: '#5a6fd6', boxShadow: 'none' }
-                                                    }}
-                                                >
-                                                    Revisar
-                                                </Button>
-                                            </Tooltip>
+                                            {submission.status === 'reviewed' ? (
+                                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                                                    <Chip label="Revisado" color="success" size="small" variant="outlined" />
+                                                    <Tooltip title="Ver Detalles">
+                                                        <IconButton
+                                                            size="small"
+                                                            onClick={() => handleSelectSubmission(submission)}
+                                                            color="primary"
+                                                        >
+                                                            <VisibilityIcon />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                </Box>
+                                            ) : (
+                                                <Tooltip title="Revisar Avance">
+                                                    <Button
+                                                        variant="contained"
+                                                        size="small"
+                                                        onClick={() => handleSelectSubmission(submission)}
+                                                        startIcon={<AssignmentTurnedInIcon />} // Changed icon to distinguish
+                                                        sx={{
+                                                            backgroundColor: '#667eea',
+                                                            boxShadow: 'none',
+                                                            '&:hover': { backgroundColor: '#5a6fd6', boxShadow: 'none' }
+                                                        }}
+                                                    >
+                                                        Revisar
+                                                    </Button>
+                                                </Tooltip>
+                                            )}
                                         </TableCell>
                                     </TableRow>
                                 ))}

@@ -9,72 +9,83 @@ import {
     TableRow,
     Paper,
     Avatar,
-    Button
+    Button,
+    Chip
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
-function RecentStudentsTable({ students }) {
+function RecentStudentsTable({ evidences }) {
     const navigate = useNavigate();
+
+    const getStatusChip = (status) => {
+        const config = {
+            aprobado: { label: 'Aprobado', color: 'success' },
+            rechazado: { label: 'Rechazado', color: 'error' },
+            pendiente: { label: 'Pendiente', color: 'warning' },
+            pending: { label: 'Pendiente', color: 'warning' }
+        };
+        const current = config[status?.toLowerCase()] || config.pendiente;
+        return <Chip label={current.label} color={current.color} size="small" variant="outlined" />;
+    };
 
     return (
         <TableContainer component={Paper} elevation={1} sx={{ borderRadius: 2 }}>
-            <Box sx={{ p: 2, bgcolor: '#E0E0E0' }}>
-                <Table sx={{ minWidth: 650 }}>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell><Typography fontWeight="bold">Estudiantes</Typography></TableCell>
-                            <TableCell><Typography fontWeight="bold">ID</Typography></TableCell>
-                            <TableCell><Typography fontWeight="bold">Tema</Typography></TableCell>
-                            <TableCell><Typography fontWeight="bold">Fecha</Typography></TableCell>
-                            <TableCell align="right"><Typography fontWeight="bold">Action</Typography></TableCell>
-                        </TableRow>
-                    </TableHead>
-                </Table>
-            </Box>
-
             <Table sx={{ minWidth: 650 }}>
+                <TableHead sx={{ bgcolor: '#f5f5f5' }}>
+                    <TableRow>
+                        <TableCell><Typography fontWeight="bold">Estudiante</Typography></TableCell>
+                        <TableCell><Typography fontWeight="bold">Título del Proyecto</Typography></TableCell>
+                        <TableCell><Typography fontWeight="bold">Semana</Typography></TableCell>
+                        <TableCell><Typography fontWeight="bold">Estado</Typography></TableCell>
+                        <TableCell align="right"><Typography fontWeight="bold">Acción</Typography></TableCell>
+                    </TableRow>
+                </TableHead>
                 <TableBody>
-                    {students.map((student) => (
-                        <TableRow
-                            key={student.id}
-                            sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                        >
-                            <TableCell component="th" scope="row">
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                    <Avatar sx={{ bgcolor: '#880E4F' }}>{student.name.charAt(0)}</Avatar>
-                                    <Box>
-                                        <Typography variant="body2" fontWeight="bold">
-                                            {student.name.split(' ')[0]}
-                                        </Typography>
-                                        <Typography variant="caption" color="text.secondary">
-                                            {student.name.split(' ').slice(1).join(' ')}
+                    {evidences.map((ev) => {
+                        const student = ev.actividad?.propuesta?.estudiante;
+                        const studentName = student ? `${student.nombres} ${student.apellidos}` : 'Desconocido';
+                        const projectTitle = ev.actividad?.propuesta?.titulo || 'Sin título';
+
+                        return (
+                            <TableRow
+                                key={ev.id}
+                                sx={{ '&:last-child td, &:last-child th': { border: 0 }, '&:hover': { bgcolor: '#fafafa' } }}
+                            >
+                                <TableCell>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                        <Avatar sx={{ bgcolor: '#000A9B', fontSize: '14px' }}>
+                                            {student ? student.nombres.charAt(0) : '?'}
+                                        </Avatar>
+                                        <Typography variant="body2" fontWeight="500">
+                                            {studentName}
                                         </Typography>
                                     </Box>
-                                </Box>
-                            </TableCell>
-                            <TableCell>{student.cedula}</TableCell>
-                            <TableCell>
-                                <Typography variant="body2" sx={{ maxWidth: 200 }} noWrap>
-                                    {student.tema}
-                                </Typography>
-                            </TableCell>
-                            <TableCell>{student.fecha}</TableCell>
-                            <TableCell align="right">
-                                <Button
-                                    variant="contained"
-                                    size="small"
-                                    sx={{
-                                        bgcolor: '#000A9B',
-                                        textTransform: 'none',
-                                        borderRadius: 1
-                                    }}
-                                    onClick={() => navigate(`/docente-integracion/review/${student.weekId}/${student.id}`)}
-                                >
-                                    Revisar
-                                </Button>
-                            </TableCell>
-                        </TableRow>
-                    ))}
+                                </TableCell>
+                                <TableCell>
+                                    <Typography variant="body2" sx={{ maxWidth: 250 }} noWrap>
+                                        {projectTitle}
+                                    </Typography>
+                                </TableCell>
+                                <TableCell>Semana {ev.semana}</TableCell>
+                                <TableCell>{getStatusChip(ev.estadoRevisionDocente)}</TableCell>
+                                <TableCell align="right">
+                                    <Button
+                                        variant="outlined"
+                                        size="small"
+                                        sx={{
+                                            color: '#000A9B',
+                                            borderColor: '#000A9B',
+                                            textTransform: 'none',
+                                            borderRadius: '20px'
+                                        }}
+                                        onClick={() => navigate(`/docente-integracion/review/0/${ev.id}`)}
+                                    >
+                                        Revisar
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        );
+                    })}
                 </TableBody>
             </Table>
         </TableContainer>

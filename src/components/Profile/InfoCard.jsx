@@ -8,26 +8,25 @@ import {
     List,
     ListItem,
     ListItemIcon,
-    ListItemText,
-    Grid
+    ListItemText
 } from "@mui/material";
 import { Edit as EditIcon } from "@mui/icons-material";
 
 function InfoItem({ icon, label, value }) {
     return (
-        <ListItem sx={{ px: 0, py: 1.5 }}>
-            <ListItemIcon sx={{ minWidth: 40 }}>
+        <ListItem sx={{ px: 0, py: 2 }}>
+            <ListItemIcon sx={{ minWidth: 56, color: "#1976d2" }}>
                 {icon}
             </ListItemIcon>
             <ListItemText
                 primary={
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
                         {label}
                     </Typography>
                 }
                 secondary={
-                    <Typography variant="body2" fontWeight="500">
-                        {value}
+                    <Typography variant="body1" color="text.primary" fontWeight="500">
+                        {value || "No registrado"}
                     </Typography>
                 }
             />
@@ -37,8 +36,8 @@ function InfoItem({ icon, label, value }) {
 
 function InfoCard({ title, items, onEdit }) {
     return (
-        <Card>
-            <CardContent>
+        <Card sx={{ height: '100%', boxShadow: 2 }}>
+            <CardContent sx={{ p: 3 }}>
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
                     <Typography variant="h6" fontWeight="bold">
                         {title}
@@ -46,7 +45,7 @@ function InfoCard({ title, items, onEdit }) {
                     {onEdit && (
                         <IconButton
                             size="small"
-                            sx={{ color: "#667eea" }}
+                            sx={{ color: "#1976d2" }}
                             onClick={onEdit}
                         >
                             <EditIcon />

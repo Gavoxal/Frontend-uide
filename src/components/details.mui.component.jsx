@@ -16,6 +16,8 @@ import {
     ListItemText,
     Button,
     Chip,
+    Grid,
+    TextField,
 } from '@mui/material';
 import {
     Assignment,
@@ -47,6 +49,7 @@ function DetailsModal({
 }) {
     const [currentTab, setCurrentTab] = useState(initialTab);
     const [uploadedFile, setUploadedFile] = useState(null);
+    const [comment, setComment] = useState('');
 
     React.useEffect(() => {
         setCurrentTab(initialTab);
@@ -55,6 +58,7 @@ function DetailsModal({
     React.useEffect(() => {
         if (!open) {
             setUploadedFile(null);
+            setComment('');
         }
     }, [open]);
 
@@ -68,9 +72,10 @@ function DetailsModal({
 
     const handleSubmit = () => {
         if (onSubmit) {
-            onSubmit(uploadedFile);
+            onSubmit(uploadedFile, comment);
         }
         setUploadedFile(null);
+        setComment('');
     };
 
     if (!progressData) return null;
@@ -125,17 +130,15 @@ function DetailsModal({
             >
                 <Tab icon={<Assignment />} label="Asignación" iconPosition="start" sx={{ textTransform: 'none' }} />
                 <Tab icon={<UploadFile />} label="Mi Entrega" iconPosition="start" sx={{ textTransform: 'none' }} />
-                <Tab icon={<CheckCircle />} label="Revisión Tutor" iconPosition="start" sx={{ textTransform: 'none' }} />
                 <Tab icon={<Grade />} label="Calificación" iconPosition="start" sx={{ textTransform: 'none' }} />
             </Tabs>
-
-            <DialogContent sx={{ py: 3 }}>
+            <DialogContent sx={{ p: 3 }}>
                 {/* Pestaña 1: Asignación del Tutor */}
                 {currentTab === 0 && progressData.tutorAssignment && (
                     <Box>
                         <Alert severity="info" sx={{ mb: 3 }}>
                             Asignado por <strong>{progressData.tutorAssignment.assignedBy}</strong> el{' '}
-                            {progressData.tutorAssignment.assignedDate.toLocaleDateString('es-ES')}
+                            {progressData.tutorAssignment.assignedDate?.toLocaleDateString ? progressData.tutorAssignment.assignedDate.toLocaleDateString('es-ES') : 'N/A'}
                         </Alert>
 
                         <Typography variant="h6" fontWeight="600" gutterBottom>
@@ -144,17 +147,6 @@ function DetailsModal({
                         <Typography variant="body1" paragraph>
                             {progressData.tutorAssignment.description}
                         </Typography>
-
-                        <Typography variant="h6" fontWeight="600" gutterBottom sx={{ mt: 3 }}>
-                            Requisitos
-                        </Typography>
-                        <List>
-                            {progressData.tutorAssignment.requirements.map((req, idx) => (
-                                <ListItem key={idx}>
-                                    <ListItemText primary={`• ${req}`} />
-                                </ListItem>
-                            ))}
-                        </List>
                     </Box>
                 )}
 
@@ -164,7 +156,7 @@ function DetailsModal({
                         {progressData.studentSubmission ? (
                             <>
                                 <Alert severity="success" sx={{ mb: 3 }}>
-                                    Entregado el {progressData.studentSubmission.submittedDate.toLocaleDateString('es-ES')}
+                                    Entregado el {progressData.studentSubmission.submittedDate?.toLocaleDateString ? progressData.studentSubmission.submittedDate.toLocaleDateString('es-ES') : 'N/A'}
                                 </Alert>
 
                                 <Typography variant="h6" fontWeight="600" gutterBottom>
@@ -200,7 +192,7 @@ function DetailsModal({
                             <>
                                 <Alert severity="warning" sx={{ mb: 3 }}>
                                     Aún no has entregado este avance. Fecha límite:{' '}
-                                    <strong>{progressData.dueDate.toLocaleDateString('es-ES')}</strong>
+                                    <strong>{progressData.dueDate?.toLocaleDateString ? progressData.dueDate.toLocaleDateString('es-ES') : 'Sin fecha'}</strong>
                                 </Alert>
 
                                 <Typography variant="h6" fontWeight="600" gutterBottom>
@@ -211,63 +203,40 @@ function DetailsModal({
                                     onRemoveFile={handleFileRemove}
                                     uploadedFile={uploadedFile}
                                 />
+
+                                <Box sx={{ mt: 3 }}>
+                                    <Typography variant="h6" fontWeight="600" gutterBottom>
+                                        Comentarios Adicionales
+                                    </Typography>
+                                    <TextField
+                                        fullWidth
+                                        multiline
+                                        rows={3}
+                                        placeholder="Describe brevemente los cambios o el trabajo realizado..."
+                                        value={comment}
+                                        onChange={(e) => setComment(e.target.value)}
+                                        variant="outlined"
+                                        sx={{ bgcolor: 'white' }}
+                                    />
+                                </Box>
                             </>
                         )}
                     </Box>
                 )}
 
-                {/* Pestaña 3: Revisión del Tutor */}
+                {/* Pestaña 3: Calificación/Revisión */}
                 {currentTab === 2 && (
                     <Box>
-                        {progressData.tutorReview ? (
-                            <>
-                                <Alert
-                                    severity={progressData.tutorReview.status === 'approved' ? 'success' : 'warning'}
-                                    sx={{ mb: 3 }}
-                                >
-                                    Revisado el {progressData.tutorReview.reviewDate.toLocaleDateString('es-ES')}
-                                </Alert>
-
-                                <Typography variant="h6" fontWeight="600" gutterBottom>
-                                    Estado Técnico
-                                </Typography>
-                                <Chip
-                                    label={progressData.tutorReview.technicalScore}
-                                    color={progressData.tutorReview.status === 'approved' ? 'success' : 'warning'}
-                                    sx={{ mb: 3, fontWeight: 600 }}
-                                />
-
-                                <Typography variant="h6" fontWeight="600" gutterBottom>
-                                    Feedback del Tutor
-                                </Typography>
-                                <Typography variant="body1">
-                                    {progressData.tutorReview.feedback}
-                                </Typography>
-                            </>
-                        ) : (
-                            <Alert severity="info">
-                                {progressData.studentSubmission
-                                    ? 'Tu tutor está revisando tu entrega. Recibirás feedback pronto.'
-                                    : 'Primero debes entregar tu avance para que el tutor pueda revisarlo.'
-                                }
-                            </Alert>
-                        )}
-                    </Box>
-                )}
-
-                {/* Pestaña 4: Calificación Final */}
-                {currentTab === 3 && (
-                    <Box>
-                        {progressData.integrationGrade ? (
+                        {progressData.grading ? (
                             <>
                                 <Alert severity="success" sx={{ mb: 3 }}>
-                                    Calificado por <strong>{progressData.integrationGrade.gradedBy}</strong> el{' '}
-                                    {progressData.integrationGrade.gradedDate.toLocaleDateString('es-ES')}
+                                    Calificado por <strong>{progressData.grading.gradedBy}</strong> el{' '}
+                                    {progressData.grading.gradedDate?.toLocaleDateString ? progressData.grading.gradedDate.toLocaleDateString('es-ES') : 'N/A'}
                                 </Alert>
 
                                 <Box sx={{ textAlign: 'center', mb: 3 }}>
                                     <Typography variant="h2" fontWeight="700" color="#4caf50">
-                                        {progressData.integrationGrade.score}/100
+                                        {progressData.grading.score}/10
                                     </Typography>
                                     <Typography variant="h6" color="text.secondary">
                                         Calificación Final
@@ -278,14 +247,14 @@ function DetailsModal({
                                     Observaciones
                                 </Typography>
                                 <Typography variant="body1">
-                                    {progressData.integrationGrade.feedback}
+                                    {progressData.grading.feedback}
                                 </Typography>
                             </>
                         ) : (
                             <Alert severity="info">
-                                {progressData.tutorReview
-                                    ? 'El docente de integración está evaluando tu avance según la rúbrica.'
-                                    : 'Primero el tutor debe aprobar tu avance antes de la calificación final.'
+                                {progressData.studentSubmission
+                                    ? 'Tu tutor está revisando tu entrega. Recibirás feedback pronto.'
+                                    : 'Primero debes entregar tu avance para que el tutor pueda revisarlo.'
                                 }
                             </Alert>
                         )}
@@ -327,7 +296,7 @@ function DetailsModal({
                     </Button>
                 )}
             </DialogActions>
-        </Dialog>
+        </Dialog >
     );
 }
 

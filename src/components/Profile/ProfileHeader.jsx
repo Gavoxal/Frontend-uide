@@ -1,7 +1,13 @@
-import { Box, Typography, Card, CardContent, Avatar, Button, Chip, IconButton } from "@mui/material";
-import { LockReset as LockResetIcon, CameraAlt as CameraIcon } from "@mui/icons-material";
+import { Box, Typography, Card, CardContent, Avatar, Chip, IconButton } from "@mui/material";
+import { CameraAlt as CameraIcon } from "@mui/icons-material";
 
-function ProfileHeader({ name, subtitle, initials, tags, onChangePassword }) {
+function ProfileHeader({ studentData, onEditProfile, onEditCover }) {
+    const { name, subtitle, initials, tags } = {
+        name: studentData?.name,
+        subtitle: `Estudiante de ${studentData?.carrera || 'Carrera no definida'}`,
+        initials: studentData?.initials,
+        tags: [studentData?.semestre, studentData?.status].filter(Boolean)
+    };
     return (
         <Card
             sx={{
@@ -81,23 +87,8 @@ function ProfileHeader({ name, subtitle, initials, tags, onChangePassword }) {
                         </Box>
                     </Box>
 
-                    {/* Change Password Button */}
-                    <Button
-                        variant="contained"
-                        startIcon={<LockResetIcon />}
-                        onClick={onChangePassword}
-                        sx={{
-                            backgroundColor: "#667eea",
-                            color: "white",
-                            fontWeight: "600",
-                            mt: 5,
-                            "&:hover": {
-                                backgroundColor: "#5568d3"
-                            }
-                        }}
-                    >
-                        Cambiar Contraseña
-                    </Button>
+                    {/* Edit Profile Button */}
+
                 </Box>
             </CardContent>
         </Card>

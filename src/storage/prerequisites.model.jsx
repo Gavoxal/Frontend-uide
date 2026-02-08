@@ -58,7 +58,7 @@ export const prerequisitesToRequirements = (prerequisites) => {
     return [
         {
             id: 1,
-            name: "B2 - Certificado de Inglés",
+            name: "Certificado de Inglés",
             status: getStatus(prerequisites.english),
             color: getColor(getStatus(prerequisites.english))
         },

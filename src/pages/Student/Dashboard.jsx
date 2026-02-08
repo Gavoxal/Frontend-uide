@@ -8,12 +8,14 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import { getDataUser } from "../../storage/user.model.jsx";
 import StatsCard from "../../components/common/StatsCard";
-import StatusBadge from "../../components/common/StatusBadge";
 import UpcomingDateCard from "../../components/updata.mui.component";
 import UpcomingDates from "../../components/upcommigdates.mui.component";
 import { useUserProgress } from "../../contexts/UserProgressContext";
-import AccessAlert, { ProgressSummaryCard } from "../../components/AccessAlert";
 import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { UserService } from "../../services/user.service";
+import { ProposalService } from "../../services/proposal.service";
+import { ActivityService } from "../../services/activity.service";
 
 function StudentDashboard() {
     const user = getDataUser();
@@ -27,185 +29,145 @@ function StudentDashboard() {
 
     const progressSummary = getProgressSummary();
 
-    // Datos de ejemplo
-    const studentData = {
-        currentPhase: "Desarrollo de Tesis",
-        progress: 65,
-        tutor: "Ing. Milton Palacios",
-        nextDeadline: "2026-02-05",
-        deadlineTask: "Entrega de avance semanal",
+    const [loading, setLoading] = useState(true);
+    const [activities, setActivities] = useState([]);
+    const [studentData, setStudentData] = useState({
+        name: (user?.nombres && user?.apellidos) ? `${user.nombres} ${user.apellidos}` : (user?.name || "Estudiante"),
+        currentPhase: "Cargando...",
+        progress: 0,
+        tutor: "Buscando tutor...",
+        nextDeadline: null,
+        deadlineTask: "Consultando...",
+    });
+    const [tasks, setTasks] = useState([]);
+
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            // 1. Obtener datos frescos del usuario (Nombre correcto)
+            if (user?.id) {
+                try {
+                    const freshUser = await UserService.getById(user.id);
+                    if (freshUser) {
+                        const firstName = freshUser.nombres || freshUser.nombre || user.nombres || user.name || "";
+                        const lastName = freshUser.apellidos || freshUser.apellido || user.apellidos || user.lastName || "";
+                        const fullName = (firstName && lastName) ? `${firstName} ${lastName}` : (firstName || lastName || "Estudiante");
+
+                        setStudentData(prev => ({ ...prev, name: fullName }));
+                    }
+                } catch (e) {
+                    console.error("Error fetching user details:", e);
+                }
+            }
+
+            console.log("Fetching proposals...");
+            const proposals = await ProposalService.getAll();
+            console.log("Proposals found:", proposals);
+
+            if (proposals && proposals.length > 0) {
+                const activeProposal = proposals[0];
+                console.log("Active proposal details:", activeProposal);
+
+                // EXTRAER TUTOR (Logic from Avances.jsx)
+                let tutorName = "Por asignar";
+                if (activeProposal.tutor) {
+                    tutorName = `${activeProposal.tutor.nombres} ${activeProposal.tutor.apellidos}`;
+                } else if (activeProposal.trabajosTitulacion?.[0]?.tutor) {
+                    const t = activeProposal.trabajosTitulacion[0].tutor;
+                    tutorName = `${t.nombres} ${t.apellidos}`;
+                }
+
+                // Fetch activities for this proposal
+                const fetchedActivities = await ActivityService.getByPropuesta(activeProposal.id);
+                console.log("Activities fetched:", fetchedActivities);
+                setActivities(fetchedActivities);
+
+                // Calculate progress
+                const completedCount = fetchedActivities.filter(a => {
+                    // Check if it has a submission that is graded or at least submitted
+                    const mainEvidence = a.evidencias && a.evidencias.length > 0
+                        ? a.evidencias[a.evidencias.length - 1]
+                        : a.evidencia;
+                    return mainEvidence && (mainEvidence.calificacionTutor !== null || mainEvidence.calificacionDocente !== null);
+                }).length;
+
+                const totalWeeks = 16;
+                const progressPercent = Math.round((completedCount / totalWeeks) * 100);
+
+                // --- LOGIC FOR DATES & CURRENT ACTIVITY (Mirrors Avances.jsx) ---
+                const now = new Date();
+
+                // Helper to parse dates correctly
+                const parseDate = (d) => {
+                    if (!d) return null;
+                    // Handle ISO strings directly
+                    return new Date(d);
+                };
+
+                // Sort activities by date/week
+                const sortedActivities = fetchedActivities.sort((a, b) => {
+                    // Prefer fechaEntrega, fallback to fechaCreacion/createdAt
+                    const dateA = a.fechaEntrega || a.fechaCreacion || a.createdAt || new Date();
+                    const dateB = b.fechaEntrega || b.fechaCreacion || b.createdAt || new Date();
+                    return new Date(dateA) - new Date(dateB);
+                });
+
+                // Find next upcoming deadline
+                const upcomingActivity = sortedActivities.find(a => {
+                    const dueDate = parseDate(a.fechaEntrega);
+                    // Filter for future dates
+                    return dueDate && dueDate >= now;
+                });
+
+                // Find "Current Activity"
+                const currentActivity = sortedActivities.find(a => {
+                    // Check status on activity first if available
+                    if (a.estado && a.estado !== 'ENTREGADO') return true;
+
+                    // Deep check on evidences
+                    const mainEvidence = a.evidencias && a.evidencias.length > 0
+                        ? a.evidencias[a.evidencias.length - 1]
+                        : null;
+
+                    // If no evidence, it's pending
+                    if (!mainEvidence) return true;
+
+                    // If evidence exists but not graded/approved, it's current
+                    const isApproved = (mainEvidence.calificacionTutor && Number(mainEvidence.calificacionTutor) >= 7) ||
+                        (mainEvidence.calificacionDocente && Number(mainEvidence.calificacionDocente) >= 7);
+                    return !isApproved;
+                }) || sortedActivities[sortedActivities.length - 1]; // Fallback to last activity
+
+                setStudentData(prev => ({
+                    ...prev,
+                    currentPhase: activeProposal.estado === 'APROBADA' ? "Desarrollo de Tesis" : (activeProposal.estado || "En Revisión"),
+                    progress: isNaN(progressPercent) ? 0 : progressPercent,
+                    tutor: tutorName,
+                    nextDeadline: upcomingActivity?.fechaEntrega || null,
+                    deadlineTask: upcomingActivity?.nombre || "Sin tareas pendientes próximas",
+                    currentActivity: currentActivity || null
+                }));
+            } else {
+                console.warn("No proposals found for this student.");
+                setStudentData(prev => ({
+                    ...prev,
+                    currentPhase: "Sin Propuesta Registrada",
+                    progress: 0,
+                    tutor: "N/A",
+                    deadlineTask: "Debe iniciar un proceso",
+                    currentActivity: null
+                }));
+            }
+        } catch (error) {
+            console.error("Error fetching dashboard data:", error);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    // Tareas pendientes
-    const tasks = [
-        { id: 1, text: 'Completar capítulo de marco teórico', completed: false },
-        { id: 2, text: 'Revisar con el tutor el avance del proyecto', completed: false },
-        { id: 3, text: 'Subir documentación de prerrequisitos', completed: true },
-        { id: 4, text: 'Preparar presentación de propuesta', completed: false },
-    ];
-
-    // Vista para estudiantes nuevos (sin prerrequisitos aprobados)
-    if (shouldShowPrerequisitesAlert()) {
-        return (
-            <Box sx={{ maxWidth: 1400, mx: 'auto' }}>
-                {/* Encabezado */}
-                <Box sx={{ mb: 4 }}>
-                    <Typography variant="h4" fontWeight="bold" gutterBottom>
-                        ¡Bienvenido, {user?.nombres || user?.nombre || user?.name || "Estudiante"}! 👋
-                    </Typography>
-                    <Typography variant="body1" color="text.secondary">
-                        Estás a un paso de comenzar tu trabajo de titulación
-                    </Typography>
-                </Box>
-
-                {/* Alerta de acceso restringido */}
-                <AccessAlert
-                    prerequisitesStatus={prerequisitesStatus}
-                    completedWeeks={completedWeeks}
-                />
-
-                {/* Tarjeta de primeros pasos */}
-                <Card sx={{
-                    borderRadius: 3,
-                    boxShadow: 3,
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    color: 'white',
-                    mb: 3
-                }}>
-                    <CardContent sx={{ p: 4 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-                            <RocketLaunchIcon sx={{ fontSize: 48 }} />
-                            <Box>
-                                <Typography variant="h5" fontWeight="bold" gutterBottom>
-                                    ¡Comienza tu Trayectoria!
-                                </Typography>
-                                <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                                    Completa estos pasos para desbloquear todas las funcionalidades
-                                </Typography>
-                            </Box>
-                        </Box>
-
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                            <Paper sx={{ p: 2, backgroundColor: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)' }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                    <CheckCircleOutlineIcon sx={{ fontSize: 32, color: 'white' }} />
-                                    <Box sx={{ flex: 1 }}>
-                                        <Typography variant="subtitle1" fontWeight="600">
-                                            1. Completa tus Prerrequisitos
-                                        </Typography>
-                                        <Typography variant="body2" sx={{ opacity: 0.8, mt: 0.5 }}>
-                                            Sube la documentación requerida (certificados, comprobantes, etc.)
-                                        </Typography>
-                                    </Box>
-                                    <Chip
-                                        label="Pendiente"
-                                        sx={{
-                                            backgroundColor: '#ff9800',
-                                            color: 'white',
-                                            fontWeight: 600
-                                        }}
-                                    />
-                                </Box>
-                            </Paper>
-
-                            <Paper sx={{ p: 2, backgroundColor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)' }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                    <PlayArrowIcon sx={{ fontSize: 32, color: 'rgba(255,255,255,0.5)' }} />
-                                    <Box sx={{ flex: 1 }}>
-                                        <Typography variant="subtitle1" fontWeight="600" sx={{ opacity: 0.7 }}>
-                                            2. Espera la Aprobación del Director
-                                        </Typography>
-                                        <Typography variant="body2" sx={{ opacity: 0.6, mt: 0.5 }}>
-                                            Tu documentación será revisada por el director de carrera
-                                        </Typography>
-                                    </Box>
-                                    <Chip
-                                        label="Bloqueado"
-                                        sx={{
-                                            backgroundColor: 'rgba(255,255,255,0.2)',
-                                            color: 'white',
-                                            fontWeight: 600
-                                        }}
-                                    />
-                                </Box>
-                            </Paper>
-
-                            <Paper sx={{ p: 2, backgroundColor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)' }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                    <PlayArrowIcon sx={{ fontSize: 32, color: 'rgba(255,255,255,0.5)' }} />
-                                    <Box sx={{ flex: 1 }}>
-                                        <Typography variant="subtitle1" fontWeight="600" sx={{ opacity: 0.7 }}>
-                                            3. ¡Comienza tu Trabajo de Titulación!
-                                        </Typography>
-                                        <Typography variant="body2" sx={{ opacity: 0.6, mt: 0.5 }}>
-                                            Accede a propuestas, avances semanales y toda la plataforma
-                                        </Typography>
-                                    </Box>
-                                    <Chip
-                                        label="Bloqueado"
-                                        sx={{
-                                            backgroundColor: 'rgba(255,255,255,0.2)',
-                                            color: 'white',
-                                            fontWeight: 600
-                                        }}
-                                    />
-                                </Box>
-                            </Paper>
-                        </Box>
-
-                        <Button
-                            variant="contained"
-                            size="large"
-                            fullWidth
-                            onClick={() => navigate('/student/prerequisites')}
-                            sx={{
-                                mt: 3,
-                                backgroundColor: 'white',
-                                color: '#667eea',
-                                fontWeight: 700,
-                                py: 1.5,
-                                fontSize: '1rem',
-                                '&:hover': {
-                                    backgroundColor: '#f5f5f5',
-                                    transform: 'translateY(-2px)',
-                                    boxShadow: 4
-                                },
-                                transition: 'all 0.3s'
-                            }}
-                        >
-                            Ir a Completar Prerrequisitos
-                        </Button>
-                    </CardContent>
-                </Card>
-
-                {/* Información adicional */}
-                <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
-                    <CardContent sx={{ p: 3 }}>
-                        <Typography variant="h6" fontWeight="bold" gutterBottom>
-                            📚 ¿Necesitas ayuda?
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" paragraph>
-                            Si tienes dudas sobre los prerrequisitos o necesitas soporte, contacta con:
-                        </Typography>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <PersonIcon sx={{ color: '#667eea' }} />
-                                <Typography variant="body2">
-                                    <strong>Director de Carrera:</strong> direccion@uide.edu.ec
-                                </Typography>
-                            </Box>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <EventIcon sx={{ color: '#667eea' }} />
-                                <Typography variant="body2">
-                                    <strong>Horario de atención:</strong> Lunes a Viernes, 08:00 - 17:00
-                                </Typography>
-                            </Box>
-                        </Box>
-                    </CardContent>
-                </Card>
-            </Box>
-        );
-    }
+    useEffect(() => {
+        fetchData();
+    }, []);
 
     // Vista para estudiantes con prerrequisitos aprobados
     return (
@@ -213,198 +175,125 @@ function StudentDashboard() {
             {/* Encabezado con saludo personalizado */}
             <Box sx={{ mb: 4 }}>
                 <Typography variant="h4" fontWeight="bold" gutterBottom>
-                    ¡Hola, {user?.nombres || user?.nombre || user?.name || "Estudiante"}! 👋
+                    ¡Hola, {studentData.name}! 👋
                 </Typography>
                 <Typography variant="body1" color="text.secondary">
                     Panel de seguimiento de tu trabajo de titulación
                 </Typography>
             </Box>
 
-            {/* Resumen de progreso */}
-            <Box sx={{ mb: 3 }}>
+            {/* Resumen de progreso (Eliminado por solicitud del usuario) */}
+            {/* <Box sx={{ mb: 3 }}>
                 <ProgressSummaryCard
                     progressSummary={progressSummary}
                     prerequisitesStatus={prerequisitesStatus}
                 />
-            </Box>
+            </Box> */}
 
-            {/* Estadísticas principales */}
-            <Grid container spacing={3} sx={{ mb: 3 }}>
-                <Grid item xs={12} sm={6} md={4}>
-                    <StatsCard
-                        title="Fase Actual"
-                        value={studentData.currentPhase}
-                        icon={<AssignmentIcon fontSize="large" />}
-                        color="primary"
-                    />
-                </Grid>
-                <Grid item xs={12} sm={6} md={4}>
-                    <StatsCard
-                        title="Tutor Asignado"
-                        value={studentData.tutor}
-                        icon={<PersonIcon fontSize="large" />}
-                        color="info"
-                    />
-                </Grid>
-                <Grid item xs={12} sm={6} md={4}>
-                    <Card sx={{
-                        borderRadius: 3,
-                        boxShadow: 2,
-                        height: '100%',
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        color: 'white'
-                    }}>
-                        <CardContent sx={{ p: 3 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                <TrendingUpIcon fontSize="large" />
-                                <Box>
-                                    <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                                        Progreso General
-                                    </Typography>
-                                    <Typography variant="h4" fontWeight="bold">
-                                        {studentData.progress}%
-                                    </Typography>
-                                </Box>
-                            </Box>
-                        </CardContent>
-                    </Card>
-                </Grid>
-            </Grid>
-
-            {/* Cards superiores: Progreso y Próxima Fecha */}
-            <Grid container spacing={3} sx={{ mb: 3 }}>
-                {/* Progreso del Proyecto */}
-                <Grid item xs={12} md={6}>
-                    <Card sx={{ borderRadius: 3, boxShadow: 2, height: '100%' }}>
-                        <CardContent sx={{ p: 3 }}>
-                            <Typography variant="h6" fontWeight="bold" gutterBottom>
-                                Progreso del Proyecto
-                            </Typography>
-                            <Box sx={{ mt: 3, mb: 2 }}>
-                                <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
-                                    <LinearProgress
-                                        variant="determinate"
-                                        value={studentData.progress}
-                                        sx={{
-                                            flex: 1,
-                                            height: 12,
-                                            borderRadius: 6,
-                                            backgroundColor: '#e0e0e0',
-                                            '& .MuiLinearProgress-bar': {
-                                                borderRadius: 6,
-                                                background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
-                                            }
-                                        }}
-                                    />
-                                    <Typography variant="h6" fontWeight="bold" color="primary.main">
-                                        {studentData.progress}%
-                                    </Typography>
-                                </Box>
-                            </Box>
-                            <Typography variant="body2" color="text.secondary">
-                                Estás en buen camino. Continúa trabajando para alcanzar el 100%
-                            </Typography>
-
-                            {/* Milestones */}
-                            <Box sx={{ mt: 3 }}>
-                                <Typography variant="subtitle2" fontWeight="600" gutterBottom>
-                                    Hitos del Proyecto
-                                </Typography>
-                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 2 }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <Box sx={{
-                                            width: 8,
-                                            height: 8,
-                                            borderRadius: '50%',
-                                            backgroundColor: '#4caf50'
-                                        }} />
-                                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                                            Propuesta aprobada
-                                        </Typography>
-                                    </Box>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <Box sx={{
-                                            width: 8,
-                                            height: 8,
-                                            borderRadius: '50%',
-                                            backgroundColor: '#667eea'
-                                        }} />
-                                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                                            En desarrollo
-                                        </Typography>
-                                    </Box>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <Box sx={{
-                                            width: 8,
-                                            height: 8,
-                                            borderRadius: '50%',
-                                            backgroundColor: '#e0e0e0'
-                                        }} />
-                                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                                            Defensa final
-                                        </Typography>
-                                    </Box>
-                                </Box>
-                            </Box>
-                        </CardContent>
-                    </Card>
-                </Grid>
-
-                {/* Próxima Fecha Importante */}
-                <Grid item xs={12} md={6}>
-                    <UpcomingDateCard />
-                </Grid>
-            </Grid>
-
-            {/* Sección inferior: Tareas y Fechas */}
+            {/* Main Content Area */}
             <Grid container spacing={3}>
-                {/* Lista de Tareas */}
-                <Grid item xs={12} lg={7}>
-                    <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
-                        <CardContent sx={{ p: 3 }}>
-                            <Typography variant="h6" fontWeight="bold" gutterBottom>
-                                Tareas Pendientes
-                            </Typography>
-                            <List sx={{ mt: 2 }}>
-                                {tasks.map((task) => (
-                                    <ListItem
-                                        key={task.id}
+                {/* Left Column: Progress & Current Activity */}
+                <Grid item xs={12} md={7}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+
+                        {/* Top Stats Cards (Restored - Small & Wide) */}
+                        <Grid container spacing={2}>
+                            <Grid item xs={12} sm={6}>
+                                <StatsCard
+                                    title="Fase Actual"
+                                    value={studentData.currentPhase}
+                                    icon={<AssignmentIcon fontSize="large" />}
+                                    color="primary"
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <StatsCard
+                                    title="Tutor Asignado"
+                                    value={studentData.tutor}
+                                    icon={<PersonIcon fontSize="large" />}
+                                    color="info"
+                                />
+                            </Grid>
+                        </Grid>
+
+                        {/* Progreso General Card (Moved from top) */}
+                        <Card sx={{
+                            borderRadius: 3,
+                            boxShadow: 2,
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            color: 'white'
+                        }}>
+                            <CardContent sx={{ p: 3 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                    <TrendingUpIcon fontSize="large" />
+                                    <Box>
+                                        <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                                            Progreso General (16 Semanas)
+                                        </Typography>
+                                        <Typography variant="h4" fontWeight="bold">
+                                            {studentData.progress}%
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                            </CardContent>
+                        </Card>
+
+
+
+                        {/* Current Weekly Advance Card */}
+                        <Card sx={{ borderRadius: 3, boxShadow: 2, borderLeft: '6px solid #667eea' }}>
+                            <CardContent sx={{ p: 3 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                    <Box>
+                                        <Typography variant="overline" color="primary" fontWeight="bold">
+                                            ACTIVIDAD ACTUAL
+                                        </Typography>
+                                        <Typography variant="h5" fontWeight="bold" gutterBottom sx={{ mt: 1 }}>
+                                            {studentData.currentActivity?.nombre || "Sin actividad pendiente"}
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary" paragraph>
+                                            {studentData.currentActivity?.descripcion || "Descripción no disponible"}
+                                        </Typography>
+
+                                        {studentData.currentActivity && (
+                                            <Chip
+                                                label={studentData.currentActivity.estado || "PENDIENTE"}
+                                                color={studentData.currentActivity.estado === 'ENTREGADO' ? "success" : "warning"}
+                                                size="small"
+                                                sx={{ fontWeight: 'bold' }}
+                                            />
+                                        )}
+                                    </Box>
+                                    <AssignmentIcon sx={{ fontSize: 60, color: '#e0e0e0' }} />
+                                </Box>
+
+                                <Box sx={{ mt: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
+                                    <Button
+                                        variant="contained"
+                                        onClick={() => navigate('/student/avances')}
                                         sx={{
-                                            px: 0,
-                                            py: 1,
-                                            borderBottom: '1px solid #f0f0f0',
-                                            '&:last-child': {
-                                                borderBottom: 'none'
-                                            }
+                                            backgroundColor: '#667eea',
+                                            fontWeight: 'bold',
+                                            '&:hover': { backgroundColor: '#5a6fd6' }
                                         }}
                                     >
-                                        <ListItemIcon sx={{ minWidth: 40 }}>
-                                            <Checkbox
-                                                edge="start"
-                                                checked={task.completed}
-                                                tabIndex={-1}
-                                                disableRipple
-                                            />
-                                        </ListItemIcon>
-                                        <ListItemText
-                                            primary={task.text}
-                                            sx={{
-                                                '& .MuiListItemText-primary': {
-                                                    textDecoration: task.completed ? 'line-through' : 'none',
-                                                    color: task.completed ? 'text.secondary' : 'text.primary',
-                                                }
-                                            }}
-                                        />
-                                    </ListItem>
-                                ))}
-                            </List>
-                        </CardContent>
-                    </Card>
+                                        Ir a Avances
+                                    </Button>
+                                    {studentData.nextDeadline && (
+                                        <Typography variant="body2" color="error" fontWeight="500">
+                                            Vence: {new Date(studentData.nextDeadline).toLocaleDateString()}
+                                        </Typography>
+                                    )}
+                                </Box>
+                            </CardContent>
+                        </Card>
+
+                    </Box>
                 </Grid>
 
-                {/* Próximas Fechas */}
-                <Grid item xs={12} lg={5}>
-                    <UpcomingDates />
+                {/* Right Column: Upcoming Dates */}
+                <Grid item xs={12} md={5}>
+                    <UpcomingDates activities={activities} />
                 </Grid>
             </Grid>
         </Box>

@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { PrerequisiteService } from '../services/prerequisites.service';
+import { getDataUser } from '../storage/user.model.jsx';
 
 const UserProgressContext = createContext();
 
@@ -10,34 +12,7 @@ export const useUserProgress = () => {
     return context;
 };
 
-// Mock data de usuarios de prueba
-const MOCK_USERS = {
-    // Usuario con restricciones - Sin prerrequisitos aprobados
-    'estudiante_nuevo@uide.edu.ec': {
-        prerequisitesStatus: 'pending',
-        completedWeeks: 0,
-        hasProjectAccess: false,
-        studentName: 'Juan Pérez',
-        studentId: 'EST001'
-    },
-    // Usuario con acceso completo - Todo aprobado
-    'estudiante_completo@uide.edu.ec': {
-        prerequisitesStatus: 'approved',
-        completedWeeks: 15,
-        hasProjectAccess: true,
-        studentName: 'María García',
-        studentId: 'EST002'
-    },
-    // Usuario con prerrequisitos aprobados pero sin proyecto
-    'estudiante_avanzado@uide.edu.ec': {
-        prerequisitesStatus: 'approved',
-        completedWeeks: 8,
-        hasProjectAccess: false,
-        studentName: 'Carlos López',
-        studentId: 'EST003'
-    }
-};
-
+// Mock data remains if needed elsewhere, but we prioritize real data
 export function UserProgressProvider({ children }) {
     const [progressState, setProgressState] = useState({
         prerequisitesStatus: 'pending', // 'pending', 'approved', 'rejected'
@@ -49,25 +24,47 @@ export function UserProgressProvider({ children }) {
     });
 
     useEffect(() => {
-        // Simular carga de datos del usuario
         loadUserProgress();
     }, []);
 
-    const loadUserProgress = () => {
+    const loadUserProgress = async () => {
+        const user = getDataUser();
+        if (!user?.id) {
+            setProgressState(prev => ({ ...prev, isLoadingProgress: false }));
+            return;
+        }
+
         setProgressState(prev => ({ ...prev, isLoadingProgress: true }));
 
-        // Simulación: obtener email del localStorage
-        const userEmail = localStorage.getItem('userEmail') || 'estudiante_nuevo@uide.edu.ec';
+        try {
+            // Cargar registros personales (que ya vienen mapeados por el servicio)
+            const prerequisites = await PrerequisiteService.getByStudent(user.id);
+            console.log("Context: Prerequisites loaded", prerequisites);
 
-        // Obtener datos del usuario mock
-        const userData = MOCK_USERS[userEmail] || MOCK_USERS['estudiante_nuevo@uide.edu.ec'];
+            let allApproved = false;
+            if (Array.isArray(prerequisites)) {
+                // Buscamos específicamente los 3 obligatorios por sus claves mapeadas por el servicio
+                const requiredKeys = ["english", "internship", "community"];
 
-        setTimeout(() => {
-            setProgressState({
-                ...userData,
+                allApproved = requiredKeys.every(key => {
+                    const found = prerequisites.find(p => p.name === key);
+                    return found && found.status === 'approved';
+                });
+            }
+
+            setProgressState(prev => ({
+                ...prev,
+                studentName: (user.nombres && user.apellidos) ? `${user.nombres} ${user.apellidos}` : (user.name || ""),
+                studentId: user.id,
+                prerequisitesStatus: allApproved ? 'approved' : 'pending',
+                hasProjectAccess: allApproved,
                 isLoadingProgress: false
-            });
-        }, 500);
+            }));
+
+        } catch (error) {
+            console.error("Error loading user progress:", error);
+            setProgressState(prev => ({ ...prev, isLoadingProgress: false }));
+        }
     };
 
     const refreshProgress = () => {

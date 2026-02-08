@@ -24,7 +24,33 @@ const dates = [
   },
 ];
 
-export default function UpcomingDates() {
+export default function UpcomingDates({ activities = [] }) {
+  const upcomingActivities = activities
+    .filter(a => a.fechaEntrega)
+    .sort((a, b) => new Date(a.fechaEntrega) - new Date(b.fechaEntrega))
+    .slice(0, 3);
+
+  const mappedDates = upcomingActivities.map(act => {
+    const d = new Date(act.fechaEntrega);
+    const months = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+
+    // Calcular tiempo restante
+    const diffTime = d - new Date();
+    const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    let timeLeft = "";
+    if (daysLeft > 0) {
+      timeLeft = daysLeft > 7 ? `Quedan ${Math.ceil(daysLeft / 7)} Semanas` : `Faltan ${daysLeft} días`;
+    }
+
+    return {
+      month: months[d.getMonth()],
+      day: d.getDate(),
+      title: act.nombre,
+      description: act.descripcion || "Sin descripción",
+      timeLeft: timeLeft
+    };
+  });
+
   return (
     <Card sx={{ borderRadius: 3, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
       <CardContent sx={{ p: 3 }}>
@@ -33,7 +59,7 @@ export default function UpcomingDates() {
         </Typography>
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {dates.map((date, index) => (
+          {mappedDates.length > 0 ? mappedDates.map((date, index) => (
             <Box key={index} sx={{ display: 'flex', gap: 2 }}>
               <Box
                 sx={{
@@ -77,7 +103,11 @@ export default function UpcomingDates() {
                 )}
               </Box>
             </Box>
-          ))}
+          )) : (
+            <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+              No hay fechas próximas programadas
+            </Typography>
+          )}
         </Box>
       </CardContent>
     </Card>
