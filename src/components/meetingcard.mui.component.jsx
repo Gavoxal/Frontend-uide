@@ -8,8 +8,9 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import PersonIcon from '@mui/icons-material/Person';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import MeetingRoomIcon from '@mui/icons-material/MeetingRoom';
+import SchoolIcon from '@mui/icons-material/School';
 
-function MeetingCard({ meeting, onView, onEdit, onExportPdf }) {
+function MeetingCard({ meeting, onView, onEdit, onExportPdf, readOnly = false }) {
     const getModalityIcon = (modality) => {
         return modality === 'virtual' ? <VideocamIcon /> : <MeetingRoomIcon />;
     };
@@ -64,11 +65,21 @@ function MeetingCard({ meeting, onView, onEdit, onExportPdf }) {
 
                 <Divider sx={{ my: 2 }} />
 
+                {/* Tutor (si está disponible) */}
+                {meeting.tutorName && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                        <SchoolIcon sx={{ fontSize: 20, color: '#667eea' }} />
+                        <Typography variant="body2" fontWeight="600">
+                            Tutor: {meeting.tutorName}
+                        </Typography>
+                    </Box>
+                )}
+
                 {/* Estudiante */}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                     <PersonIcon sx={{ fontSize: 20, color: '#667eea' }} />
                     <Typography variant="body2" fontWeight="600">
-                        {meeting.studentName}
+                        Estudiante: {meeting.studentName}
                     </Typography>
                 </Box>
 
@@ -155,18 +166,20 @@ function MeetingCard({ meeting, onView, onEdit, onExportPdf }) {
                     >
                         <VisibilityIcon fontSize="small" />
                     </IconButton>
-                    <IconButton
-                        size="small"
-                        onClick={() => onEdit?.(meeting)}
-                        sx={{
-                            backgroundColor: '#f5f5f5',
-                            '&:hover': {
-                                backgroundColor: '#e0e0e0'
-                            }
-                        }}
-                    >
-                        <EditIcon fontSize="small" />
-                    </IconButton>
+                    {!readOnly && (
+                        <IconButton
+                            size="small"
+                            onClick={() => onEdit?.(meeting)}
+                            sx={{
+                                backgroundColor: '#f5f5f5',
+                                '&:hover': {
+                                    backgroundColor: '#e0e0e0'
+                                }
+                            }}
+                        >
+                            <EditIcon fontSize="small" />
+                        </IconButton>
+                    )}
                     <IconButton
                         size="small"
                         onClick={() => onExportPdf?.(meeting)}

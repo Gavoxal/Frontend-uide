@@ -1,7 +1,6 @@
 import { AppBar, Toolbar, IconButton, Typography, Box, Badge } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import NotificationsIcon from '@mui/icons-material/Notifications';
-import { getDataUser } from '../storage/user.model.jsx';
 
 function HeaderMui({
   title = "Tablero",
@@ -10,8 +9,6 @@ function HeaderMui({
   sidebarWidth = 0,
   showNotifications = true,
 }) {
-  const user = getDataUser();
-
   return (
     <AppBar
       position="fixed"

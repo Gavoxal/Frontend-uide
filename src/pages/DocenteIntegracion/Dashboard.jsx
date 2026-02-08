@@ -46,11 +46,19 @@ function Dashboard() {
                         icon={<AssignmentIcon />}
                         color="info"
                     />
+<<<<<<< HEAD
+=======
+
+>>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
                 </Box>
 
                 <Box sx={{ mt: 4 }}>
                     <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', color: '#000A9B' }}>
+<<<<<<< HEAD
                         Actividad Reciente
+=======
+                        Mis Estudiantes
+>>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
                     </Typography>
                     <RecentStudentsTable students={recentActivity} />
                 </Box>

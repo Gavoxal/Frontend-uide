@@ -1,20 +1,11 @@
 import React, { useState } from 'react';
-<<<<<<< HEAD
-import { Box, Typography, Grid, Card, CardContent, Divider, Chip, Avatar, Tooltip } from '@mui/material';
-import TextMui from '../../components/text.mui.component';
-import TribunalAssignment from '../../components/Director/TribunalAssignment.mui';
-import StatsCard from '../../components/common/StatsCard'; // Importante
-import InputMui from '../../components/input.mui.component'; // Importante
-=======
 import { Box, Typography, Grid, Card, CardContent, Divider, Chip, Avatar, Tooltip, Tabs, Tab } from '@mui/material';
-import SearchBar from '../../components/SearchBar.component';
 import TextMui from '../../components/text.mui.component';
 import TribunalAssignment from '../../components/Director/TribunalAssignment.mui';
 import StatsCard from '../../components/common/StatsCard';
 import InputMui from '../../components/input.mui.component';
 import AlertMui from '../../components/alert.mui.component';
 import NotificationMui from '../../components/notification.mui.component';
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
 
 // Icons
 import SchoolIcon from '@mui/icons-material/School';
@@ -23,21 +14,12 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ArticleIcon from '@mui/icons-material/Article';
 import DescriptionIcon from '@mui/icons-material/Description';
 import CancelIcon from '@mui/icons-material/Cancel';
-<<<<<<< HEAD
-import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty'; // Importante
-import SearchIcon from '@mui/icons-material/Search'; // Importante
-
-function ThesisDefense() {
-    const [selectedStudent, setSelectedStudent] = useState(null);
-
-    // Mock Data Completo
-=======
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import SearchIcon from '@mui/icons-material/Search';
 import LockIcon from '@mui/icons-material/Lock';
 import EventIcon from '@mui/icons-material/Event';
 
-function ThesisDefense() {
+function CoordinatorThesisDefense() {
     const [selectedStudent, setSelectedStudent] = useState(null);
     const [tabValue, setTabValue] = useState(0); // 0: Privada, 1: Pública
     const [openConfirmAlert, setOpenConfirmAlert] = useState(false);
@@ -48,24 +30,11 @@ function ThesisDefense() {
     };
 
     // Mock Data Completo con lógica Multi-Etapa
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
     const [studentsReady, setStudentsReady] = useState([
         {
             id: 1,
             name: 'Abad Montesdeoca Nicole Belen',
             email: 'niabadmo@uide.edu.ec',
-<<<<<<< HEAD
-            photoUrl: '', // mock
-            topic: 'Implementación de IA para optimización de tráfico urbano en Loja',
-            director: 'Ing. Wilson',
-            career: 'Ing. Tecnologías de la Información',
-            campus: 'UIDE - Loja',
-            status: 'Habilitado',
-            documents: {
-                programmerManual: true,
-                userManual: true,
-                scientificArticle: true
-=======
             topic: 'Implementación de IA para optimización de tráfico urbano en Loja',
             director: 'Ing. Wilson',
             career: 'Ing. Tecnologías de la Información', // Agregado
@@ -84,28 +53,16 @@ function ThesisDefense() {
                 time: null,
                 classroom: null,
                 tribunal: []
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
             }
         },
         {
             id: 2,
             name: 'Acacho Yangari Daddy Abel',
             email: 'daacachoya@uide.edu.ec',
-<<<<<<< HEAD
-            photoUrl: '',
-=======
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
             topic: 'Sistema de gestión documental con Blockchain para la UIDE',
             director: 'Ing. Lorena',
             career: 'Ing. Tecnologías de la Información',
             campus: 'UIDE - Loja',
-<<<<<<< HEAD
-            status: 'Pendiente Documentación',
-            documents: {
-                programmerManual: true,
-                userManual: false,
-                scientificArticle: false
-=======
             documents: { programmerManual: true, userManual: false, scientificArticle: false },
             privateDefense: {
                 status: 'pending',
@@ -120,28 +77,16 @@ function ThesisDefense() {
                 time: null,
                 classroom: null,
                 tribunal: []
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
             }
         },
         {
             id: 3,
             name: 'Ajila Armijos Cristian Xavier',
             email: 'crajilaar@uide.edu.ec',
-<<<<<<< HEAD
-            photoUrl: '',
-=======
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
             topic: 'Aplicación móvil para turismo comunitario en Saraguro',
             director: 'Ing. Gabriel',
             career: 'Sistemas de Información',
             campus: 'UIDE - Loja',
-<<<<<<< HEAD
-            status: 'Habilitado',
-            documents: {
-                programmerManual: true,
-                userManual: true,
-                scientificArticle: true
-=======
             documents: { programmerManual: true, userManual: true, scientificArticle: true },
             privateDefense: {
                 status: 'approved', // Ya aprobó la privada
@@ -156,21 +101,14 @@ function ThesisDefense() {
                 time: null,
                 classroom: null,
                 tribunal: []
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
             }
         }
     ]);
 
     const [searchTerm, setSearchTerm] = useState("");
-<<<<<<< HEAD
-    const [filterTab, setFilterTab] = useState("all"); // all, assigned, pending
-
-    const handleCardClick = (student) => {
-=======
 
     const handleCardClick = (student) => {
         // Bloquear click si no está habilitado para la pestaña actual (aunque el filtrado ya maneja esto)
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
         setSelectedStudent(student);
     };
 
@@ -178,16 +116,6 @@ function ThesisDefense() {
         setSelectedStudent(null);
     };
 
-<<<<<<< HEAD
-    const handleSaveAssignment = (assignmentData) => {
-        // Actualizamos el estado del estudiante con la asignación
-        const updatedStudents = studentsReady.map(s => {
-            if (s.id === selectedStudent.id) {
-                return {
-                    ...s,
-                    ...assignmentData,
-                    tribunalAssigned: true // Marcamos como asignado
-=======
     // Paso 1: Recibir datos del componente hijo y pedir confirmación
     const handleAssignmentRequest = (assignmentData) => {
         setPendingAssignmentData(assignmentData);
@@ -208,23 +136,15 @@ function ThesisDefense() {
                         ...pendingAssignmentData,
                         status: 'assigned'
                     }
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
                 };
             }
             return s;
         });
-<<<<<<< HEAD
-        setStudentsReady(updatedStudents);
-
-        alert(`Tribunal asignado correctamente para: ${selectedStudent.name}\nAula: ${assignmentData.classroom}`);
-        setSelectedStudent(null);
-=======
 
         setStudentsReady(updatedStudents);
         setOpenConfirmAlert(false);
         setSelectedStudent(null);
         setPendingAssignmentData(null);
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
     };
 
     // Helper: Get Initials
@@ -234,28 +154,6 @@ function ThesisDefense() {
         return name.slice(0, 2).toUpperCase();
     };
 
-<<<<<<< HEAD
-    // Estadísticas
-    const stats = {
-        assigned: studentsReady.filter(s => s.tribunalAssigned).length,
-        pending: studentsReady.filter(s => !s.tribunalAssigned).length
-    };
-
-    // Filtros
-    const filteredStudents = studentsReady.filter(student => {
-        const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase());
-
-        if (filterTab === 'assigned') return matchesSearch && student.tribunalAssigned;
-        if (filterTab === 'pending') return matchesSearch && !student.tribunalAssigned;
-
-        return matchesSearch;
-    });
-
-    // Componente interno ThesisDefenseCard
-    const ThesisDefenseCard = ({ student, isSelected, onClick }) => {
-        const allDocsReady = student.documents.programmerManual && student.documents.userManual && student.documents.scientificArticle;
-
-=======
     // Filtros por Pestaña
     const filteredStudents = studentsReady.filter(student => {
         const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -294,7 +192,6 @@ function ThesisDefense() {
         // Para defensa pública, los documentos ya debieron estar listos en la privada, pero verificamos igual.
         const isReadyForAssign = tabValue === 0 ? allDocsReady : true;
 
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
         return (
             <Card
                 onClick={() => onClick(student)}
@@ -306,11 +203,7 @@ function ThesisDefense() {
                     border: isSelected ? '2px solid #1976d2' : '1px solid transparent',
                     transform: isSelected ? 'scale(1.02)' : 'scale(1)',
                     backgroundColor: isSelected ? '#f5f9ff' : 'white',
-<<<<<<< HEAD
-                    filter: isSelected ? 'none' : (selectedStudent ? 'grayscale(0.4) opacity(0.8)' : 'none'), // Dim others
-=======
                     filter: isSelected ? 'none' : (selectedStudent ? 'grayscale(0.4) opacity(0.8)' : 'none'),
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
                     '&:hover': {
                         boxShadow: 6,
                         transform: 'translateY(-3px)',
@@ -321,11 +214,7 @@ function ThesisDefense() {
                 <CardContent>
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                         <Avatar
-<<<<<<< HEAD
-                            sx={{ width: 50, height: 50, bgcolor: '#1976d2', mr: 2 }}
-=======
                             sx={{ width: 50, height: 50, bgcolor: tabValue === 0 ? '#1976d2' : '#7b1fa2', mr: 2 }}
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
                             src={student.photoUrl || ''}
                         >
                             {getInitials(student.name)}
@@ -361,31 +250,6 @@ function ThesisDefense() {
                         </Typography>
                     </Box>
 
-<<<<<<< HEAD
-                    <Box sx={{ mb: 1 }}>
-                        <Typography variant="caption" fontWeight="bold" color="text.secondary">
-                            Director Asignado
-                        </Typography>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <SchoolIcon fontSize="inherit" sx={{ fontSize: '1rem', color: '#555' }} />
-                            <Typography variant="body2">
-                                {student.director}
-                            </Typography>
-                        </Box>
-                    </Box>
-
-                    {/* Información de Defensa si está asignada */}
-                    {student.tribunalAssigned && (
-                        <Box sx={{ mt: 1, p: 1, bgcolor: '#e3f2fd', borderRadius: 1 }}>
-                            <Typography variant="caption" fontWeight="bold" color="primary" sx={{ display: 'block' }}>
-                                Defensa Programada:
-                            </Typography>
-                            <Typography variant="caption" display="block">
-                                📅 {student.date} | 🕒 {student.time}
-                            </Typography>
-                            <Typography variant="caption" display="block">
-                                🏫 {student.classroom}
-=======
                     {/* Información de Defensa si está asignada */}
                     {defenseData.status === 'assigned' ? (
                         <Box sx={{ mt: 1, p: 1, bgcolor: '#e3f2fd', borderRadius: 1, border: '1px solid #90caf9' }}>
@@ -405,40 +269,10 @@ function ThesisDefense() {
                             <Typography variant="caption" color="warning.main" sx={{ display: 'flex', alignItems: 'center' }}>
                                 <HourglassEmptyIcon fontSize="inherit" sx={{ mr: 0.5 }} />
                                 Pendiente de Asignación
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
                             </Typography>
                         </Box>
                     )}
 
-<<<<<<< HEAD
-                    {/* Document Indicators */}
-                    <Box sx={{ mt: 2, p: 1, bgcolor: '#f5f5f5', borderRadius: 1 }}>
-                        <Typography variant="caption" fontWeight="bold" sx={{ display: 'block', mb: 0.5 }}>
-                            Entregables:
-                        </Typography>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem' }}>
-                            <Box title="Manual de Programador" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: student.documents.programmerManual ? 'green' : 'gray' }}>
-                                <ArticleIcon fontSize="inherit" /> M. Prog.
-                                {student.documents.programmerManual ? <CheckCircleIcon fontSize="inherit" /> : <CancelIcon fontSize="inherit" />}
-                            </Box>
-                            <Box title="Manual de Usuario" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: student.documents.userManual ? 'green' : 'gray' }}>
-                                <DescriptionIcon fontSize="inherit" /> M. Usu.
-                                {student.documents.userManual ? <CheckCircleIcon fontSize="inherit" /> : <CancelIcon fontSize="inherit" />}
-                            </Box>
-                        </Box>
-                        <Box sx={{ mt: 0.5, display: 'flex', justifyContent: 'center', fontSize: '0.75rem', color: student.documents.scientificArticle ? 'green' : 'gray' }}>
-                            <Box title="Artículo Científico" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                <ArticleIcon fontSize="inherit" /> Artículo Científico
-                                {student.documents.scientificArticle ? <CheckCircleIcon fontSize="inherit" /> : <CancelIcon fontSize="inherit" />}
-                            </Box>
-                        </Box>
-                    </Box>
-
-                    <Box sx={{ mt: 2, textAlign: 'center' }}>
-                        <Chip
-                            label={student.tribunalAssigned ? "Defensa Asignada" : (allDocsReady ? "Habilitado para Defensa" : "Documentación Pendiente")}
-                            color={student.tribunalAssigned ? "primary" : (allDocsReady ? "success" : "warning")}
-=======
                     {/* Document Indicators (Solo relevante en Privada para habilitar) */}
                     {tabValue === 0 && (
                         <Box sx={{ mt: 2, p: 1, bgcolor: '#f5f5f5', borderRadius: 1 }}>
@@ -459,7 +293,6 @@ function ThesisDefense() {
                         <Chip
                             label={defenseData.status === 'assigned' ? "Defensa Asignada" : (isReadyForAssign ? "Habilitado" : "Doc. Pendiente")}
                             color={defenseData.status === 'assigned' ? "primary" : (isReadyForAssign ? "success" : "warning")}
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
                             size="small"
                         />
                     </Box>
@@ -473,10 +306,7 @@ function ThesisDefense() {
         <Box>
             <Box sx={{ mb: 4 }}>
                 <TextMui value="Designación de Tribunal" variant="h4" />
-<<<<<<< HEAD
-                <TextMui value="Programación de defensas y asignación de jurados" variant="body1" />
-=======
-                <TextMui value="Programación de defensas Privadas y Públicas" variant="body1" />
+                <TextMui value="Programación de defensas Privadas y Públicas (Vista Coordinador)" variant="body1" />
             </Box>
 
             {/* Pestañas de Navegación */}
@@ -485,69 +315,11 @@ function ThesisDefense() {
                     <Tab label="Defensa Privada" icon={<LockIcon />} iconPosition="start" />
                     <Tab label="Defensa Pública" icon={<SchoolIcon />} iconPosition="start" />
                 </Tabs>
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
             </Box>
 
             {/* Estadísticas / Filtros */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
                 <Grid item xs={12} sm={6}>
-<<<<<<< HEAD
-                    <Tooltip title="Filtrar pendientes" placement="top">
-                        <Box
-                            onClick={() => setFilterTab(filterTab === 'pending' ? 'all' : 'pending')}
-                            sx={{
-                                cursor: 'pointer',
-                                opacity: filterTab === 'assigned' ? 0.5 : 1,
-                                transition: '0.3s',
-                                transform: filterTab === 'pending' ? 'scale(1.02)' : 'scale(1)',
-                            }}
-                        >
-                            <StatsCard
-                                title="Pendientes de Asignación"
-                                value={stats.pending}
-                                icon={<HourglassEmptyIcon fontSize="large" />}
-                                color="warning"
-                            />
-                        </Box>
-                    </Tooltip>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                    <Tooltip title="Filtrar asignadas" placement="top">
-                        <Box
-                            onClick={() => setFilterTab(filterTab === 'assigned' ? 'all' : 'assigned')}
-                            sx={{
-                                cursor: 'pointer',
-                                opacity: filterTab === 'pending' ? 0.5 : 1,
-                                transition: '0.3s',
-                                transform: filterTab === 'assigned' ? 'scale(1.02)' : 'scale(1)',
-                            }}
-                        >
-                            <StatsCard
-                                title="Defensas Asignadas"
-                                value={stats.assigned}
-                                icon={<CheckCircleIcon fontSize="large" />}
-                                color="success"
-                            />
-                        </Box>
-                    </Tooltip>
-                </Grid>
-            </Grid>
-
-            {/* Buscador */}
-            <Card sx={{ mb: 3 }}>
-                <CardContent>
-                    <InputMui
-                        placeholder="Buscar por nombre..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        startIcon={<SearchIcon color="action" />}
-                    />
-                </CardContent>
-            </Card>
-
-            <Grid container spacing={3}>
-                {/* Lista de Estudiantes (Cards) - Ocupa todo el ancho siempre */}
-=======
                     <StatsCard
                         title="Pendientes en esta etapa"
                         value={currentStats.pending}
@@ -565,17 +337,19 @@ function ThesisDefense() {
                 </Grid>
             </Grid>
 
-
             {/* Buscador */}
-            <SearchBar
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Buscar por nombre..."
-                title="Buscar Estudiantes"
-            />
+            <Card sx={{ mb: 3 }}>
+                <CardContent>
+                    <InputMui
+                        placeholder="Buscar por nombre..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        startIcon={<SearchIcon color="action" />}
+                    />
+                </CardContent>
+            </Card>
 
             <Grid container spacing={3}>
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
                 <Grid item xs={12}>
                     <Grid container spacing={2}>
                         {filteredStudents.length > 0 ? (
@@ -591,15 +365,11 @@ function ThesisDefense() {
                         ) : (
                             <Grid item xs={12}>
                                 <Box sx={{ textAlign: 'center', py: 4 }}>
-<<<<<<< HEAD
-                                    <Typography color="text.secondary">No se encontraron defensas con los filtros aplicados.</Typography>
-=======
                                     <Typography color="text.secondary">
                                         {tabValue === 0
                                             ? "No hay estudiantes pendientes de Defensa Privada."
                                             : "No hay estudiantes habilitados para Defensa Pública (Deben aprobar la Privada primero)."}
                                     </Typography>
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
                                 </Box>
                             </Grid>
                         )}
@@ -607,20 +377,11 @@ function ThesisDefense() {
                 </Grid>
             </Grid>
 
-<<<<<<< HEAD
-            {/* Dialog de Asignación (Fuera del Grid principal) */}
-=======
             {/* Dialog de Asignación (Componente existente) */}
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
             {selectedStudent && (
                 <TribunalAssignment
                     student={selectedStudent}
                     onClose={handleCloseAssignment}
-<<<<<<< HEAD
-                    onSave={handleSaveAssignment}
-                />
-            )}
-=======
                     onSave={handleAssignmentRequest} // Cambiado para interceptar y mostrar alerta
                 />
             )}
@@ -657,9 +418,8 @@ function ThesisDefense() {
                 btnNameR="Cancelar"
                 actionBtnR={() => setOpenConfirmAlert(false)}
             />
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
         </Box>
     );
 }
 
-export default ThesisDefense;
+export default CoordinatorThesisDefense;

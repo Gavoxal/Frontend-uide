@@ -12,7 +12,6 @@ import { getPrerequisites, prerequisitesToRequirements } from "../../storage/pre
 import ProfileHeader from "../../components/Profile/ProfileHeader";
 import InfoCard from "../../components/Profile/InfoCard";
 import RequirementsCard from "../../components/Profile/RequirementsCard";
-import { UserService } from "../../services/user.service";
 
 function StudentProfile() {
     const user = getDataUser();
@@ -109,13 +108,15 @@ function StudentProfile() {
         { icon: <AssignmentIcon color="primary" />, label: "Matla", value: studentData.matla }
     ];
 
-    // Handlers
-    const handleEditProfile = () => {
-        console.log("Editar perfil");
-    };
+    // State for password change dialog
+    const [openPasswordDialog, setOpenPasswordDialog] = useState(false);
 
-    const handleEditCover = () => {
-        console.log("Editar portada");
+    // Handlers
+    const handleChangePassword = () => setOpenPasswordDialog(true);
+    const handlePasswordSubmit = (passwordData) => {
+        console.log("Cambiar contraseña:", passwordData);
+        // TODO: Implement API call to change password
+        alert("Contraseña cambiada exitosamente");
     };
 
     const handleEditPersonalInfo = () => {
@@ -148,9 +149,11 @@ function StudentProfile() {
 
             {/* Profile Header Card */}
             <ProfileHeader
-                studentData={studentData}
-                onEditProfile={handleEditProfile}
-                onEditCover={handleEditCover}
+                name={studentData.name}
+                subtitle={`Estudiante de ${studentData.carrera}`}
+                initials={studentData.initials}
+                tags={[studentData.semestre, studentData.status]}
+                onChangePassword={handleChangePassword}
             />
 
             {/* Main Content Grid */}
@@ -174,6 +177,13 @@ function StudentProfile() {
                     />
                 </Grid>
             </Grid>
+
+            {/* Password Change Dialog */}
+            <ChangePasswordDialog
+                open={openPasswordDialog}
+                onClose={() => setOpenPasswordDialog(false)}
+                onSubmit={handlePasswordSubmit}
+            />
         </Box>
     );
 }

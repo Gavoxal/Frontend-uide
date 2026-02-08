@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
+<<<<<<< HEAD
     Box, Typography, Paper, Grid, TextField, Button, IconButton, Divider, Chip
+=======
+    Box, Typography, Paper, Grid, TextField, Button, IconButton, Divider, Chip, Tooltip
+>>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
@@ -11,6 +15,11 @@ import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import SaveIcon from '@mui/icons-material/Save';
 import SendIcon from '@mui/icons-material/Send';
+<<<<<<< HEAD
+=======
+import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
+import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
+>>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
 import { weeksData } from './mockWeeks';
 
 function ReviewAdvance() {
@@ -39,6 +48,18 @@ function ReviewAdvance() {
         return <InsertDriveFileIcon sx={{ fontSize: 30 }} />;
     };
 
+<<<<<<< HEAD
+=======
+    // Lógica de navegación entre estudiantes
+    const currentIndex = week.students.findIndex(s => s.id === studentId);
+    const prevStudent = currentIndex > 0 ? week.students[currentIndex - 1] : null;
+    const nextStudent = currentIndex < week.students.length - 1 ? week.students[currentIndex + 1] : null;
+
+    const handleNavigate = (newStudentId) => {
+        navigate(`/docente-integracion/review/${weekId}/${newStudentId}`);
+    };
+
+>>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
     return (
         <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', bgcolor: '#F4F6F8' }}>
             {/* Header Personalizado */}
@@ -66,6 +87,7 @@ function ReviewAdvance() {
             </Paper>
 
             <Box sx={{ p: 3, flex: 1, overflow: 'auto' }}>
+<<<<<<< HEAD
                 <Grid container spacing={3} sx={{ height: '100%' }}>
                     {/* Panel Izquierdo: Contenido */}
                     <Grid item xs={12} md={8}>
@@ -83,6 +105,61 @@ function ReviewAdvance() {
                                         borderRadius: 1
                                     }}
                                 />
+=======
+                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
+                    {/* Panel Izquierdo: Contenido */}
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Box sx={{ mb: 3 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                    <Typography variant="h4" fontWeight="bold" color="text.primary">
+                                        Semana {week.id}: Integración
+                                    </Typography>
+                                    <Chip
+                                        label="PENDIENTE"
+                                        sx={{
+                                            bgcolor: '#FFF9C4',
+                                            color: '#FBC02D',
+                                            fontWeight: 'bold',
+                                            borderRadius: 1
+                                        }}
+                                    />
+                                </Box>
+
+                                {/* Flechas de Navegación */}
+                                <Box sx={{ display: 'flex', gap: 1 }}>
+                                    <Tooltip title="Estudiante anterior">
+                                        <span>
+                                            <IconButton
+                                                onClick={() => handleNavigate(prevStudent.id)}
+                                                disabled={!prevStudent}
+                                                sx={{
+                                                    bgcolor: 'white',
+                                                    border: '1px solid #e0e0e0',
+                                                    '&:hover': { bgcolor: '#f5f5f5' }
+                                                }}
+                                            >
+                                                <KeyboardArrowLeftIcon />
+                                            </IconButton>
+                                        </span>
+                                    </Tooltip>
+                                    <Tooltip title="Siguiente estudiante">
+                                        <span>
+                                            <IconButton
+                                                onClick={() => handleNavigate(nextStudent.id)}
+                                                disabled={!nextStudent}
+                                                sx={{
+                                                    bgcolor: 'white',
+                                                    border: '1px solid #e0e0e0',
+                                                    '&:hover': { bgcolor: '#f5f5f5' }
+                                                }}
+                                            >
+                                                <KeyboardArrowRightIcon />
+                                            </IconButton>
+                                        </span>
+                                    </Tooltip>
+                                </Box>
+>>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
                             </Box>
                             <Typography variant="body1" color="text.secondary">
                                 Estudiante: <b>{student.name}</b> • Ene 12 - Ene 19
@@ -144,11 +221,19 @@ function ReviewAdvance() {
                                 </Button>
                             </Paper>
                         ))}
+<<<<<<< HEAD
                     </Grid>
 
                     {/* Panel Derecho: Calificación */}
                     <Grid item xs={12} md={4}>
                         <Paper variant="outlined" sx={{ p: 3, height: '100%', bgcolor: 'white', borderRadius: 2 }}>
+=======
+                    </Box>
+
+                    {/* Panel Derecho: Calificación */}
+                    <Box sx={{ width: { xs: '100%', md: 350 }, flexShrink: 0 }}>
+                        <Paper variant="outlined" sx={{ p: 3, bgcolor: 'white', borderRadius: 2, position: 'sticky', top: 24 }}>
+>>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
                             <Typography variant="h6" gutterBottom fontWeight="bold">
                                 ✏️ Panel de Calificación
                             </Typography>
@@ -204,8 +289,13 @@ function ReviewAdvance() {
                                 Guardar Calificación
                             </Button>
                         </Paper>
+<<<<<<< HEAD
                     </Grid>
                 </Grid>
+=======
+                    </Box>
+                </Box>
+>>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
             </Box>
         </Box>
     );

@@ -2,18 +2,12 @@ import React, { useState } from 'react';
 import { Box, Card, CardContent, Grid } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import SearchIcon from '@mui/icons-material/Search';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
 
-<<<<<<< HEAD
-=======
-import SearchBar from '../../components/SearchBar.component';
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
 import TextMui from '../../components/text.mui.component';
 import InputMui from '../../components/input.mui.component';
-import ButtonMui from '../../components/button.mui.component';
 import TutorCard from '../../components/Director/TutorCard.mui';
 
-function DirectorTutorList() {
+function CoordinatorTutorList() {
     const navigate = useNavigate();
 
     // Mock Data
@@ -72,13 +66,12 @@ function DirectorTutorList() {
             <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Box>
                     <TextMui value="Listado de Tutores Académicos" variant="h4" />
-                    <TextMui value="Gestión del cuerpo docente para titulaciones" variant="body1" />
+                    <TextMui value="Gestión del cuerpo docente para titulaciones (Vista Coordinador)" variant="body1" />
                 </Box>
                 <Box>
                 </Box>
             </Box>
 
-<<<<<<< HEAD
             <Box sx={{ mb: 4 }}>
                 <Card>
                     <CardContent>
@@ -91,16 +84,6 @@ function DirectorTutorList() {
                     </CardContent>
                 </Card>
             </Box>
-=======
-
-            <SearchBar
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Buscar por nombre, especialidad..."
-                title="Buscar Tutores"
-            />
-
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
 
             <Grid container spacing={3}>
                 {filteredTutors.length > 0 ? (
@@ -121,4 +104,4 @@ function DirectorTutorList() {
     );
 }
 
-export default DirectorTutorList;
+export default CoordinatorTutorList;

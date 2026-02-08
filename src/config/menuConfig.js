@@ -11,6 +11,10 @@ import ChecklistIcon from '@mui/icons-material/Checklist';
 import PersonIcon from '@mui/icons-material/Person';
 import GavelIcon from '@mui/icons-material/Gavel';
 import EventNoteIcon from '@mui/icons-material/EventNote';
+<<<<<<< HEAD
+=======
+import GroupsIcon from '@mui/icons-material/Groups';
+>>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
 
 /**
  * Configuración de menús por rol de usuario
@@ -33,6 +37,11 @@ export const menuConfig = {
             ]
         },
         { icon: GavelIcon, label: "Defensas", path: "/director/defense" },
+<<<<<<< HEAD
+=======
+        { icon: GroupsIcon, label: "Gestión de Comité", path: "/director/committee" },
+        { icon: EventNoteIcon, label: "Historial de Reuniones", path: "/director/meetings" },
+>>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
     ],
 
     coordinador: [
@@ -40,6 +49,20 @@ export const menuConfig = {
         { icon: PeopleIcon, label: "Estudiantes", path: "/coordinador/students" },
         { icon: ChecklistIcon, label: "Prerrequisitos", path: "/coordinador/prerequisites" },
         { icon: AssignmentIcon, label: "Propuestas", path: "/coordinador/proposals" },
+<<<<<<< HEAD
+=======
+        {
+            icon: SchoolIcon,
+            label: "Tutores",
+            path: "/coordinador/tutors",
+            children: [
+                { label: "Listado", path: "/coordinador/tutors" },
+                { label: "Asignar Tutor", path: "/coordinador/tutors/assign" }
+            ]
+        },
+        { icon: GavelIcon, label: "Defensas", path: "/coordinador/defense" },
+        { icon: EventNoteIcon, label: "Historial de Reuniones", path: "/coordinador/meetings" },
+>>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
     ],
 
     student: [
@@ -55,18 +78,36 @@ export const menuConfig = {
         { icon: DashboardIcon, label: "Dashboard", path: "/tutor/dashboard" },
         { icon: AssignmentIcon, label: "Planificar Actividades", path: "/tutor/planning" },
         { icon: RateReviewIcon, label: "Revisar Avances", path: "/tutor/review" },
+<<<<<<< HEAD
         { icon: EventNoteIcon, label: "Bitácora de reuniones", path: "/tutor/meetings" },
     ],
 
+=======
+        { icon: DescriptionIcon, label: "Propuestas", path: "/tutor/proposals" },
+        { icon: EventNoteIcon, label: "Bitácora de reuniones", path: "/tutor/meetings" },
+    ],
+
+    // reviewer menu deleted
+    /* 
+>>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
     reviewer: [
         { icon: DashboardIcon, label: "Dashboard", path: "/reviewer/dashboard" },
         { icon: AssignmentIcon, label: "Propuestas", path: "/reviewer/proposals" },
         { icon: GavelIcon, label: "Defensas", path: "/reviewer/defenses" },
     ],
+<<<<<<< HEAD
+=======
+    */
+>>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
 
     docente_integracion: [
         { icon: DashboardIcon, label: "Dashboard", path: "/docente-integracion/dashboard" },
         { icon: AssignmentIcon, label: "Avances", path: "/docente-integracion/advances" },
+<<<<<<< HEAD
+=======
+        { icon: DescriptionIcon, label: "Propuestas", path: "/docente-integracion/proposals" },
+        { icon: AssignmentIcon, label: "Planificar Actividades", path: "/docente-integracion/planning" },
+>>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
     ],
 
     admin: [

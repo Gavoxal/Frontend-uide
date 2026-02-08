@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-<<<<<<< HEAD
 import { Box, Card, CardContent, Chip, MenuItem, Select, FormControl, InputLabel, Grid, Divider, Tooltip } from '@mui/material';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import DescriptionIcon from '@mui/icons-material/Description';
@@ -10,48 +9,15 @@ import AssignmentLateIcon from '@mui/icons-material/AssignmentLate';
 import SearchIcon from '@mui/icons-material/Search';
 import EmailIcon from '@mui/icons-material/Email';
 import BadgeIcon from '@mui/icons-material/Badge';
-=======
-import {
-    Box,
-    Chip,
-    MenuItem,
-    Select,
-    FormControl,
-    InputLabel,
-    Grid,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Paper,
-    Typography
-} from '@mui/material';
-
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
-import AssignmentLateIcon from '@mui/icons-material/AssignmentLate';
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
 
 import TextMui from '../../components/text.mui.component';
 import ButtonMui from '../../components/button.mui.component';
 import AlertMui from '../../components/alert.mui.component';
-<<<<<<< HEAD
-=======
-import TooltipMui from '../../components/tooltip.mui.component';
-import SearchBar from '../../components/SearchBar.component';
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
 import NotificationMui from '../../components/notification.mui.component';
 import StatsCard from '../../components/common/StatsCard';
 import InputMui from '../../components/input.mui.component';
 
-function DirectorAssignTutor() {
-<<<<<<< HEAD
-=======
-
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
+function CoordinatorAssignTutor() {
     const [openAlert, setOpenAlert] = useState(false);
     const [selectedProject, setSelectedProject] = useState(null);
     const [selectedTutor, setSelectedTutor] = useState('');
@@ -59,10 +25,7 @@ function DirectorAssignTutor() {
     const [filterStatus, setFilterStatus] = useState("all");
     const [searchTerm, setSearchTerm] = useState("");
 
-<<<<<<< HEAD
     // Mock Data: Anteproyectos (Propuestas Aprobadas) pendientes de tutor
-=======
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
     const [projects, setProjects] = useState([
         {
             id: 101,
@@ -72,32 +35,21 @@ function DirectorAssignTutor() {
             topic: 'Implementación de IA para optimización de tráfico urbano',
             area: 'Ciencia de Datos',
             status: 'Aprobado',
-<<<<<<< HEAD
-            tutor: null
-=======
             tutor: null,
             career: 'Ingeniería de Software',
             malla: 'Malla 2020'
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
         },
         {
             id: 102,
             student: 'Luis Gomez',
             cedula: '1105005678',
             email: 'luis.gomez@uide.edu.ec',
-<<<<<<< HEAD
             topic: 'Sistema de gestión documental con Blockchain',
-            area: 'Transformación Digital',
-            status: 'Tutor Asignado',
-            tutor: 'Ing. Carlos Mendez, PhD' // Mocking one assigned for demo
-=======
-            topic: 'Sistema de gestión documental con Blockchain y seguridad distribuida avanzada empresarial',
             area: 'Transformación Digital',
             status: 'Tutor Asignado',
             tutor: 'Ing. Carlos Mendez, PhD',
             career: 'Tecnologías de la Información',
             malla: 'Malla 2019'
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
         },
         {
             id: 103,
@@ -107,20 +59,13 @@ function DirectorAssignTutor() {
             topic: 'Aplicación Móvil para Turismo',
             area: 'Desarrollo Software',
             status: 'Aprobado',
-<<<<<<< HEAD
-            tutor: null
-        }
-    ]);
-
-    // Mock Tutors List
-=======
             tutor: null,
             career: 'Ingeniería de Software',
             malla: 'Malla 2020'
         }
     ]);
 
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
+    // Mock Tutors List
     const tutors = [
         { id: 1, name: 'Ing. Carlos Mendez, PhD' },
         { id: 2, name: 'Dra. Maria Elena Silva' },
@@ -129,11 +74,7 @@ function DirectorAssignTutor() {
 
     const handleAssignClick = (project) => {
         setSelectedProject(project);
-<<<<<<< HEAD
         setSelectedTutor(''); // Reset selection
-=======
-        setSelectedTutor('');
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
         setOpenAlert(true);
     };
 
@@ -142,68 +83,40 @@ function DirectorAssignTutor() {
 
         const tutorName = tutors.find(t => t.id === selectedTutor)?.name;
 
-<<<<<<< HEAD
         setProjects(prev => prev.map(p =>
             p.id === selectedProject.id ? { ...p, tutor: tutorName, status: 'Tutor Asignado' } : p
         ));
-=======
-        setProjects(prev =>
-            prev.map(p =>
-                p.id === selectedProject.id
-                    ? { ...p, tutor: tutorName, status: 'Tutor Asignado' }
-                    : p
-            )
-        );
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
 
-        setSuccessMsg(`Se ha asignado el tutor ${tutorName} al estudiante ${selectedProject.student}.`);
+        setSuccessMsg(`Se ha asignado el tutor ${tutorName} al estudiante ${selectedProject.student}. Se ha enviado el correo de notificación.`);
         setOpenAlert(false);
         setSelectedProject(null);
     };
 
-<<<<<<< HEAD
     // Estadísticas
-=======
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
     const stats = {
         assigned: projects.filter(p => p.tutor).length,
         pending: projects.filter(p => !p.tutor).length
     };
 
-<<<<<<< HEAD
     // Lógica de Filtrado
     const filteredProjects = projects.filter((project) => {
         const matchesSearch = project.student.toLowerCase().includes(searchTerm.toLowerCase()) ||
-=======
-    const filteredProjects = projects.filter((project) => {
-        const matchesSearch =
-            project.student.toLowerCase().includes(searchTerm.toLowerCase()) ||
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
             project.topic.toLowerCase().includes(searchTerm.toLowerCase()) ||
             project.cedula.includes(searchTerm) ||
             project.email.toLowerCase().includes(searchTerm.toLowerCase());
 
         if (filterStatus === "assigned") return matchesSearch && project.tutor;
         if (filterStatus === "pending") return matchesSearch && !project.tutor;
-<<<<<<< HEAD
-=======
-
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
         return matchesSearch;
     });
 
     return (
         <Box>
-<<<<<<< HEAD
-=======
-
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
             <Box sx={{ mb: 4 }}>
                 <TextMui value="Asignación de Tutores" variant="h4" />
-                <TextMui value="Gestión de anteproyectos aprobados" variant="body1" />
+                <TextMui value="Gestión de anteproyectos aprobados (Vista Coordinador)" variant="body1" />
             </Box>
 
-<<<<<<< HEAD
             {/* Dashboard Stats */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
                 <Grid item xs={12} sm={6}>
@@ -217,12 +130,6 @@ function DirectorAssignTutor() {
                                 transform: filterStatus === 'pending' ? 'scale(1.02)' : 'scale(1)',
                             }}
                         >
-=======
-            <Grid container spacing={3} sx={{ mb: 4 }}>
-                <Grid item xs={12} sm={6}>
-                    <TooltipMui title="Filtrar sin tutor">
-                        <Box onClick={() => setFilterStatus(filterStatus === 'pending' ? 'all' : 'pending')} sx={{ cursor: 'pointer' }}>
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
                             <StatsCard
                                 title="Sin Tutor Asignado"
                                 value={stats.pending}
@@ -230,7 +137,6 @@ function DirectorAssignTutor() {
                                 color="warning"
                             />
                         </Box>
-<<<<<<< HEAD
                     </Tooltip>
                 </Grid>
                 <Grid item xs={12} sm={6}>
@@ -244,14 +150,6 @@ function DirectorAssignTutor() {
                                 transform: filterStatus === 'assigned' ? 'scale(1.02)' : 'scale(1)',
                             }}
                         >
-=======
-                    </TooltipMui>
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                    <TooltipMui title="Filtrar con tutor">
-                        <Box onClick={() => setFilterStatus(filterStatus === 'assigned' ? 'all' : 'assigned')} sx={{ cursor: 'pointer' }}>
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
                             <StatsCard
                                 title="Con Tutor Asignado"
                                 value={stats.assigned}
@@ -259,11 +157,7 @@ function DirectorAssignTutor() {
                                 color="success"
                             />
                         </Box>
-<<<<<<< HEAD
                     </Tooltip>
-=======
-                    </TooltipMui>
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
                 </Grid>
             </Grid>
 
@@ -275,7 +169,6 @@ function DirectorAssignTutor() {
                 </Box>
             )}
 
-<<<<<<< HEAD
             <Box sx={{ mb: 4 }}>
                 <Card>
                     <CardContent>
@@ -304,103 +197,12 @@ function DirectorAssignTutor() {
                                             variant="outlined"
                                             color="default"
                                         />
-=======
-            {/* BARRA DE BÚSQUEDA */}
-            <SearchBar
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Buscar por estudiante, cédula, correo o tema..."
-                title="Buscar Propuestas"
-            />
-
-            {/* TABLA DE PROPUESTAS */}
-            <TableContainer component={Paper} elevation={3}>
-                <Table sx={{ minWidth: 650 }}>
-                    <TableHead>
-                        <TableRow sx={{ bgcolor: '#f5f5f5' }}>
-                            <TableCell sx={{ fontWeight: 'bold' }}>ID</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>Estudiante</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold', minWidth: 250 }}>Tema de Propuesta</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>Carrera</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>Área</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>Estado</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold', textAlign: 'center' }}>Acción</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {filteredProjects.length > 0 ? (
-                            filteredProjects.map((project) => (
-                                <TableRow
-                                    key={project.id}
-                                    sx={{
-                                        '&:hover': { bgcolor: '#f9f9f9' },
-                                        height: 80 // Altura uniforme para todas las filas
-                                    }}
-                                >
-                                    <TableCell>
-                                        <Chip label={project.id} size="small" variant="outlined" />
-                                    </TableCell>
-
-                                    <TableCell>
-                                        <Box>
-                                            <Typography variant="body2" fontWeight="bold">
-                                                {project.student}
-                                            </Typography>
-                                            <Typography variant="caption" color="text.secondary">
-                                                {project.cedula}
-                                            </Typography>
-                                            <br />
-                                            <Typography variant="caption" color="text.secondary">
-                                                {project.email}
-                                            </Typography>
-                                        </Box>
-                                    </TableCell>
-
-                                    <TableCell>
-                                        <TooltipMui title={project.topic} arrow placement="top">
-                                            <Typography
-                                                variant="body2"
-                                                sx={{
-                                                    overflow: 'hidden',
-                                                    textOverflow: 'ellipsis',
-                                                    display: '-webkit-box',
-                                                    WebkitLineClamp: 2,
-                                                    WebkitBoxOrient: 'vertical',
-                                                    lineHeight: 1.4
-                                                }}
-                                            >
-                                                {project.topic}
-                                            </Typography>
-                                        </TooltipMui>
-                                    </TableCell>
-
-                                    <TableCell>
-                                        <Typography variant="caption" display="block">
-                                            {project.career}
-                                        </Typography>
-                                        <Typography variant="caption" color="text.secondary">
-                                            {project.malla}
-                                        </Typography>
-                                    </TableCell>
-
-                                    <TableCell>
-                                        <Chip
-                                            label={project.area}
-                                            size="small"
-                                            variant="outlined"
-                                            color="primary"
-                                        />
-                                    </TableCell>
-
-                                    <TableCell>
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
                                         <Chip
                                             label={project.status}
                                             color={project.tutor ? "success" : "warning"}
                                             size="small"
                                             icon={project.tutor ? <CheckCircleIcon /> : <AssignmentLateIcon />}
                                         />
-<<<<<<< HEAD
                                     </Box>
 
                                     {/* Content section */}
@@ -420,6 +222,10 @@ function DirectorAssignTutor() {
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary', mb: 1, pl: 0.5 }}>
                                             <EmailIcon fontSize="small" sx={{ fontSize: '1rem' }} />
                                             <TextMui value={project.email} variant="body2" />
+                                        </Box>
+
+                                        <Box sx={{ ml: 3.5, mb: 1 }}>
+                                            <TextMui value={`${project.career} | ${project.malla}`} variant="caption" color="text.secondary" sx={{ display: 'block', fontStyle: 'italic' }} />
                                         </Box>
 
                                         <Divider sx={{ my: 1, borderStyle: 'dashed' }} />
@@ -464,75 +270,36 @@ function DirectorAssignTutor() {
                     </Grid>
                 )}
             </Grid>
-=======
-                                        {project.tutor && (
-                                            <Typography variant="caption" display="block" sx={{ mt: 0.5 }}>
-                                                {project.tutor}
-                                            </Typography>
-                                        )}
-                                    </TableCell>
-
-                                    <TableCell align="center">
-                                        {!project.tutor && (
-                                            <ButtonMui
-                                                name="Asignar"
-                                                onClick={() => handleAssignClick(project)}
-                                                startIcon={<PersonAddIcon />}
-                                                backgroundColor="#ed6c02"
-                                                size="small"
-                                            />
-                                        )}
-                                    </TableCell>
-                                </TableRow>
-                            ))
-                        ) : (
-                            <TableRow>
-                                <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
-                                    <Typography variant="h6" color="text.secondary">
-                                        No se encontraron proyectos
-                                    </Typography>
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </TableContainer>
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
 
             <AlertMui
                 open={openAlert}
                 handleClose={() => setOpenAlert(false)}
-<<<<<<< HEAD
-                title={`Asignar Tutor a: ${selectedProject?.student}`}
+                title={`Asignar Tutor - Confirmación de Correo`}
                 message={
-                    <Box sx={{ mt: 2, minWidth: 300 }}>
-                        <TextMui value={`Tema: ${selectedProject?.topic}`} variant="body2" sx={{ mb: 2, fontWeight: 'bold' }} />
-                        <TextMui value="Seleccione un docente:" variant="caption" color="text.secondary" />
+                    <Box sx={{ mt: 2, minWidth: 350 }}>
+                        <NotificationMui severity="info" sx={{ mb: 2 }}>
+                            Al confirmar, <strong>se enviará un correo electrónico</strong> notificando la asignación.
+                        </NotificationMui>
 
+                        <Box sx={{ p: 2, bgcolor: '#f9f9f9', borderRadius: 2, mb: 2, border: '1px solid #eee' }}>
+                            <TextMui value="Detalles del Anteproyecto:" variant="subtitle2" sx={{ mb: 1, color: 'primary.main' }} />
+                            <TextMui value={`Tema: ${selectedProject?.topic}`} variant="body2" sx={{ mb: 0.5, fontWeight: 'bold' }} />
+                            <TextMui value={`Estudiante: ${selectedProject?.student} (${selectedProject?.cedula})`} variant="body2" />
+                            <TextMui value={`Carrera: ${selectedProject?.career}`} variant="caption" display="block" />
+                            <TextMui value={`Malla: ${selectedProject?.malla}`} variant="caption" display="block" />
+                        </Box>
+
+                        <TextMui value="Seleccione el Docente a notificar:" variant="caption" color="text.secondary" />
                         <FormControl fullWidth sx={{ mt: 1 }}>
                             <InputLabel id="tutor-select-label">Tutor</InputLabel>
                             <Select
                                 labelId="tutor-select-label"
-=======
-                title="Asignar Tutor"
-                message={
-                    <Box sx={{ mt: 2, minWidth: 350 }}>
-                        <FormControl fullWidth>
-                            <InputLabel>Tutor</InputLabel>
-                            <Select
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
                                 value={selectedTutor}
                                 label="Tutor"
                                 onChange={(e) => setSelectedTutor(e.target.value)}
                             >
                                 {tutors.map((t) => (
-<<<<<<< HEAD
                                     <MenuItem key={t.id} value={t.id}>{t.name}</MenuItem>
-=======
-                                    <MenuItem key={t.id} value={t.id}>
-                                        {t.name}
-                                    </MenuItem>
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
                                 ))}
                             </Select>
                         </FormControl>
@@ -540,26 +307,14 @@ function DirectorAssignTutor() {
                 }
                 status="info"
                 showBtnL={true}
-<<<<<<< HEAD
-                btnNameL="Guardar Asignación"
-=======
-                btnNameL="Confirmar"
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
+                btnNameL="Confirmar y Enviar Correo"
                 actionBtnL={confirmAssignment}
                 showBtnR={true}
                 btnNameR="Cancelar"
                 actionBtnR={() => setOpenAlert(false)}
             />
-<<<<<<< HEAD
-=======
-
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
         </Box>
     );
 }
 
-<<<<<<< HEAD
-export default DirectorAssignTutor;
-=======
-export default DirectorAssignTutor;
->>>>>>> e40cad7ef6d59023c2ef3868f73163032e1e18e5
+export default CoordinatorAssignTutor;

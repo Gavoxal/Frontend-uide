@@ -4,16 +4,11 @@ import SendIcon from '@mui/icons-material/Send';
 
 
 function ButtonMUI({
-    name,
-    onClick = () => { },
-    backgroundColor = 'primary.main',
-    color = 'white',
-    type = 'button',
-    variant = 'contained',
-    startIcon = null,
-    endIcon = null,
-    disabled = false,
-    ...props
+    name, 
+    onClick= () => {}, 
+    backgroundColor = 'white', 
+    color ='white', 
+    type='submit'
 }) {
     return (
         <>
@@ -21,24 +16,14 @@ function ButtonMUI({
             <Button
                 fullWidth
                 type={type}
-                onClick={onClick}
-                variant={variant}
-                startIcon={startIcon}
-                endIcon={endIcon}
-                disabled={disabled}
+                onClick={onClick} 
+                variant= "contained"
                 sx={{
-                    color: color,
-                    backgroundColor: variant === 'contained' ? backgroundColor : 'transparent',
-                    borderColor: variant === 'outlined' ? backgroundColor : undefined,
-                    '&:hover': {
-                        backgroundColor: variant === 'contained' ? backgroundColor : 'rgba(0,0,0,0.05)',
-                        filter: 'brightness(0.9)'
-                    },
-                    ...props.sx
+                    color:color,
+                    backgroundColor:backgroundColor
                 }}
-                {...props}
-            >
-                {name}
+            > 
+                {name} 
             </Button>
 
         </>

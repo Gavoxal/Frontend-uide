@@ -6,20 +6,19 @@ import {
     ListItemIcon,
     ListItemText,
     Divider,
+    Collapse,
+    Avatar,
+    Typography,
+    Chip,
     Tooltip,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
-import DashboardIcon from "@mui/icons-material/Dashboard";
-import PeopleIcon from "@mui/icons-material/People";
-import AssignmentIcon from "@mui/icons-material/Assignment";
-import ChecklistIcon from "@mui/icons-material/Checklist";
-import PersonIcon from "@mui/icons-material/Person";
 import LogoutIcon from "@mui/icons-material/Logout";
-import SchoolIcon from "@mui/icons-material/School";
-import GavelIcon from "@mui/icons-material/Gavel";
+import ExpandLess from "@mui/icons-material/ExpandLess";
+import ExpandMore from "@mui/icons-material/ExpandMore";
 import LockIcon from "@mui/icons-material/Lock";
-import RateReviewIcon from "@mui/icons-material/RateReview";
-import EventNoteIcon from "@mui/icons-material/EventNote";
+import PersonIcon from "@mui/icons-material/Person";
+import { useState } from "react";
 import { getDataUser } from "../storage/user.model.jsx";
 import { useUserProgress } from "../contexts/UserProgressContext";
 import uideImage from "../assets/uide3.svg";
@@ -31,19 +30,8 @@ const MENU_BY_ROLE = {
         { icon: <PeopleIcon />, label: "Estudiantes", path: "/director/students" },
         { icon: <ChecklistIcon />, label: "Prerrequisitos", path: "/director/prerequisites" },
         { icon: <AssignmentIcon />, label: "Propuestas", path: "/director/proposals" },
-        {
-            icon: <SchoolIcon />,
-            label: "Tutores",
-            path: "/director/tutors",
-        },
-        { icon: <GavelIcon />, label: "Defensas", path: "/director/defense" },
-    ],
-
-    coordinador: [
-        { icon: <DashboardIcon />, label: "Dashboard", path: "/coordinador/dashboard" },
-        { icon: <PeopleIcon />, label: "Estudiantes", path: "/coordinador/students" },
-        { icon: <ChecklistIcon />, label: "Prerrequisitos", path: "/coordinador/prerequisites" },
-        { icon: <AssignmentIcon />, label: "Propuestas", path: "/coordinador/proposals" },
+        { icon: <SchoolIcon />, label: "Tutores", path: "/director/tutors" },
+        { icon: <GavelIcon />, label: "Defensas", path: "/director/defenses" },
     ],
     student: [
         { icon: <DashboardIcon />, label: "Dashboard", path: "/student/dashboard" },
@@ -55,24 +43,15 @@ const MENU_BY_ROLE = {
     ],
     tutor: [
         { icon: <DashboardIcon />, label: "Dashboard", path: "/tutor/dashboard" },
-        { icon: <PeopleIcon />, label: "Estudiantes Asignados", path: "/tutor/students" },
-        { icon: <AssignmentIcon />, label: "Actividades", path: "/tutor/planning" },
+        { icon: <AssignmentIcon />, label: "Planificar Actividades", path: "/tutor/planning" },
         { icon: <RateReviewIcon />, label: "Revisar Avances", path: "/tutor/review" },
-        { icon: <GavelIcon />, label: "Defensas Públicas", path: "/tutor/defenses" },
         { icon: <EventNoteIcon />, label: "Bitácora de Reuniones", path: "/tutor/meetings" },
     ],
-
     reviewer: [
         { icon: <DashboardIcon />, label: "Dashboard", path: "/reviewer/dashboard" },
         { icon: <AssignmentIcon />, label: "Propuestas", path: "/reviewer/proposals" },
         { icon: <GavelIcon />, label: "Defensas", path: "/reviewer/defenses" },
     ],
-
-    docente_integracion: [
-        { icon: <DashboardIcon />, label: "Dashboard", path: "/docente-integracion/dashboard" },
-        { icon: <AssignmentIcon />, label: "Avances", path: "/docente-integracion/advances" },
-    ],
-
     admin: [
         { icon: <DashboardIcon />, label: "Dashboard", path: "/director/dashboard" },
         { icon: <PeopleIcon />, label: "Estudiantes", path: "/director/students" },
@@ -81,8 +60,9 @@ const MENU_BY_ROLE = {
 
 function SidebarMui({ onNavigate, currentPage, isExpanded, toggleSidebar }) {
     const user = getDataUser();
-    const userRole = user?.role || "admin";
-    const menuItems = MENU_BY_ROLE[userRole] || MENU_BY_ROLE.admin;
+    const userRole = user?.role || "user";
+    const userRouteBase = roleToRoute[userRole] || userRole;
+    const menuItems = getMenuByRole(userRole);
 
     // Solo para estudiantes, verificar permisos
     const progressContext = userRole === 'student' ? useUserProgress() : null;
@@ -151,7 +131,7 @@ function SidebarMui({ onNavigate, currentPage, isExpanded, toggleSidebar }) {
             </IconButton>
 
             {/* MENU DINÁMICO POR ROL */}
-            <List sx={{ width: "100%" }}>
+            <List sx={{ width: "100%", flexGrow: 1, overflowY: 'auto' }}>
                 {menuItems.map((item, index) => {
                     const canAccess = canAccessItem(item);
                     const blockReason = getBlockReasonForItem(item);
@@ -159,11 +139,10 @@ function SidebarMui({ onNavigate, currentPage, isExpanded, toggleSidebar }) {
                     return (
                         <MenuItem
                             key={index}
-                            icon={item.icon}
-                            label={item.label}
+                            item={item}
                             isExpanded={isExpanded}
-                            active={currentPage.includes(item.path)}
-                            onClick={() => canAccess && onNavigate(item.path)}
+                            currentPage={currentPage}
+                            onNavigate={onNavigate}
                             blocked={!canAccess}
                             blockReason={blockReason}
                         />
@@ -173,21 +152,105 @@ function SidebarMui({ onNavigate, currentPage, isExpanded, toggleSidebar }) {
 
             <Divider sx={{ bgcolor: "rgba(255,255,255,0.1)", my: 2 }} />
 
-            {/* BOTTOM */}
-            <Box sx={{ mt: "auto", width: "100%" }}>
-                <MenuItem
-                    icon={<PersonIcon />}
-                    label="Perfil"
-                    isExpanded={isExpanded}
-                    active={currentPage.includes("/profile")}
-                    onClick={() => onNavigate(`/${userRole}/profile`)}
-                />
+            {/* BOTTOM - PERFIL DE USUARIO */}
+            <Box sx={{ mt: "auto", width: "100%", px: 2, pb: 2 }}>
+                {/* Avatar y datos del usuario - Clickeable */}
+                {isExpanded ? (
+                    <Box
+                        onClick={() => onNavigate(`/${userRouteBase}/profile`)}
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1.5,
+                            p: 1.5,
+                            backgroundColor: "rgba(255,255,255,0.1)",
+                            borderRadius: 2,
+                            mb: 1,
+                            cursor: "pointer",
+                            transition: "all 0.2s ease",
+                            "&:hover": {
+                                backgroundColor: "rgba(255,255,255,0.2)",
+                                transform: "translateX(4px)",
+                            },
+                        }}
+                    >
+                        <Avatar
+                            sx={{
+                                bgcolor: "white",
+                                color: "#000A9B",
+                                width: 40,
+                                height: 40,
+                                fontWeight: "bold",
+                            }}
+                        >
+                            {user?.name?.charAt(0)}{user?.lastName?.charAt(0)}
+                        </Avatar>
+                        <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                            <Typography
+                                variant="body2"
+                                sx={{
+                                    color: "white",
+                                    fontWeight: 600,
+                                    fontSize: "0.875rem",
+                                    lineHeight: 1.2,
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                }}
+                            >
+                                {user?.name} {user?.lastName}
+                            </Typography>
+                            <Chip
+                                label={roleLabels[user?.role] || 'Usuario'}
+                                size="small"
+                                sx={{
+                                    height: 18,
+                                    fontSize: "0.65rem",
+                                    backgroundColor: "rgba(255,255,255,0.2)",
+                                    color: "white",
+                                    fontWeight: 500,
+                                    mt: 0.5,
+                                    "& .MuiChip-label": {
+                                        px: 1,
+                                    },
+                                }}
+                            />
+                        </Box>
+                    </Box>
+                ) : (
+                    <Box
+                        onClick={() => onNavigate(`/${userRouteBase}/profile`)}
+                        sx={{
+                            display: "flex",
+                            justifyContent: "center",
+                            mb: 1,
+                            cursor: "pointer",
+                            transition: "all 0.2s ease",
+                            "&:hover": {
+                                transform: "scale(1.1)",
+                            },
+                        }}
+                    >
+                        <Avatar
+                            sx={{
+                                bgcolor: "white",
+                                color: "#000A9B",
+                                width: 36,
+                                height: 36,
+                                fontWeight: "bold",
+                            }}
+                        >
+                            {user?.name?.charAt(0)}{user?.lastName?.charAt(0)}
+                        </Avatar>
+                    </Box>
+                )}
 
+                {/* Botón de cerrar sesión */}
                 <MenuItem
-                    icon={<LogoutIcon />}
-                    label="Salir"
+                    item={{ icon: LogoutIcon, label: "Cerrar Sesión", path: "/ingreso" }}
                     isExpanded={isExpanded}
-                    onClick={() => onNavigate("/ingreso")}
+                    currentPage={currentPage}
+                    onNavigate={onNavigate}
                 />
             </Box>
         </Box>
@@ -196,45 +259,96 @@ function SidebarMui({ onNavigate, currentPage, isExpanded, toggleSidebar }) {
 
 export default SidebarMui;
 
-function MenuItem({ icon, label, isExpanded, active, onClick, blocked = false, blockReason = null }) {
-    const menuItem = (
-        <ListItem
-            onClick={blocked ? undefined : onClick}
-            sx={{
-                cursor: blocked ? "not-allowed" : "pointer",
-                px: isExpanded ? 2 : 0,
-                justifyContent: isExpanded ? "flex-start" : "center",
-                backgroundColor: active ? "rgba(255,255,255,0.15)" : "transparent",
-                borderRadius: 1,
-                mb: 1,
-                opacity: blocked ? 0.4 : 1,
-                "&:hover": {
-                    backgroundColor: blocked ? "transparent" : "rgba(255,255,255,0.25)",
-                },
-                position: 'relative',
-            }}
-        >
-            <ListItemIcon
+function MenuItem({ item, isExpanded, currentPage, onNavigate, blocked = false, blockReason = null }) {
+    const hasChildren = item.children && item.children.length > 0;
+    const [open, setOpen] = useState(false);
+
+    // Check if the item is active or any of its children
+    const isActive = currentPage === item.path || (hasChildren && item.children.some(child => currentPage === child.path));
+
+    const IconComponent = item.icon;
+
+    const handleClick = () => {
+        if (blocked) return;
+
+        if (hasChildren) {
+            setOpen(!open);
+        } else {
+            onNavigate(item.path);
+        }
+    };
+
+    const listItemContent = (
+        <>
+            <ListItem
+                onClick={handleClick}
                 sx={{
-                    color: "white",
-                    minWidth: isExpanded ? 40 : "auto",
-                    justifyContent: "center",
+                    cursor: blocked ? "not-allowed" : "pointer",
+                    px: isExpanded ? 2 : 0,
+                    justifyContent: isExpanded ? "flex-start" : "center",
+                    backgroundColor: isActive && !hasChildren ? "rgba(255,255,255,0.15)" : "transparent",
+                    borderRadius: 1,
+                    mb: 1,
+                    opacity: blocked ? 0.4 : 1,
+                    "&:hover": {
+                        backgroundColor: blocked ? "transparent" : "rgba(255,255,255,0.25)",
+                    },
+                    position: 'relative',
                 }}
             >
-                {blocked ? <LockIcon fontSize="small" /> : icon}
-            </ListItemIcon>
+                <ListItemIcon
+                    sx={{
+                        color: "white",
+                        minWidth: isExpanded ? 40 : "auto",
+                        justifyContent: "center",
+                    }}
+                >
+                    {blocked ? <LockIcon fontSize="small" /> : (IconComponent && <IconComponent />)}
+                </ListItemIcon>
 
-            {isExpanded && <ListItemText primary={label} sx={{ color: "white" }} />}
-        </ListItem>
+                {isExpanded && (
+                    <>
+                        <ListItemText primary={item.label} sx={{ color: "white" }} />
+                        {hasChildren ? (open ? <ExpandLess sx={{ color: 'white' }} /> : <ExpandMore sx={{ color: 'white' }} />) : null}
+                    </>
+                )}
+            </ListItem>
+
+            {hasChildren && isExpanded && (
+                <Collapse in={open} timeout="auto" unmountOnExit>
+                    <List component="div" disablePadding>
+                        {item.children.map((child, index) => (
+                            <ListItem
+                                key={index}
+                                onClick={() => onNavigate(child.path)}
+                                sx={{
+                                    pl: 4,
+                                    cursor: "pointer",
+                                    backgroundColor: currentPage === child.path ? "rgba(255,255,255,0.3)" : "transparent",
+                                    borderRadius: 1,
+                                    mb: 0.5,
+                                    "&:hover": { backgroundColor: "rgba(255,255,255,0.2)" },
+                                }}
+                            >
+                                <ListItemText
+                                    primary={child.label}
+                                    primaryTypographyProps={{ fontSize: '0.9rem', color: '#e0e0e0' }}
+                                />
+                            </ListItem>
+                        ))}
+                    </List>
+                </Collapse>
+            )}
+        </>
     );
 
     if (blocked && blockReason) {
         return (
             <Tooltip title={blockReason} placement="right" arrow>
-                {menuItem}
+                {listItemContent}
             </Tooltip>
         );
     }
 
-    return menuItem;
+    return listItemContent;
 }

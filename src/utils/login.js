@@ -82,14 +82,44 @@ export function LoginService(user, passwd) {
     };
   }
 
-  // Usuario revisor predefinido
-  if (user === "revisor" && passwd === "revisor123") {
-    localStorage.setItem('userEmail', user);
+  // Usuario revisor predefinido (DEPRECATED)
+  // if (user === "revisor" && passwd === "revisor123") {
+  //   localStorage.setItem('userEmail', user);
+  //   return {
+  //     name: "Revisor",
+  //     lastName: "Main",
+  //     role: "reviewer",
+  //     image: "",
+  //   };
+  // }
+
+
+  // Usuario director
+  if (user === "director" && passwd === "director123") {
     return {
-      name: "Revisor",
-      lastName: "Main",
-      role: "reviewer",
+      name: "Director",
+      lastName: "Carrera",
+      role: "director",
+    };
+  }
+
+  // O el usuario docente de integración predefinido
+  if (user === "docente" && passwd === "docente123") {
+    return {
+      name: "Docente",
+      lastName: "Integración",
+      role: "docente_integracion",
+
       image: "",
+    };
+  }
+
+  // Usuario coordinador
+  if (user === "coordinador" && passwd === "coordinador123") {
+    return {
+      name: "Darío",
+      lastName: "Valarezo",
+      role: "coordinador",
     };
   }
 

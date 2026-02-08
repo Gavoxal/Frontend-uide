@@ -1,7 +1,7 @@
 import { Box, Typography, Card, CardContent, Avatar, Button, Chip, IconButton } from "@mui/material";
-import { Edit as EditIcon, CameraAlt as CameraIcon } from "@mui/icons-material";
+import { LockReset as LockResetIcon, CameraAlt as CameraIcon } from "@mui/icons-material";
 
-function ProfileHeader({ studentData, onEditProfile, onEditCover }) {
+function ProfileHeader({ name, subtitle, initials, tags, onChangePassword }) {
     return (
         <Card
             sx={{
@@ -15,29 +15,9 @@ function ProfileHeader({ studentData, onEditProfile, onEditCover }) {
                 sx={{
                     background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
                     height: 120,
-                    position: "relative",
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    alignItems: "flex-start",
-                    p: 2
+                    position: "relative"
                 }}
-            >
-                <Button
-                    variant="contained"
-                    startIcon={<EditIcon />}
-                    onClick={onEditCover}
-                    sx={{
-                        backgroundColor: "rgba(255, 255, 255, 0.9)",
-                        color: "#333",
-                        fontWeight: "600",
-                        "&:hover": {
-                            backgroundColor: "white"
-                        }
-                    }}
-                >
-                    Editar Portada
-                </Button>
-            </Box>
+            />
 
             {/* White Content Section */}
             <CardContent sx={{ pt: 0, pb: 3, px: 3 }}>
@@ -55,7 +35,7 @@ function ProfileHeader({ studentData, onEditProfile, onEditCover }) {
                                 boxShadow: 3
                             }}
                         >
-                            {studentData.initials || "AY"}
+                            {initials || "U"}
                         </Avatar>
                         <IconButton
                             size="small"
@@ -79,40 +59,33 @@ function ProfileHeader({ studentData, onEditProfile, onEditCover }) {
                     {/* Name and Info */}
                     <Box sx={{ flex: 1, mt: 5 }}>
                         <Typography variant="h5" fontWeight="bold" color="text.primary" gutterBottom>
-                            {studentData.name}
+                            {name}
                         </Typography>
                         <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-                            Estudiante de {studentData.carrera}
+                            {subtitle}
                         </Typography>
                         <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                            <Chip
-                                label={studentData.semestre}
-                                size="small"
-                                sx={{
-                                    backgroundColor: "#e8eaf6",
-                                    color: "#5c6bc0",
-                                    fontWeight: "600",
-                                    fontSize: "0.75rem"
-                                }}
-                            />
-                            <Chip
-                                label={studentData.status}
-                                size="small"
-                                sx={{
-                                    backgroundColor: "#e8f5e9",
-                                    color: "#4caf50",
-                                    fontWeight: "600",
-                                    fontSize: "0.75rem"
-                                }}
-                            />
+                            {tags && tags.map((tag, index) => (
+                                <Chip
+                                    key={index}
+                                    label={tag}
+                                    size="small"
+                                    sx={{
+                                        backgroundColor: index % 2 === 0 ? "#e8eaf6" : "#e8f5e9",
+                                        color: index % 2 === 0 ? "#5c6bc0" : "#4caf50",
+                                        fontWeight: "600",
+                                        fontSize: "0.75rem"
+                                    }}
+                                />
+                            ))}
                         </Box>
                     </Box>
 
-                    {/* Edit Profile Button */}
+                    {/* Change Password Button */}
                     <Button
                         variant="contained"
-                        startIcon={<EditIcon />}
-                        onClick={onEditProfile}
+                        startIcon={<LockResetIcon />}
+                        onClick={onChangePassword}
                         sx={{
                             backgroundColor: "#667eea",
                             color: "white",
@@ -123,7 +96,7 @@ function ProfileHeader({ studentData, onEditProfile, onEditCover }) {
                             }
                         }}
                     >
-                        Editar Perfil
+                        Cambiar Contraseña
                     </Button>
                 </Box>
             </CardContent>
