@@ -87,5 +87,30 @@ export const ProposalService = {
             console.error("ProposalService.create error:", error);
             throw error;
         }
+    },
+    async updateStatus(id, status, feedback) {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`/api/v1/propuestas/${id}/revision`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    estadoRevision: status,
+                    comentariosRevision: feedback
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `Error al actualizar estado: ${response.statusText}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error("ProposalService.updateStatus error:", error);
+            throw error;
+        }
     }
 };

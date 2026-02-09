@@ -59,7 +59,7 @@ function ActivityForm({ students = [], onSubmit, onDraft, initialData = null }) 
                     >
                         {students.map((student) => (
                             <MenuItem key={student.id} value={student.id}>
-                                {student.name} - {student.thesis}
+                                {student.name}
                             </MenuItem>
                         ))}
                     </Select>
@@ -91,47 +91,12 @@ function ActivityForm({ students = [], onSubmit, onDraft, initialData = null }) 
                         label="Fecha Límite de Entrega"
                         value={formData.deadline}
                         onChange={(newValue) => handleChange('deadline', newValue)}
-                        renderInput={(params) => <TextField {...params} fullWidth />}
+                        slotProps={{ textField: { fullWidth: true } }}
                         sx={{ flex: 1 }}
                     />
                 </Box>
 
-                {/* Recursos adjuntos */}
-                <Paper sx={{ p: 2, backgroundColor: '#f9f9f9' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                        <Typography variant="subtitle2" fontWeight="600">
-                            Recursos Adjuntos (Opcional)
-                        </Typography>
-                        <Button
-                            size="small"
-                            startIcon={<AddIcon />}
-                            onClick={() => {
-                                // Lógica para agregar recurso
-                            }}
-                        >
-                            Agregar
-                        </Button>
-                    </Box>
 
-                    {formData.resources.length === 0 ? (
-                        <Typography variant="caption" color="text.secondary">
-                            No hay recursos adjuntos. Puedes agregar enlaces a documentación o archivos base.
-                        </Typography>
-                    ) : (
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                            {formData.resources.map((resource, index) => (
-                                <Chip
-                                    key={index}
-                                    label={resource.name}
-                                    icon={<AttachFileIcon />}
-                                    onDelete={() => {
-                                        // Lógica para eliminar recurso
-                                    }}
-                                />
-                            ))}
-                        </Box>
-                    )}
-                </Paper>
 
                 {/* Botones de acción */}
                 <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>

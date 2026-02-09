@@ -9,7 +9,7 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import InfoOutlineIcon from '@mui/icons-material/InfoOutline';
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
-import Button from '../components/button.mui.component.jsx';
+import Button from './button.mui.component.jsx';
 import { Box, Slide, Zoom } from '@mui/material';
 import { forwardRef } from 'react';
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Box,
     Typography,
@@ -8,20 +8,24 @@ import {
     Grid,
     Alert,
     Chip,
-    Divider
+    Divider,
+    CircularProgress,
+    Tooltip
 } from '@mui/material';
-import SaveIcon from '@mui/icons-material/Save';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import EditIcon from '@mui/icons-material/Edit';
+import LockIcon from '@mui/icons-material/Lock';
+import HistoryIcon from '@mui/icons-material/History';
+import DownloadIcon from '@mui/icons-material/Download';
 import DescriptionIcon from '@mui/icons-material/Description';
-import VisibilityIcon from '@mui/icons-material/Visibility';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import FileUpload from '../../components/file.mui.component.jsx';
-import CommentSection from '../../components/comment.mui.component.jsx';
 import AlertMui from '../../components/alert.mui.component.jsx';
+import { ProposalService } from '../../services/proposal.service';
+import { EntregableService } from '../../services/entregable.service';
+import { downloadFile } from '../../services/api';
 
 function StudentProyecto() {
+    console.log("Rendering StudentProyecto with Unlock Logic");
+
     const [alertState, setAlertState] = useState({
         open: false,
         title: '',
@@ -29,484 +33,298 @@ function StudentProyecto() {
         status: 'info'
     });
 
-    const [anteproyecto, setAnteproyecto] = useState({
-        anteproyectoFile: null,
-        manualFile: null,
-        planPruebasFile: null,
-        status: 'draft', // draft, submitted, approved, rejected
-        submittedDate: null,
-        versions: [] // Historial de versiones del anteproyecto
+    const [loading, setLoading] = useState(true);
+    const [unlocked, setUnlocked] = useState(false);
+    const [unlockInfo, setUnlockInfo] = useState({ approvedWeeks: 0, requiredWeeks: 16 });
+    const [proposalId, setProposalId] = useState(null);
+
+    // Documentos finales (Tesis, Manual, etc.)
+    const [documents, setDocuments] = useState({
+        TESIS: { current: null, history: [] },
+        MANUAL_USUARIO: { current: null, history: [] },
+        ARTICULO: { current: null, history: [] }
     });
 
-    const handleRemoveFile = (type) => {
-        setAnteproyecto(prev => ({
-            ...prev,
-            [`${type}File`]: null
-        }));
+    useEffect(() => {
+        init();
+    }, []);
+
+    const init = async () => {
+        setLoading(true);
+        try {
+            // 1. Verificar estado de desbloqueo
+            const status = await EntregableService.getUnlockStatus();
+            setUnlocked(status.unlocked);
+            setUnlockInfo({ approvedWeeks: status.approvedWeeks, requiredWeeks: status.requiredWeeks });
+
+            if (status.unlocked) {
+                // 2. Obtener propuesta para el ID
+                const proposals = await ProposalService.getAll();
+                if (proposals && proposals.length > 0) {
+                    const pid = proposals[0].id;
+                    setProposalId(pid);
+
+                    // 3. Cargar documentos actuales e historial
+                    await loadDocuments(pid);
+                }
+            }
+        } catch (error) {
+            console.error("Error initializing Proyecto:", error);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleFileSelect = (file, type) => {
-        const fileData = {
-            name: file.name,
-            size: `${(file.size / 1024).toFixed(2)} KB`,
-            file: file,
-            date: new Date().toISOString().split('T')[0]
+    const loadDocuments = async (pid) => {
+        const history = await EntregableService.getByPropuesta(pid, true);
+
+        const sortedDocs = {
+            TESIS: { current: null, history: [] },
+            MANUAL_USUARIO: { current: null, history: [] },
+            ARTICULO: { current: null, history: [] }
         };
 
-        if (anteproyecto.status !== 'draft' && type === 'anteproyecto') {
-            // Versionamiento para anteproyecto en estado 'submitted' o desbloqueado
-            handleNewVersion(fileData);
-        } else {
-            setAnteproyecto(prev => ({
-                ...prev,
-                [`${type}File`]: fileData
-            }));
-        }
-    };
-
-    const handleNewVersion = (fileData) => {
-        setAnteproyecto(prev => {
-            const currentFile = prev.anteproyectoFile;
-            // Asegurar que solo archivamos si hay un archivo previo
-            const newVersions = currentFile ? [...prev.versions, { ...currentFile, version: prev.versions.length + 1 }] : prev.versions;
-
-            return {
-                ...prev,
-                versions: newVersions,
-                anteproyectoFile: { ...fileData, version: newVersions.length + 1 }
-            };
+        history.forEach(doc => {
+            if (doc.isActive) {
+                sortedDocs[doc.tipo].current = doc;
+            } else {
+                sortedDocs[doc.tipo].history.push(doc);
+            }
         });
 
-        setAlertState({
-            open: true,
-            title: 'Nueva versión subida',
-            message: 'Se ha actualizado tu anteproyecto con una nueva versión.',
-            status: 'success'
-        });
+        setDocuments(sortedDocs);
     };
 
-    const handleSubmit = () => {
-        // Validación: al menos el anteproyecto debe estar cargado
-        if (!anteproyecto.anteproyectoFile) {
+    const handleFileSelect = async (file, tipo) => {
+        try {
+            setLoading(true);
+            await EntregableService.upload(tipo, proposalId, file);
+            await loadDocuments(proposalId);
+
             setAlertState({
                 open: true,
-                title: 'Documento Faltante',
-                message: 'Por favor, sube el documento del proyecto antes de enviar.',
-                status: 'warning'
+                title: 'Documento Actualizado',
+                message: `Se ha subido una nueva versión de: ${tipo.replace('_', ' ')}`,
+                status: 'success'
             });
-            return;
-        }
-
-        setAnteproyecto(prev => ({
-            ...prev,
-            status: 'submitted',
-            submittedDate: new Date().toISOString().split('T')[0]
-        }));
-
-        setAlertState({
-            open: true,
-            title: '¡Proyecto Enviado!',
-            message: '¡Proyecto enviado correctamente! El tutor lo revisará pronto y recibirás comentarios.',
-            status: 'success'
-        });
-    };
-
-    const handleClearAll = () => {
-        if (confirm('¿Estás seguro de que quieres limpiar todos los archivos?')) {
-            setAnteproyecto({
-                anteproyectoFile: null,
-                manualFile: null,
-                planPruebasFile: null,
-                status: 'draft',
-                submittedDate: null,
-            });
+        } catch (error) {
+            alert(error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
-    const handleResubmit = () => {
-        setAnteproyecto(prev => ({
-            ...prev,
-            status: 'draft'
-        }));
+    const handleDownload = (doc) => {
+        // Los entregables se sirven desde /api/v1/entregables/file/
+        const filename = doc.urlArchivo.split('/').pop();
+        const dbUrl = `/api/v1/entregables/file/${filename}`;
+        downloadFile(dbUrl, `Version_${doc.version}_${doc.tipo}.pdf`);
     };
 
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'submitted': return '#ff9800';
-            case 'approved': return '#4caf50';
-            case 'rejected': return '#f44336';
-            default: return '#9e9e9e';
-        }
-    };
-
-    const getStatusLabel = (status) => {
-        switch (status) {
-            case 'draft': return 'Borrador';
-            case 'submitted': return 'En Revisión';
-            case 'approved': return 'Aprobado';
-            case 'rejected': return 'Requiere Cambios';
-            default: return 'Borrador';
-        }
-    };
-
-    const renderDocumentCard = (file, title) => {
-        if (!file) return null;
+    const renderDocumentSection = (tipo, title, description) => {
+        const doc = documents[tipo].current;
+        const history = documents[tipo].history;
 
         return (
-            <Box sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2,
-                p: 2.5,
-                backgroundColor: '#f9fafb',
-                borderRadius: 2,
-                border: '1px solid #e5e7eb',
-                mb: 2,
-                transition: 'all 0.2s',
-                '&:hover': {
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                    borderColor: '#667eea',
-                }
-            }}>
-                <DescriptionIcon sx={{ color: '#667eea', fontSize: 36 }} />
-                <Box sx={{ flex: 1 }}>
-                    <Typography variant="subtitle1" fontWeight="600" sx={{ mb: 0.5 }}>
-                        {title}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.25 }}>
-                        {file.name}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                        {file.size}
-                    </Typography>
-                </Box>
-                <Button
-                    startIcon={<VisibilityIcon />}
-                    sx={{
-                        textTransform: 'none',
-                        fontWeight: 600,
-                        color: '#667eea',
-                        '&:hover': {
-                            backgroundColor: '#eef2ff'
-                        }
-                    }}
-                >
-                    Ver
-                </Button>
-            </Box>
+            <Card sx={{ mb: 3, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', overflow: 'visible' }}>
+                <CardContent sx={{ p: 3 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                        <Box>
+                            <Typography variant="h6" fontWeight="bold">
+                                {title}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                {description}
+                            </Typography>
+                        </Box>
+                        {doc && (
+                            <Chip
+                                label={`V${doc.version}`}
+                                color="primary"
+                                size="small"
+                                sx={{ fontWeight: 'bold' }}
+                            />
+                        )}
+                    </Box>
+
+                    {doc ? (
+                        <Box sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 2,
+                            p: 2,
+                            bgcolor: '#f8fafc',
+                            borderRadius: 2,
+                            border: '1px solid #e2e8f0'
+                        }}>
+                            <DescriptionIcon sx={{ color: '#6366f1', fontSize: 32 }} />
+                            <Box sx={{ flex: 1 }}>
+                                <Typography variant="subtitle2" noWrap>Versión Actual</Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                    Subido el: {new Date(doc.fechaSubida).toLocaleDateString()}
+                                </Typography>
+                            </Box>
+                            <Button
+                                size="small"
+                                startIcon={<DownloadIcon />}
+                                onClick={() => handleDownload(doc)}
+                                sx={{ textTransform: 'none' }}
+                            >
+                                Descargar
+                            </Button>
+                        </Box>
+                    ) : (
+                        <Alert severity="info" sx={{ mb: 2, borderRadius: 2 }}>
+                            Aún no has subido este documento.
+                        </Alert>
+                    )}
+
+                    <Box sx={{ mt: 2 }}>
+                        <FileUpload
+                            onFileSelect={(file) => handleFileSelect(file, tipo)}
+                            uploadedFile={null}
+                            placeholder={`Subir ${doc ? 'nueva versión' : 'archivo'}`}
+                        />
+                    </Box>
+
+                    {history.length > 0 && (
+                        <Box sx={{ mt: 2 }}>
+                            <Tooltip title="Ver versiones anteriores">
+                                <Button
+                                    size="small"
+                                    startIcon={<HistoryIcon />}
+                                    sx={{ textTransform: 'none', color: 'text.secondary' }}
+                                    onClick={() => alert("Historial: \n" + history.map(h => `V${h.version} - ${new Date(h.fechaSubida).toLocaleDateString()}`).join('\n'))}
+                                >
+                                    Historial de versiones ({history.length})
+                                </Button>
+                            </Tooltip>
+                        </Box>
+                    )}
+                </CardContent>
+            </Card>
         );
     };
 
-    return (
-        <>
-            <Box sx={{ p: 3, maxWidth: 1400, mx: 'auto' }}>
-                {/* Encabezado */}
-                <Box sx={{ mb: 4 }}>
+    if (loading && !proposalId && unlocked) {
+        return (
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: 2 }}>
+                <CircularProgress size={60} thickness={4} />
+                <Typography variant="h6" color="text.secondary">Cargando documentos finales...</Typography>
+            </Box>
+        );
+    }
+
+    if (!unlocked && !loading) {
+        return (
+            <Box sx={{ p: 4, maxWidth: 800, mx: 'auto', textAlign: 'center' }}>
+                <Box sx={{
+                    mb: 4,
+                    p: 6,
+                    borderRadius: 4,
+                    bgcolor: '#f8fafc',
+                    border: '2px dashed #cbd5e1',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center'
+                }}>
+                    <LockIcon sx={{ fontSize: 80, color: '#94a3b8', mb: 2 }} />
                     <Typography variant="h4" fontWeight="bold" gutterBottom>
-                        Anteproyecto y Avances
+                        Sección Bloqueada
                     </Typography>
-                    <Typography variant="body1" color="text.secondary">
-                        Sube y actualiza los documentos de tu anteproyecto. El sistema guarda un historial de tus versiones.
+                    <Typography variant="body1" color="text.secondary" sx={{ mb: 4, maxWidth: 500 }}>
+                        Para acceder a la entrega de documentos finales y postulación de defensa, debes haber completado y tener aprobadas las **16 semanas de avances**.
+                    </Typography>
+
+                    <Box sx={{ width: '100%', maxWidth: 400, mb: 2 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                            <Typography variant="body2" fontWeight="bold">Progreso de Aprobación</Typography>
+                            <Typography variant="body2" color="primary" fontWeight="bold">
+                                {unlockInfo.approvedWeeks} / {unlockInfo.requiredWeeks} Semanas
+                            </Typography>
+                        </Box>
+                        <Box sx={{
+                            height: 12,
+                            bgcolor: '#e2e8f0',
+                            borderRadius: 6,
+                            overflow: 'hidden',
+                            position: 'relative'
+                        }}>
+                            <Box sx={{
+                                position: 'absolute',
+                                left: 0, top: 0, bottom: 0,
+                                width: `${(unlockInfo.approvedWeeks / unlockInfo.requiredWeeks) * 100}%`,
+                                bgcolor: '#6366f1',
+                                borderRadius: 6,
+                                transition: 'width 1s ease-in-out'
+                            }} />
+                        </Box>
+                    </Box>
+                    <Typography variant="caption" color="text.secondary">
+                        Contacta a tu tutor si crees que hay un error en tu conteo de semanas.
                     </Typography>
                 </Box>
+            </Box>
+        );
+    }
 
-                {/* Status Info */}
-                <Card sx={{ mb: 3, backgroundColor: '#f8f9fa', borderRadius: 2 }}>
-                    <CardContent>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, flexWrap: 'wrap' }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <CheckCircleIcon sx={{ color: '#10B981', fontSize: 24 }} />
-                                <Typography variant="body1" fontWeight="500">
-                                    Estado: <span style={{ color: '#10B981' }}>Abierto</span>
-                                </Typography>
-                            </Box>
-                            {anteproyecto.status !== 'draft' && (
-                                <Chip
-                                    label={getStatusLabel(anteproyecto.status)}
-                                    sx={{
-                                        backgroundColor: getStatusColor(anteproyecto.status),
-                                        color: 'white',
-                                        fontWeight: 600
-                                    }}
-                                />
-                            )}
-                        </Box>
-                    </CardContent>
-                </Card>
-
-                <Grid container spacing={3}>
-                    {/* Formulario / Anteproyecto enviado */}
-                    <Grid item xs={12} md={anteproyecto.status === 'draft' ? 12 : 7}>
-                        {anteproyecto.status === 'draft' ? (
-                            /* Formulario de carga */
-                            <>
-                                {/* Información */}
-                                <Alert severity="info" sx={{ mb: 4 }}>
-                                    Debes subir tu proyecto aprobado y los documentos complementarios. Solo se aceptan archivos en formato PDF.
-                                </Alert>
-
-                                <Grid container spacing={3}>
-                                    {/* Proyecto */}
-                                    <Grid item xs={12} md={4}>
-                                        <Card sx={{ height: '100%', borderRadius: 3, boxShadow: 2, display: 'flex', flexDirection: 'column' }}>
-                                            <CardContent sx={{ p: 4, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                                                <Typography variant="h6" fontWeight="bold" gutterBottom>
-                                                    Proyecto *
-                                                </Typography>
-                                                <Typography variant="body2" color="text.secondary" sx={{ mb: 2, height: '3.6em', overflow: 'hidden' }}>
-                                                    Documento principal del proyecto aprobado por el director
-                                                </Typography>
-                                                <Box sx={{ mt: 'auto' }}>
-                                                    <FileUpload
-                                                        onFileSelect={(file) => handleFileSelect(file, 'anteproyecto')}
-                                                        uploadedFile={anteproyecto.anteproyectoFile}
-                                                        onRemoveFile={() => handleRemoveFile('anteproyecto')}
-                                                    />
-                                                </Box>
-                                            </CardContent>
-                                        </Card>
-                                    </Grid>
-
-                                    {/* Manual de Usuario/Programador */}
-                                    <Grid item xs={12} md={4}>
-                                        <Card sx={{ height: '100%', borderRadius: 3, boxShadow: 2, display: 'flex', flexDirection: 'column' }}>
-                                            <CardContent sx={{ p: 4, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                                                <Typography variant="h6" fontWeight="bold" gutterBottom>
-                                                    Manual de Usuario/Programador
-                                                </Typography>
-                                                <Typography variant="body2" color="text.secondary" sx={{ mb: 2, height: '3.6em', overflow: 'hidden' }}>
-                                                    Documentación técnica del sistema
-                                                </Typography>
-                                                <Box sx={{ mt: 'auto' }}>
-                                                    <FileUpload
-                                                        onFileSelect={(file) => handleFileSelect(file, 'manual')}
-                                                        uploadedFile={anteproyecto.manualFile}
-                                                        onRemoveFile={() => handleRemoveFile('manual')}
-                                                    />
-                                                </Box>
-                                            </CardContent>
-                                        </Card>
-                                    </Grid>
-
-                                    {/* Articulo Cientifico */}
-                                    <Grid item xs={12} md={4}>
-                                        <Card sx={{ height: '100%', borderRadius: 3, boxShadow: 2, display: 'flex', flexDirection: 'column' }}>
-                                            <CardContent sx={{ p: 4, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                                                <Typography variant="h6" fontWeight="bold" gutterBottom>
-                                                    Articulo Cientifico
-                                                </Typography>
-                                                <Typography variant="body2" color="text.secondary" sx={{ mb: 2, height: '3.6em', overflow: 'hidden' }}>
-                                                    Documento cientifico del proyecto
-                                                </Typography>
-                                                <Box sx={{ mt: 'auto' }}>
-                                                    <FileUpload
-                                                        onFileSelect={(file) => handleFileSelect(file, 'planPruebas')}
-                                                        uploadedFile={anteproyecto.planPruebasFile}
-                                                        onRemoveFile={() => handleRemoveFile('planPruebas')}
-                                                    />
-                                                </Box>
-                                            </CardContent>
-                                        </Card>
-                                    </Grid>
-                                </Grid>
-
-                                {/* Información adicional */}
-                                <Card sx={{ mt: 3, backgroundColor: '#FFF9E6', borderRadius: 2 }}>
-                                    <CardContent>
-                                        <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-                                            📋 Requisitos de los documentos:
-                                        </Typography>
-                                        <Typography variant="body2" component="div">
-                                            <ul style={{ margin: '8px 0', paddingLeft: '20px' }}>
-                                                <li>Formato: PDF únicamente</li>
-                                                <li>Tamaño máximo: 10 MB por archivo</li>
-                                                <li>El anteproyecto debe estar firmado por el tutor</li>
-                                                <li>Los manuales deben seguir el formato institucional</li>
-                                            </ul>
-                                        </Typography>
-                                    </CardContent>
-                                </Card>
-
-                                {/* Botones de acción */}
-                                <Box sx={{
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                    mt: 3,
-                                    p: 3,
-                                    backgroundColor: 'white',
-                                    borderRadius: 2,
-                                    boxShadow: 1
-                                }}>
-                                    <Button
-                                        startIcon={<DeleteOutlineIcon />}
-                                        onClick={handleClearAll}
-                                        sx={{
-                                            color: '#EF4444',
-                                            textTransform: 'none',
-                                            fontWeight: 600,
-                                            '&:hover': {
-                                                backgroundColor: '#FEE2E2',
-                                            },
-                                        }}
-                                    >
-                                        Limpiar Todo
-                                    </Button>
-
-                                    <Button
-                                        variant="contained"
-                                        endIcon={<ArrowForwardIcon />}
-                                        onClick={handleSubmit}
-                                        sx={{
-                                            backgroundColor: '#667eea',
-                                            textTransform: 'none',
-                                            fontWeight: 600,
-                                            px: 4,
-                                            py: 1.5,
-                                            borderRadius: 2,
-                                            '&:hover': {
-                                                backgroundColor: '#5568d3',
-                                            },
-                                        }}
-                                    >
-                                        Enviar Documentación
-                                    </Button>
-                                </Box>
-                            </>
-                        ) : (
-                            /* Vista de documentación enviada */
-                            <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
-                                <CardContent sx={{ p: 4 }}>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
-                                        <Box>
-                                            <Typography variant="h5" fontWeight="700" gutterBottom>
-                                                Documentación del Anteproyecto
-                                            </Typography>
-                                            <Chip
-                                                label={getStatusLabel(anteproyecto.status)}
-                                                sx={{
-                                                    backgroundColor: getStatusColor(anteproyecto.status),
-                                                    color: 'white',
-                                                    fontWeight: 600,
-                                                    mb: 2
-                                                }}
-                                            />
-                                        </Box>
-                                        <Button
-                                            startIcon={<EditIcon />}
-                                            onClick={handleResubmit}
-                                            sx={{
-                                                textTransform: 'none',
-                                                fontWeight: 600,
-                                                color: '#667eea'
-                                            }}
-                                        >
-                                            Editar y Reenviar
-                                        </Button>
-                                    </Box>
-
-                                    <Box sx={{ mb: 3 }}>
-                                        <Typography variant="subtitle2" fontWeight="600" color="text.secondary" gutterBottom>
-                                            Fecha de envío
-                                        </Typography>
-                                        <Typography variant="body1">{anteproyecto.submittedDate}</Typography>
-                                    </Box>
-
-                                    <Divider sx={{ my: 3 }} />
-
-                                    <Typography variant="h6" fontWeight="600" gutterBottom>
-                                        Anteproyecto Actual
-                                    </Typography>
-
-                                    {/* Mostrar version actual si existe */}
-                                    {renderDocumentCard(anteproyecto.anteproyectoFile, `Anteproyecto (Versión ${anteproyecto.anteproyectoFile?.version || 1})`)}
-
-                                    {/* Historial de Versiones */}
-                                    {anteproyecto.versions && anteproyecto.versions.length > 0 && (
-                                        <Box sx={{ mt: 2, mb: 4, pl: 2, borderLeft: '3px solid #e0e0e0' }}>
-                                            <Typography variant="subtitle2" color="text.secondary" gutterBottom>Historial de Versiones</Typography>
-                                            {anteproyecto.versions.map((ver, idx) => (
-                                                <Typography key={idx} variant="body2" sx={{ color: 'text.secondary', mb: 0.5 }}>
-                                                    • Versión {ver.version || idx + 1}: {ver.name} ({ver.date})
-                                                </Typography>
-                                            ))}
-                                        </Box>
-                                    )}
-
-                                    <Box sx={{ mt: 3, mb: 4 }}>
-                                        <Typography variant="subtitle2" fontWeight="600" color="primary" gutterBottom>
-                                            Subir Nuevo Avance / Versión
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                                            Puedes subir una nueva versión del anteproyecto para actualizar tus avances.
-                                        </Typography>
-                                        <FileUpload
-                                            onFileSelect={(file) => handleFileSelect(file, 'anteproyecto')}
-                                            uploadedFile={null}
-                                            onRemoveFile={() => { }}
-                                            placeholder="Cargar nueva versión del anteproyecto"
-                                        />
-                                    </Box>
-
-                                    <Divider sx={{ my: 3 }} />
-
-                                    <Typography variant="h6" fontWeight="600" gutterBottom>
-                                        Documentos Complementarios
-                                    </Typography>
-
-                                    {/* Permitir editar/subir otros documentos incluso en submitted */}
-                                    <Box sx={{ mb: 2 }}>
-                                        <Typography variant="subtitle2" fontWeight="600" gutterBottom>Manual de Usuario/Programador</Typography>
-                                        {anteproyecto.manualFile ? (
-                                            renderDocumentCard(anteproyecto.manualFile, 'Manual de Usuario')
-                                        ) : (
-                                            <FileUpload
-                                                onFileSelect={(file) => handleFileSelect(file, 'manual')}
-                                                uploadedFile={null}
-                                                onRemoveFile={() => { }}
-                                                placeholder="Cargar Manual"
-                                            />
-                                        )}
-                                    </Box>
-
-                                    <Box sx={{ mb: 2 }}>
-                                        <Typography variant="subtitle2" fontWeight="600" gutterBottom>Plan de Pruebas / Artículo</Typography>
-                                        {anteproyecto.planPruebasFile ? (
-                                            renderDocumentCard(anteproyecto.planPruebasFile, 'Plan de Pruebas')
-                                        ) : (
-                                            <FileUpload
-                                                onFileSelect={(file) => handleFileSelect(file, 'planPruebas')}
-                                                uploadedFile={null}
-                                                onRemoveFile={() => { }}
-                                                placeholder="Cargar Plan de Pruebas"
-                                            />
-                                        )}
-                                    </Box>
-
-                                    {!anteproyecto.manualFile && !anteproyecto.planPruebasFile && (
-                                        <Alert severity="warning" sx={{ mt: 2 }}>
-                                            Solo se ha enviado el anteproyecto. Se recomienda completar con los documentos complementarios.
-                                        </Alert>
-                                    )}
-                                </CardContent>
-                            </Card>
-                        )}
-                    </Grid>
-
-                    {/* Sección de comentarios (solo visible cuando está enviado) */}
-                    {anteproyecto.status !== 'draft' && (
-                        <Grid item xs={12} md={5}>
-                            <Card sx={{ borderRadius: 3, boxShadow: 2, position: 'sticky', top: 20 }}>
-                                <CardContent sx={{ p: 3 }}>
-                                    <CommentSection proposalId="anteproyecto" />
-                                </CardContent>
-                            </Card>
-                        </Grid>
-                    )}
-                </Grid>
+    return (
+        <Box sx={{ p: 3, maxWidth: 1200, mx: 'auto' }}>
+            <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                <Box>
+                    <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ color: '#1e293b' }}>
+                        Proyecto Final y Entregables
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary">
+                        Gestiona las versiones finales de tu tesis y documentos complementarios para la defensa.
+                    </Typography>
+                </Box>
+                <Chip
+                    icon={<CheckCircleIcon />}
+                    label="Requisitos Completos (16 Semanas)"
+                    color="success"
+                    variant="outlined"
+                    sx={{ fontWeight: 'bold' }}
+                />
             </Box>
 
-            {/* Alert Component */}
+            <Grid container spacing={3}>
+                {/* Instrucciones en la parte superior para balancear el layout */}
+                <Grid item xs={12}>
+                    <Card sx={{ borderRadius: 3, bgcolor: '#EEF2FF', border: '1px solid #C7D2FE', mb: 1 }}>
+                        <CardContent sx={{ p: 3, display: 'flex', flexDirection: { xs: 'column', md: 'row' }, alignItems: 'center', gap: 4 }}>
+                            <Box sx={{ flex: 1 }}>
+                                <Typography variant="h6" fontWeight="bold" gutterBottom color="#3730A3">
+                                    Instrucciones de Versiones
+                                </Typography>
+                                <Typography variant="body2" sx={{ color: '#4338CA' }}>
+                                    Si el tribunal solicita cambios después de la defensa privada, sube el archivo corregido en el apartado correspondiente.
+                                    El sistema gestionará automáticamente el control de versiones (V1, V2, etc.).
+                                </Typography>
+                            </Box>
+                            <Box sx={{ flex: 1, borderLeft: { md: '1px solid #C7D2FE' }, pl: { md: 4 } }}>
+                                <ul style={{ paddingLeft: 20, fontSize: '0.85rem', color: '#4338CA', margin: 0 }}>
+                                    <li style={{ marginBottom: 4 }}>La versión más reciente será la que revise el comité.</li>
+                                    <li style={{ marginBottom: 4 }}>Puedes descargar versiones anteriores desde el historial.</li>
+                                    <li>Asegúrate de que los archivos estén en formato PDF o ZIP según corresponda.</li>
+                                </ul>
+                            </Box>
+                        </CardContent>
+                    </Card>
+                </Grid>
+
+                {/* Grid Simétrico de Documentos */}
+                <Grid item xs={12}>
+                    {renderDocumentSection('TESIS', 'Documento de Tesis (PDF)', 'Archivo principal de tu trabajo de titulación.')}
+                </Grid>
+                <Grid item xs={12} md={6}>
+                    {renderDocumentSection('MANUAL_USUARIO', 'Manual de Usuario / Técnico', 'Documentación sobre el uso y configuración del sistema.')}
+                </Grid>
+                <Grid item xs={12} md={6}>
+                    {renderDocumentSection('ARTICULO', 'Artículo Científicio', 'Resumen técnico para publicación institucional.')}
+                </Grid>
+            </Grid>
+
             <AlertMui
                 open={alertState.open}
                 handleClose={() => setAlertState({ ...alertState, open: false })}
@@ -517,7 +335,7 @@ function StudentProyecto() {
                 btnNameL="Aceptar"
                 actionBtnL={() => setAlertState({ ...alertState, open: false })}
             />
-        </>
+        </Box>
     );
 }
 

@@ -75,7 +75,8 @@ function ThesisProposal() {
                             alcance: item.alcance || '',
                             file: archivoUrl ? { name: archivoUrl.split('/').pop(), url: archivoUrl } : null,
                             status: item.estado?.toLowerCase() || 'submitted',
-                            submittedDate: item.fechaPublicacion ? item.fechaPublicacion.split('T')[0] : (item.createdAt ? item.createdAt.split('T')[0] : null)
+                            submittedDate: item.fechaPublicacion ? item.fechaPublicacion.split('T')[0] : (item.createdAt ? item.createdAt.split('T')[0] : null),
+                            comentarioRevision: item.comentarioRevision || item.comentario_revision || null
                         };
                     }
                 });
@@ -592,7 +593,7 @@ function ThesisProposal() {
                         <Grid item xs={12} md={5}>
                             <Card sx={{ borderRadius: 3, boxShadow: 2, position: 'sticky', top: 20 }}>
                                 <CardContent sx={{ p: 3 }}>
-                                    <CommentSection proposalId={currentTab} />
+                                    <CommentSection proposalId={currentProposal.id} revisionComment={currentProposal.comentarioRevision} />
                                 </CardContent>
                             </Card>
                         </Grid>

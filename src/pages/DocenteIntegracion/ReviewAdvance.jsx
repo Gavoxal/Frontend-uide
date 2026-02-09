@@ -10,6 +10,7 @@ import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import SaveIcon from '@mui/icons-material/Save';
 import { ActivityService } from '../../services/activity.service';
+import { downloadFile } from '../../services/api';
 
 function ReviewAdvance() {
     const { studentId: evidenciaId } = useParams();
@@ -136,12 +137,15 @@ function ReviewAdvance() {
                                     <Typography variant="subtitle1" fontWeight="bold">{fileName}</Typography>
                                 </Box>
                                 <Button
-                                    component="a"
-                                    href={evidencia.archivoUrl}
-                                    target="_blank"
                                     startIcon={<DownloadIcon />}
+                                    onClick={() => {
+                                        const url = evidencia.archivoUrl.startsWith('http')
+                                            ? evidencia.archivoUrl
+                                            : `/api/v1/actividades/file/${evidencia.archivoUrl.split('/').pop()}`;
+                                        downloadFile(url, fileName);
+                                    }}
                                 >
-                                    Abrir
+                                    Descargar
                                 </Button>
                             </Paper>
                         ) : (

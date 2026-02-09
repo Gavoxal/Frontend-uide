@@ -73,13 +73,15 @@ const MENU_BY_ROLE = {
     ],
     tutor: [
         { icon: DashboardIcon, label: "Dashboard", path: "/tutor/dashboard" },
-        { icon: AssignmentIcon, label: "Planificar Actividades", path: "/tutor/planning" },
-        { icon: RateReviewIcon, label: "Revisar Avances", path: "/tutor/review" },
-        { icon: EventNoteIcon, label: "Bitácora de Reuniones", path: "/tutor/meetings" },
+        { icon: SchoolIcon, label: "Propuestas", path: "/tutor/proposals" },
+        { icon: AssignmentIcon, label: "Actividades", path: "/tutor/planning" },
+        { icon: RateReviewIcon, label: "Avances", path: "/tutor/review" },
+        { icon: EventNoteIcon, label: "Reuniones", path: "/tutor/meetings" },
+
     ],
     reviewer: [
         { icon: DashboardIcon, label: "Dashboard", path: "/reviewer/dashboard" },
-        { icon: AssignmentIcon, label: "Propuestas", path: "/reviewer/proposals" },
+        { icon: AssignmentIcon, label: "Avances", path: "/reviewer/proposals" },
         { icon: GavelIcon, label: "Defensas", path: "/reviewer/defenses" },
     ],
     admin: [

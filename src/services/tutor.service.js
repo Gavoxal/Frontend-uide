@@ -9,12 +9,38 @@ export const TutorService = {
         try {
             const response = await apiFetch('/api/v1/tutor/mis-estudiantes');
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || `Error al obtener estudiantes: ${response.statusText}`);
+                // Si retorna 401/403 ya lo maneja apiFetch o el interceptor, 
+                // pero si es otro error lanzamos excepción
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
             }
             return await response.json();
         } catch (error) {
             console.error("TutorService.getAssignedStudents error:", error);
+            return []; // Retorna array vacío para no romper el UI
+        }
+    },
+
+    async getProfile() {
+        try {
+            const response = await apiFetch('/api/v1/tutor/perfil');
+            if (!response.ok) throw new Error('Error al obtener perfil');
+            return await response.json();
+        } catch (error) {
+            console.error("TutorService.getProfile error:", error);
+            throw error;
+        }
+    },
+
+    async updateProfile(data) {
+        try {
+            const response = await apiFetch('/api/v1/tutor/perfil', {
+                method: 'PUT',
+                body: JSON.stringify(data)
+            });
+            if (!response.ok) throw new Error('Error al actualizar perfil');
+            return await response.json();
+        } catch (error) {
+            console.error("TutorService.updateProfile error:", error);
             throw error;
         }
     }

@@ -1,82 +1,76 @@
-import React, { useState } from 'react';
-import { Box, Typography, Grid, Card, CardContent, InputAdornment, Chip, Button } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import {
+    Box, Typography, Button, Paper, Table,
+    TableBody, TableCell, TableContainer, TableHead, TableRow,
+    Tooltip, Avatar, Chip, TextField, InputAdornment
+} from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
-import TextMui from '../../components/text.mui.component';
-import InputMui from '../../components/input.mui.component';
-
-// Icons
 import SearchIcon from '@mui/icons-material/Search';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import RateReviewIcon from '@mui/icons-material/RateReview';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import FilterListIcon from '@mui/icons-material/FilterList';
 
 function SharedProposalList() {
     const navigate = useNavigate();
     const location = useLocation();
     const [searchTerm, setSearchTerm] = useState("");
+    const [proposals, setProposals] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     // Determine base path for navigation
     const getBasePath = () => {
         if (location.pathname.includes('docente-integracion')) return '/docente-integracion';
         if (location.pathname.includes('tutor')) return '/tutor';
         if (location.pathname.includes('coordinador')) return '/coordinador';
+        if (location.pathname.includes('director')) return '/director';
         return '';
     };
 
     const basePath = getBasePath();
 
-    // Mock Data
-    const [proposals] = useState([
-        {
-            id: 1,
-            student: "Eduardo Pardo",
-            studentId: "1104567890",
-            email: "eapardo@uide.edu.ec",
-            phone: "0991234567",
-            title: "Sistema de Gestión de Tesis Universitaria",
-            career: "Ing. Software",
-            date: "2026-01-15",
-            status: "pending", // pending, reviewed
-            pdfUrl: "#",
-            director: "Ing. Wilson"
-        },
-        {
-            id: 2,
-            student: "Gabriel Serrango",
-            studentId: "1104567891",
-            email: "gaserrango@uide.edu.ec",
-            phone: "0991234568",
-            title: "Plataforma de Monitoreo de Seguridad con IA",
-            career: "Ing. TI",
-            date: "2026-01-16",
-            status: "reviewed",
-            reviewDate: "2026-01-20",
-            vote: "approved",
-            pdfUrl: "#",
-            director: "Ing. Lorena"
-        },
-        {
-            id: 3,
-            student: "Fernando Castillo",
-            studentId: "1104567892",
-            email: "fcastillo@uide.edu.ec",
-            phone: "0991234569",
-            title: "Aplicación Móvil para Gestión de Inventarios",
-            career: "Sistemas",
-            date: "2026-01-18",
-            status: "pending",
-            pdfUrl: "#",
-            director: "Ing. Gabriel"
-        },
-    ]);
+    const fetchProposals = async () => {
+        try {
+            setLoading(true);
+            const { ProposalService } = await import('../../services/proposal.service');
+            const data = await ProposalService.getAll();
+
+            // Map backend data to frontend structure
+            // Map backend data to frontend structure
+            const mappedProposals = data.map(p => {
+                console.log("Proposal:", p.id, "Student:", p.estudiante); // Debug log
+
+                // Try to find career in proposal, then in profile (escuela), then N/A
+                const career = p.carrera || p.estudiante?.estudiantePerfil?.escuela || "N/A";
+
+                return {
+                    id: p.id,
+                    student: p.estudiante ? `${p.estudiante.nombres} ${p.estudiante.apellidos}` : "Desconocido",
+                    studentId: p.estudiante?.cedula || "N/A",
+                    email: p.estudiante?.correoInstitucional || "N/A",
+                    title: p.titulo,
+                    career: career,
+                    date: p.fechaPublicacion ? p.fechaPublicacion.split('T')[0] : (p.createdAt?.split('T')[0] || "N/A"),
+                    status: p.estado === 'PENDIENTE' ? 'pending' : 'reviewed',
+                    originalStatus: p.estado,
+                    pdfUrl: p.archivoUrl || "#",
+                };
+            });
+
+            setProposals(mappedProposals);
+        } catch (error) {
+            console.error("Error fetching proposals:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchProposals();
+    }, []);
 
     const handleNavigateToReview = (id) => {
-        // Navigate to the review page relative to the current role
-        if (basePath === '/coordinador') {
-            // Coordinator uses 'detail' in current router setup, but we mapped it to SharedProposalReview
-            navigate(`${basePath}/proposals/detail/${id}`);
-        } else {
-            navigate(`${basePath}/proposals/review/${id}`);
-        }
+        navigate(`${basePath}/proposals/review/${id}`);
     };
 
     const filteredProposals = proposals.filter(p =>
@@ -84,95 +78,142 @@ function SharedProposalList() {
         p.student.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    const getStatusColor = (status) => {
+        switch (status) {
+            case 'PENDIENTE': return 'warning';
+            case 'APROBADA': return 'success';
+            case 'RECHAZADA': return 'error';
+            case 'APROBADA_CON_COMENTARIOS': return 'info';
+            case 'REVISADA': return 'info';
+            default: return 'default';
+        }
+    };
+
+    const getStatusLabel = (status) => {
+        switch (status) {
+            case 'PENDIENTE': return 'Pendiente';
+            case 'APROBADA': return 'Aprobada';
+            case 'RECHAZADA': return 'Rechazada';
+            case 'APROBADA_CON_COMENTARIOS': return 'Con Observaciones';
+            case 'REVISADA': return 'Revisada';
+            default: return status;
+        }
+    };
+
     return (
-        <Box>
-            <Box sx={{ mb: 4 }}>
-                <TextMui value="Revisión de Propuestas" variant="h4" />
-                <TextMui value="Listado de propuestas asignadas para revisión" variant="body1" />
+        <Box sx={{ p: 3, width: '100%', boxSizing: 'border-box' }}>
+            {/* Header */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Box>
+                    <Typography variant="h5" fontWeight="bold" color="primary.main">
+                        Foro de Propuestas
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                        Revisa y comenta las propuestas de titulación.
+                    </Typography>
+                </Box>
+                <Button
+                    startIcon={<RefreshIcon />}
+                    size="small"
+                    onClick={fetchProposals}
+                >
+                    Actualizar
+                </Button>
             </Box>
 
-            {/* Buscador */}
-            <Card sx={{ mb: 3 }}>
-                <CardContent>
-                    <InputMui
-                        placeholder="Buscar por título o estudiante..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        startIcon={<SearchIcon color="action" />}
-                    />
-                </CardContent>
-            </Card>
+            {/* Filters */}
+            <Paper elevation={0} sx={{ p: 2, mb: 3, border: '1px solid #e0e0e0', borderRadius: 2, display: 'flex', gap: 2, alignItems: 'center' }}>
+                <TextField
+                    placeholder="Buscar por estudiante, título..."
+                    variant="outlined"
+                    size="small"
+                    fullWidth
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <SearchIcon color="action" fontSize="small" />
+                            </InputAdornment>
+                        ),
+                    }}
+                    sx={{ maxWidth: 500 }}
+                />
+                <Button startIcon={<FilterListIcon />} color="inherit" size="small">Filtros</Button>
+            </Paper>
 
-            <Grid container spacing={3}>
-                {filteredProposals.map((proposal) => (
-                    <Grid item xs={12} key={proposal.id}>
-                        <Card>
-                            <CardContent>
-                                <Grid container spacing={2} alignItems="center">
-                                    <Grid item xs={12} md={8}>
-                                        <Typography variant="h6" fontWeight="bold">
-                                            {proposal.title}
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary" gutterBottom>
-                                            Estudiante: <strong>{proposal.student}</strong>
-                                        </Typography>
-                                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mb: 1.5, ml: 1, borderLeft: '3px solid #e0e0e0', pl: 1.5 }}>
-                                            <Typography variant="caption" color="text.secondary">
-                                                Cédula: {proposal.studentId}
-                                            </Typography>
-                                            <Typography variant="caption" color="text.secondary">
-                                                Carrera: {proposal.career}
-                                            </Typography>
-                                            <Typography variant="caption" color="text.secondary">
-                                                Email: {proposal.email} | Tel: {proposal.phone}
-                                            </Typography>
+            {/* Content */}
+            {loading ? (
+                <Typography textAlign="center" py={4}>Cargando propuestas...</Typography>
+            ) : filteredProposals.length === 0 ? (
+                <Paper sx={{ p: 4, textAlign: 'center', border: '1px dashed #e0e0e0' }} elevation={0}>
+                    <Typography color="text.secondary">No se encontraron propuestas.</Typography>
+                </Paper>
+            ) : (
+                <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #e0e0e0', borderRadius: 2 }}>
+                    <Table sx={{ minWidth: 650 }}>
+                        <TableHead sx={{ bgcolor: '#f5f7fa' }}>
+                            <TableRow>
+                                <TableCell sx={{ fontWeight: 'bold' }}>Estudiante / Carrera</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }}>Propuesta</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }}>Estado</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }}>Fecha</TableCell>
+                                <TableCell align="right" sx={{ fontWeight: 'bold' }}>Acción</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {filteredProposals.map((row) => (
+                                <TableRow key={row.id} hover>
+                                    <TableCell>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                            <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.light', color: 'primary.main', fontSize: '0.875rem' }}>
+                                                {row.student.charAt(0)}
+                                            </Avatar>
+                                            <Box>
+                                                <Typography variant="subtitle2" fontWeight="bold">{row.student}</Typography>
+                                                <Typography variant="caption" display="block" color="text.secondary">{row.career}</Typography>
+                                                <Typography variant="caption" display="block" color="text.secondary" sx={{ opacity: 0.8 }}>{row.email}</Typography>
+                                            </Box>
                                         </Box>
-
-                                        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mt: 1 }}>
-                                            <Chip
-                                                label={proposal.status === 'pending' ? "Pendiente de Revisión" : "Revisado"}
-                                                color={proposal.status === 'pending' ? "warning" : "success"}
-                                                size="small"
-                                            />
-                                            {proposal.status === 'reviewed' && (
-                                                <Chip
-                                                    label={proposal.vote === 'approved' ? "Voto: A Favor" : "Voto: En Contra"}
-                                                    variant="outlined"
-                                                    color={proposal.vote === 'approved' ? "success" : "error"}
-                                                    size="small"
-                                                />
-                                            )}
-                                        </Box>
-                                    </Grid>
-                                    <Grid item xs={12} md={4} sx={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'flex-end', justifyContent: 'center' }}>
-                                        {proposal.status === 'pending' ? (
-                                            <Button
-                                                variant="contained"
-                                                startIcon={<RateReviewIcon />}
-                                                onClick={() => handleNavigateToReview(proposal.id)}
-                                                color="primary"
-                                                sx={{ minWidth: 150 }}
-                                            >
-                                                Evaluar
-                                            </Button>
-                                        ) : (
-                                            <Button
-                                                variant="outlined"
-                                                startIcon={<CheckCircleIcon />}
-                                                onClick={() => handleNavigateToReview(proposal.id)}
-                                                color="success"
-                                                sx={{ minWidth: 150 }}
-                                            >
-                                                Ver Detalles
-                                            </Button>
-                                        )}
-                                    </Grid>
-                                </Grid>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                ))}
-            </Grid>
+                                    </TableCell>
+                                    <TableCell sx={{ maxWidth: 350 }}>
+                                        <Tooltip title={row.title}>
+                                            <Typography variant="body2" fontWeight="medium" sx={{
+                                                display: '-webkit-box', overflow: 'hidden', WebkitBoxOrient: 'vertical', WebkitLineClamp: 2
+                                            }}>
+                                                {row.title}
+                                            </Typography>
+                                        </Tooltip>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Chip
+                                            label={getStatusLabel(row.originalStatus)}
+                                            color={getStatusColor(row.originalStatus)}
+                                            size="small"
+                                            variant={row.originalStatus === 'PENDIENTE' ? 'filled' : 'outlined'}
+                                            sx={{ fontWeight: 'bold' }}
+                                        />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Typography variant="body2" color="text.secondary">{row.date}</Typography>
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        <Button
+                                            variant={row.status === 'pending' ? "contained" : "outlined"}
+                                            size="small"
+                                            onClick={() => handleNavigateToReview(row.id)}
+                                            startIcon={row.status === 'pending' ? <RateReviewIcon /> : <VisibilityIcon />}
+                                            sx={{ textTransform: 'none' }}
+                                        >
+                                            {row.status === 'pending' ? "Revisar" : "Ver"}
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            )}
         </Box>
     );
 }

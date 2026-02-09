@@ -28,6 +28,7 @@ import {
     Download,
 } from '@mui/icons-material';
 import FileUpload from './file.mui.component';
+import { downloadFile } from '../services/api';
 
 /**
  * Componente modal reutilizable para mostrar detalles de avances semanales
@@ -175,6 +176,13 @@ function DetailsModal({
                                     <Button
                                         startIcon={<Download />}
                                         size="small"
+                                        onClick={() => {
+                                            const fileUrl = progressData.studentSubmission.fileUrl;
+                                            if (fileUrl) {
+                                                const url = fileUrl.startsWith('http') ? fileUrl : `/api/v1/actividades/file/${fileUrl.split('/').pop()}`;
+                                                downloadFile(url, progressData.studentSubmission.uploadedFile);
+                                            }
+                                        }}
                                         sx={{ mt: 1, textTransform: 'none' }}
                                     >
                                         Descargar

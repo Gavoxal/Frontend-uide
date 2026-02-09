@@ -43,9 +43,9 @@ import ReviewFeedback from "../pages/Tutor/ReviewFeedback";
 import MeetingLog from "../pages/Tutor/MeetingLog";
 import TutorProfile from "../pages/Tutor/Profile";
 import TutorStudents from "../pages/Tutor/Students";
-import PublicDefense from "../pages/Tutor/PublicDefense";
 import SharedProposalList from "../pages/Shared/ProposalList";
 import SharedProposalReview from "../pages/Shared/ProposalReview";
+import PublicDefense from "../pages/Tutor/PublicDefense";
 
 
 // Docente Integración pages
