@@ -375,6 +375,7 @@ function ThesisDefense() {
             {selectedStudent && (
                 <TribunalAssignment
                     student={selectedStudent}
+                    type={tabValue === 0 ? 'private' : 'public'}
                     onClose={handleCloseAssignment}
                     onSave={handleAssignmentRequest} // Cambiado para interceptar y mostrar alerta
                 />

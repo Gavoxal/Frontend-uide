@@ -38,16 +38,17 @@ function TribunalAssignment({ student, onClose, onSave }) {
 
     useEffect(() => {
         if (student) {
+            const defenseData = type === 'public' ? student.publicDefense : student.privateDefense;
             setAssignment({
-                president: student.privateDefense?.tribunal?.find(p => p.rol === 'PRESIDENTE')?.usuarioId || '',
-                vocal1: student.privateDefense?.tribunal?.find(p => p.rol === 'JURADO_1')?.usuarioId || '',
-                vocal2: student.privateDefense?.tribunal?.find(p => p.rol === 'JURADO_2')?.usuarioId || '',
-                date: student.privateDefense?.date || '',
-                time: student.privateDefense?.time || '',
-                classroom: student.privateDefense?.classroom || ''
+                president: defenseData?.tribunal?.find(p => p.rol === 'PRESIDENTE')?.usuarioId || '',
+                vocal1: defenseData?.tribunal?.find(p => p.rol === 'JURADO_1')?.usuarioId || '',
+                vocal2: defenseData?.tribunal?.find(p => p.rol === 'JURADO_2')?.usuarioId || '',
+                date: defenseData?.date || '',
+                time: defenseData?.time || '',
+                classroom: defenseData?.classroom || ''
             });
         }
-    }, [student]);
+    }, [student, type]);
 
     const handleChange = (e) => {
         setAssignment({ ...assignment, [e.target.name]: e.target.value });
@@ -111,7 +112,7 @@ function TribunalAssignment({ student, onClose, onSave }) {
                             >
                                 {members.map(m => (
                                     <MenuItem key={m.id} value={m.id}>
-                                        {m.nombres} {m.apellidos} ({m.designacion || 'Miembro'})
+                                        {m.nombres} {m.apellidos} ({m.rol === 'TUTOR' ? 'Tutor' : (m.designacion || 'Comité')})
                                     </MenuItem>
                                 ))}
                             </Select>
@@ -131,7 +132,7 @@ function TribunalAssignment({ student, onClose, onSave }) {
                             >
                                 {members.map(m => (
                                     <MenuItem key={m.id} value={m.id}>
-                                        {m.nombres} {m.apellidos} ({m.designacion || 'Miembro'})
+                                        {m.nombres} {m.apellidos} ({m.rol === 'TUTOR' ? 'Tutor' : (m.designacion || 'Comité')})
                                     </MenuItem>
                                 ))}
                             </Select>
@@ -151,7 +152,7 @@ function TribunalAssignment({ student, onClose, onSave }) {
                             >
                                 {members.map(m => (
                                     <MenuItem key={m.id} value={m.id}>
-                                        {m.nombres} {m.apellidos} ({m.designacion || 'Miembro'})
+                                        {m.nombres} {m.apellidos} ({m.rol === 'TUTOR' ? 'Tutor' : (m.designacion || 'Comité')})
                                     </MenuItem>
                                 ))}
                             </Select>

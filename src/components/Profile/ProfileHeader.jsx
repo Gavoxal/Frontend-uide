@@ -1,7 +1,7 @@
-import { Box, Typography, Card, CardContent, Avatar, Chip, IconButton } from "@mui/material";
-import { CameraAlt as CameraIcon } from "@mui/icons-material";
+import { Box, Typography, Card, CardContent, Avatar, Chip, IconButton, Button } from "@mui/material";
+import { CameraAlt as CameraIcon, Lock as LockIcon } from "@mui/icons-material";
 
-function ProfileHeader({ studentData, onEditProfile, onEditCover }) {
+function ProfileHeader({ studentData, onEditProfile, onEditCover, onChangePassword }) {
     const { name, subtitle, initials, tags } = {
         name: studentData?.name,
         subtitle: `Estudiante de ${studentData?.carrera || 'Carrera no definida'}`,
@@ -87,7 +87,31 @@ function ProfileHeader({ studentData, onEditProfile, onEditCover }) {
                         </Box>
                     </Box>
 
-                    {/* Edit Profile Button */}
+                    {/* Edit Profile Button & Change Password */}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                        <IconButton onClick={onEditProfile} title="Editar Perfil">
+                            {/* Existing logic or icon if any */}
+                        </IconButton>
+
+                        {onChangePassword && (
+                            <Button
+                                onClick={onChangePassword}
+                                variant="outlined"
+                                startIcon={<LockIcon />}
+                                size="small"
+                                sx={{
+                                    borderColor: '#667eea',
+                                    color: '#667eea',
+                                    '&:hover': {
+                                        bgcolor: '#e8eaf6',
+                                        borderColor: '#5c6bc0'
+                                    }
+                                }}
+                            >
+                                Cambiar Contraseña
+                            </Button>
+                        )}
+                    </Box>
 
                 </Box>
             </CardContent>

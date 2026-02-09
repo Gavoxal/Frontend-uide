@@ -14,6 +14,8 @@ import InfoCardModern from "../../components/Profile/InfoCardModern";
 import RequirementsCardModern from "../../components/Profile/RequirementsCardModern";
 import { UserService } from "../../services/user.service";
 import { PrerequisiteService } from "../../services/prerequisites.service";
+import { AuthService } from "../../services/auth.service";
+import ChangePasswordDialog from "../../components/Profile/ChangePasswordDialog";
 
 function StudentProfile() {
     const user = getDataUser();
@@ -34,6 +36,9 @@ function StudentProfile() {
     });
 
 
+
+    // State for password change dialog
+    const [openPasswordDialog, setOpenPasswordDialog] = useState(false);
 
     // Cargar datos frescos del backend
     useEffect(() => {
@@ -159,6 +164,17 @@ function StudentProfile() {
         console.log("Editar requisito:", requirementId);
     };
 
+    const handleChangePassword = () => setOpenPasswordDialog(true);
+    const handlePasswordSubmit = async (passwordData) => {
+        try {
+            await AuthService.changePassword(passwordData.currentPassword, passwordData.newPassword);
+            alert("Contraseña cambiada exitosamente");
+        } catch (error) {
+            console.error("Error cambiando contraseña:", error);
+            alert(error.message || "Error al cambiar la contraseña");
+        }
+    };
+
     return (
         <Box sx={{ width: "100%" }}>
             {/* Header */}
@@ -176,6 +192,7 @@ function StudentProfile() {
                 studentData={studentData}
                 onEditProfile={handleEditProfile}
                 onEditCover={handleEditCover}
+                onChangePassword={handleChangePassword}
             />
 
             {/* Main Content Grid */}
@@ -199,7 +216,14 @@ function StudentProfile() {
                     />
                 </Grid>
             </Grid>
-        </Box>
+
+            {/* Password Change Dialog */}
+            <ChangePasswordDialog
+                open={openPasswordDialog}
+                onClose={() => setOpenPasswordDialog(false)}
+                onSubmit={handlePasswordSubmit}
+            />
+        </Box >
     );
 }
 
