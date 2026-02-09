@@ -1,33 +1,58 @@
-import { Box, Typography, TextField, Button, Avatar, Divider } from "@mui/material";
-import { useState } from "react";
+import { Box, Typography, TextField, Button, Avatar, Divider, Alert } from "@mui/material";
+import { useState, useEffect } from "react";
 import SendIcon from "@mui/icons-material/Send";
-import PersonIcon from "@mui/icons-material/Person";
+import { CommentService } from "../services/comment.service";
 
-function CommentSection({ proposalId }) {
-    const [comments, setComments] = useState([
-        {
-            id: 1,
-            author: "Director Académico",
-            role: "Director",
-            text: "La propuesta está bien estructurada, sin embargo necesita más detalle en la metodología.",
-            date: "2026-01-28",
-            avatar: "D"
-        }
-    ]);
+function CommentSection({ proposal }) {
+    const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState("");
+    const [loading, setLoading] = useState(false);
 
-    const handleAddComment = () => {
-        if (newComment.trim()) {
-            const comment = {
-                id: comments.length + 1,
-                author: "Abel Yangari",
-                role: "Estudiante",
-                text: newComment,
-                date: new Date().toISOString().split('T')[0],
-                avatar: "AY"
-            };
-            setComments([...comments, comment]);
-            setNewComment("");
+    // Cargar comentarios iniciales desde la prop o recargar si es necesario
+    useEffect(() => {
+        if (proposal?.comentarios) {
+            const mapped = proposal.comentarios.map(c => ({
+                id: c.id,
+                author: `${c.usuario?.nombres} ${c.usuario?.apellidos}`,
+                role: c.usuario?.rol || 'Estudiante',
+                text: c.descripcion,
+                date: c.createdAt ? new Date(c.createdAt).toLocaleDateString() : 'Reciente',
+                avatar: (c.usuario?.nombres?.[0] || 'U') + (c.usuario?.apellidos?.[0] || '')
+            }));
+            setComments(mapped);
+        }
+    }, [proposal]);
+
+    const handleAddComment = async () => {
+        if (newComment.trim() && proposal?.id) {
+            setLoading(true);
+            try {
+                const result = await CommentService.create({
+                    descripcion: newComment,
+                    propuestaId: proposal.id
+                });
+
+                // Obtener datos del usuario local para el comentario optimista
+                // (En una app real, el backend devuelve el objeto completo con relaciones)
+                const authorData = JSON.parse(localStorage.getItem('user') || '{}');
+
+                const comment = {
+                    id: result.id,
+                    author: `${authorData.nombres} ${authorData.apellidos}` || "Tú",
+                    role: authorData.rol || "Estudiante",
+                    text: newComment,
+                    date: new Date().toLocaleDateString(),
+                    avatar: (authorData.nombres?.[0] || 'U') + (authorData.apellidos?.[0] || '')
+                };
+
+                setComments([...comments, comment]);
+                setNewComment("");
+            } catch (error) {
+                console.error("Error al enviar comentario:", error);
+                alert("No se pudo enviar el comentario: " + error.message);
+            } finally {
+                setLoading(false);
+            }
         }
     };
 
@@ -44,6 +69,14 @@ function CommentSection({ proposalId }) {
                 Comentarios y Revisiones
             </Typography>
 
+            {/* Comentario de Revisión Final (Director) */}
+            {proposal?.comentarioRevision && (
+                <Alert severity="info" sx={{ mb: 3, borderLeft: '4px solid #3b82f6' }}>
+                    <Typography variant="subtitle2" fontWeight="bold">Observación de Revisión (Director):</Typography>
+                    <Typography variant="body2">{proposal.comentarioRevision}</Typography>
+                </Alert>
+            )}
+
             {/* Lista de comentarios */}
             <Box sx={{ mb: 3 }}>
                 {comments.length === 0 ? (
@@ -54,7 +87,7 @@ function CommentSection({ proposalId }) {
                         borderRadius: 2
                     }}>
                         <Typography variant="body2" color="text.secondary">
-                            No hay comentarios aún. Sé el primero en comentar.
+                            No hay comentarios adicionales aún.
                         </Typography>
                     </Box>
                 ) : (

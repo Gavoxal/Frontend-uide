@@ -62,6 +62,8 @@ function StudentLoad() {
         setOpenAlert(true);
     };
 
+    const [uploadStats, setUploadStats] = useState(null);
+
     const confirmUpload = async () => {
         setOpenAlert(false);
 
@@ -71,8 +73,12 @@ function StudentLoad() {
         formData.append('file', file);
 
         try {
+            const token = localStorage.getItem('token');
             const response = await fetch('http://localhost:3000/api/v1/estudiantes/importar-excel', {
                 method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
                 body: formData,
             });
 
@@ -80,8 +86,13 @@ function StudentLoad() {
 
             if (response.ok) {
                 setOpenSuccess(true);
-                // Optional: Show details from result.creados or result.errores
-                console.log('Estudiantes creados:', result.creados);
+                // Store stats for the notification
+                setUploadStats({
+                    created: result.exitosos?.length || 0,
+                    skipped: result.omitidos?.length || 0,
+                    failed: result.fallidos?.length || 0
+                });
+                console.log('Resultados Carga:', result);
             } else {
                 console.error('Error al subir:', result);
                 alert('Error al procesar el archivo: ' + (result.message || 'Error desconocido'));
@@ -96,6 +107,7 @@ function StudentLoad() {
         setFile(null);
         setPreviewData([]);
         setOpenSuccess(false);
+        setUploadStats(null);
     };
 
     return (
@@ -108,8 +120,16 @@ function StudentLoad() {
 
             {openSuccess && (
                 <Box sx={{ mb: 3 }}>
-                    <NotificationMui severity="success" onClose={() => setOpenSuccess(false)}>
-                        <strong>¡Carga Exitosa!</strong> Se han procesado los estudiantes y se han enviado las credenciales de acceso a sus correos institucionales.
+                    <NotificationMui severity={uploadStats?.failed > 0 ? "warning" : "success"} onClose={() => setOpenSuccess(false)}>
+                        <strong>¡Proceso Finalizado!</strong>
+                        <ul style={{ margin: '5px 0', paddingLeft: '20px' }}>
+                            <li>Nuevos estudiantes creados: <strong>{uploadStats?.created}</strong></li>
+                            <li>Omitidos (Ya existían): <strong>{uploadStats?.skipped}</strong></li>
+                            {uploadStats?.failed > 0 && (
+                                <li style={{ color: '#d32f2f' }}>Fallidos: <strong>{uploadStats?.failed}</strong></li>
+                            )}
+                        </ul>
+                        {uploadStats?.created > 0 && <span>Se han enviado las credenciales a los correos institucionales.</span>}
                     </NotificationMui>
                 </Box>
             )}

@@ -53,6 +53,10 @@ function ThesisProposal() {
                 ProposalService.getKnowledgeAreas()
             ]);
 
+
+            console.log("Fetched PROPOSALS from API:", proposalsData);
+            console.log("Fetched AREAS from API:", areasData);
+
             setKnowledgeAreas(areasData);
 
             if (Array.isArray(proposalsData)) {
@@ -75,7 +79,9 @@ function ThesisProposal() {
                             alcance: item.alcance || '',
                             file: archivoUrl ? { name: archivoUrl.split('/').pop(), url: archivoUrl } : null,
                             status: item.estado?.toLowerCase() || 'submitted',
-                            submittedDate: item.fechaPublicacion ? item.fechaPublicacion.split('T')[0] : (item.createdAt ? item.createdAt.split('T')[0] : null)
+                            submittedDate: item.fechaPublicacion ? item.fechaPublicacion.split('T')[0] : (item.createdAt ? item.createdAt.split('T')[0] : null),
+                            comentarios: item.comentarios || [],
+                            comentarioRevision: item.comentarioRevision || null
                         };
                     }
                 });
@@ -354,7 +360,7 @@ function ThesisProposal() {
 
                                         <Box>
                                             <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600, color: 'text.primary' }}>
-                                                Área de Investigación: *
+                                                Áreas de Conocimiento: *
                                             </Typography>
                                             <FormControl fullWidth>
                                                 <Select
@@ -518,7 +524,7 @@ function ThesisProposal() {
 
                                     <Box sx={{ mb: 2 }}>
                                         <Typography variant="subtitle2" fontWeight="600" color="text.secondary" gutterBottom>
-                                            Área de Investigación
+                                            Área de Conocimiento
                                         </Typography>
                                         <Typography variant="body1" sx={{ textTransform: 'capitalize' }}>
                                             {currentProposal.areaInvestigacion?.replace('-', ' ') || 'No especificada'}
@@ -592,7 +598,7 @@ function ThesisProposal() {
                         <Grid item xs={12} md={5}>
                             <Card sx={{ borderRadius: 3, boxShadow: 2, position: 'sticky', top: 20 }}>
                                 <CardContent sx={{ p: 3 }}>
-                                    <CommentSection proposalId={currentTab} />
+                                    <CommentSection proposal={currentProposal} />
                                 </CardContent>
                             </Card>
                         </Grid>

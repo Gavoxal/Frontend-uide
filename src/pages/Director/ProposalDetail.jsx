@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     Box,
     Grid,
     Paper,
     Stack,
-    Chip
+    Chip,
+    CircularProgress
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -20,67 +21,93 @@ import AlertMui from '../../components/alert.mui.component';
 import NotificationMui from '../../components/notification.mui.component';
 import InputMui from '../../components/input.mui.component';
 
+import { ProposalService } from '../../services/proposal.service';
+
 function ProposalDetail() {
-    const { id } = useParams();
+    const { id } = useParams(); // This is now STUDENT ID
     const navigate = useNavigate();
     const [openAlert, setOpenAlert] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [proposals, setProposals] = useState([]);
+    const [studentInfo, setStudentInfo] = useState({ name: '', career: '', period: '' });
+    const [pendingChanges, setPendingChanges] = useState({});
 
-    const studentInfo = {
-        name: "Ana Torres",
-        career: "Ingeniería de Software",
-        period: "SEM LOJA OCT 2025 – FEB 2026",
+    useEffect(() => {
+        loadStudentProposals();
+    }, [id]);
+
+    const loadStudentProposals = async () => {
+        if (!id || id === 'undefined') {
+            setLoading(false);
+            return;
+        }
+        setLoading(true);
+        try {
+            const data = await ProposalService.getByStudent(id);
+            if (data.length > 0) {
+                const student = data[0].estudiante;
+                setStudentInfo({
+                    name: student ? `${student.nombres} ${student.apellidos}` : 'N/A',
+                    career: data[0].carrera || 'N/A',
+                    period: student?.estudiantePerfil?.periodoLectivo || '-'
+                });
+
+                // Map API data to component structure
+                const mapped = data.map(p => ({
+                    id: p.id,
+                    topic: p.titulo,
+                    area: p.areaConocimiento?.nombre || 'General',
+                    description: p.problematica || p.objetivos || 'Sin descripción',
+                    file: p.archivoUrl ? p.archivoUrl.split('/').pop() : 'No adjunto',
+                    fileUrl: p.archivoUrl,
+                    status: mapApiStatusToUi(p.estado),
+                    observation: p.comentarioRevision || '',
+                    reviews: p.votacionesTutor?.map(v => ({
+                        tutor: `${v.tutor?.nombres} ${v.tutor?.apellidos}`,
+                        priority: v.prioridad,
+                        justification: v.justificacion
+                    })) || []
+                }));
+                setProposals(mapped);
+            }
+        } catch (error) {
+            console.error("Error loading proposals", error);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const [proposals, setProposals] = useState([
-        {
-            id: 1,
-            topic: "Implementación de IA para optimización de tráfico urbano en Loja",
-            area: "Ciencia de Datos e Inteligencia Artificial",
-            description: "Uso de redes neuronales para analizar flujo vehicular.",
-            file: "propuesta_1.pdf",
-            status: 'pending',
-            observation: '',
-            reviews: [
-                { id: 101, reviewer: "Ing. Carlos Mendoza", vote: true, comment: "El alcance técnico es adecuado y la problemática es relevante." },
-                { id: 102, reviewer: "Dra. Elena Yépez", vote: true, comment: "Buena fundamentación teórica, aprobado." },
-                { id: 103, reviewer: "Msc. Juan Pablo", vote: false, comment: "Se debe delimitar mejor el área geográfica de estudio." }
-            ]
-        },
-        {
-            id: 2,
-            topic: "Sistema de gestión documental con Blockchain",
-            area: "Gestión de la Información y Transformación Digital",
-            description: "Aseguramiento de documentos universitarios.",
-            file: "propuesta_2.pdf",
-            status: 'pending',
-            observation: '',
-            reviews: [
-                { id: 201, reviewer: "Ing. Carlos Mendoza", vote: false, comment: "La tecnología Blockchain parece excesiva para este problema." },
-                { id: 202, reviewer: "Dra. Elena Yépez", vote: false, comment: "No queda claro el modelo de costos." }
-            ]
-        },
-        {
-            id: 3,
-            topic: "Aplicación móvil para turismo comunitario",
-            area: "Programación y Desarrollo de Software",
-            description: "Promoción de rutas turísticas en Saraguro.",
-            file: "propuesta_3.pdf",
-            status: 'pending',
-            observation: '',
-            reviews: [] // Sin revisiones aún
-        }
-    ]);
+    const mapApiStatusToUi = (apiStatus) => {
+        const map = {
+            'PENDIENTE': 'pending',
+            'APROBADA': 'approved',
+            'RECHAZADA': 'rejected',
+            'APROBADA_CON_COMENTARIOS': 'approved_with_obs'
+        };
+        return map[apiStatus] || 'pending';
+    };
+
+    const mapUiStatusToApi = (uiStatus) => {
+        const map = {
+            'pending': 'PENDIENTE',
+            'approved': 'APROBADA',
+            'rejected': 'RECHAZADA',
+            'approved_with_obs': 'APROBADA_CON_COMENTARIOS'
+        };
+        return map[uiStatus] || 'PENDIENTE';
+    };
 
     const handleStatusChange = (propId, newStatus) => {
         setProposals(prev => prev.map(p => {
             if (p.id === propId) {
                 return { ...p, status: newStatus };
-            } else {
-                if (newStatus === 'approved' || newStatus === 'approved_with_obs') {
-                    return { ...p, status: 'rejected' };
-                }
-                return p;
             }
+            return p;
+        }));
+
+        setPendingChanges(prev => ({
+            ...prev,
+            [propId]: { ...prev[propId], status: newStatus }
         }));
     };
 
@@ -88,65 +115,149 @@ function ProposalDetail() {
         setProposals(prev => prev.map(p =>
             p.id === propId ? { ...p, observation: value } : p
         ));
+
+        setPendingChanges(prev => ({
+            ...prev,
+            [propId]: { ...prev[propId], observation: value }
+        }));
     };
 
     const handleSaveClick = () => {
         setOpenAlert(true);
     };
 
-    const confirmSave = () => {
-        console.log("Guardando decisión:", proposals);
+    const confirmSave = async () => {
         setOpenAlert(false);
-        navigate('/director/proposals');
+        setLoading(true);
+        try {
+            const promises = Object.keys(pendingChanges).map(async (propId) => {
+                const change = pendingChanges[propId];
+                const currentProp = proposals.find(p => p.id === Number(propId));
+                const finalStatus = change.status ? mapUiStatusToApi(change.status) : mapUiStatusToApi(currentProp.status);
+                const finalObs = change.observation !== undefined ? change.observation : currentProp.observation;
+
+                if (finalStatus !== 'PENDIENTE' || finalObs) {
+                    await ProposalService.updateStatus(propId, finalStatus, finalObs);
+                }
+            });
+
+            await Promise.all(promises);
+            navigate('/director/proposals');
+        } catch (error) {
+            console.error("Error saving changes", error);
+            alert("Error al guardar cambios. Ver consola.");
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const canSave = proposals.some(p => p.status === 'approved' || p.status === 'approved_with_obs');
+    const hasChanges = Object.keys(pendingChanges).length > 0;
 
-    // Helper para contar votos
-    const getVoteSummary = (reviews) => {
-        if (!reviews || reviews.length === 0) return { favor: 0, contra: 0, total: 0 };
-        const favor = reviews.filter(r => r.vote).length;
-        return { favor, contra: reviews.length - favor, total: reviews.length };
+    const handleDownload = async (fileUrl, fileName = 'propuesta.pdf') => {
+        if (!fileUrl) return;
+        const baseUrl = window.location.origin.includes('localhost') ? 'http://localhost:3000' : '';
+        const fullUrl = `${baseUrl}${fileUrl}`;
+        const token = localStorage.getItem('token');
+
+        try {
+            const response = await fetch(fullUrl, {
+                headers: {
+                    'Authorization': token ? `Bearer ${token}` : ''
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error al descargar: ${response.statusText}`);
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', fileName || 'propuesta.pdf');
+            document.body.appendChild(link);
+            link.click();
+            if (link.parentNode) link.parentNode.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error("Error downloading PDF:", error);
+            alert("No se pudo descargar el archivo. Es posible que el servidor no responda o la sesión haya expirado.");
+        }
     };
+
+    if (loading) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 4, height: '400px', alignItems: 'center' }}>
+                <CircularProgress />
+            </Box>
+        );
+    }
 
     return (
         <Box>
             <Box sx={{ mb: 4 }}>
                 <TextMui value={`Revisión de Propuestas: ${studentInfo.name}`} variant="h4" />
-                <TextMui value={`${studentInfo.career} - ${studentInfo.period}`} variant="h6" />
+                <TextMui value={`${studentInfo.career} - ${studentInfo.period}`} variant="h6" color="textSecondary" />
                 <NotificationMui severity="info" sx={{ mt: 2 }}>
-                    Revise el <strong>Feedback del Tribunal</strong> antes de tomar una decisión final. Seleccione una propuesta para aprobar.
+                    Aquí puede revisar las 3 propuestas enviadas por el estudiante. Seleccione <strong>Aprobar</strong> solo en la propuesta definitiva. Al aprobar una, se notificará automáticamente al estudiante.
                 </NotificationMui>
             </Box>
 
             <Grid container spacing={3} direction="column">
-                {proposals.map((prop) => {
-                    const votes = getVoteSummary(prop.reviews);
+                {proposals.map((prop, index) => (
+                    <Grid item xs={12} key={prop.id}>
+                        <Paper
+                            elevation={3}
+                            sx={{
+                                p: 3,
+                                border: (prop.status === 'approved' || prop.status === 'approved_with_obs') ? '2px solid #2e7d32' : '1px solid #e0e0e0',
+                                backgroundColor: (prop.status === 'approved' || prop.status === 'approved_with_obs') ? '#f1f8e9' : 'white',
+                                transition: '0.3s',
+                                borderRadius: 2
+                            }}
+                        >
+                            <Grid container spacing={4}>
+                                <Grid item xs={12} md={7}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                                        <Chip label={`Opción ${index + 1}`} color="primary" size="small" />
+                                        <Chip label={prop.area} variant="outlined" size="small" />
+                                        <Chip
+                                            label={prop.status.toUpperCase()}
+                                            color={prop.status === 'approved' ? "success" : prop.status === 'rejected' ? "error" : "default"}
+                                            size="small"
+                                        />
+                                    </Box>
 
-                    return (
-                        <Grid item xs={12} key={prop.id}>
-                            <Paper
-                                elevation={3}
-                                sx={{
-                                    p: 3,
-                                    border: (prop.status === 'approved' || prop.status === 'approved_with_obs') ? '2px solid #2e7d32' : '1px solid #e0e0e0',
-                                    backgroundColor: (prop.status === 'approved' || prop.status === 'approved_with_obs') ? '#f1f8e9' : 'white',
-                                    transition: '0.3s'
-                                }}
-                            >
-                                <Grid container spacing={4}>
-                                    {/* Columna Izquierda (50%) */}
-                                    <Grid item xs={12} md={6}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                                            <Chip label={`Propuesta ${prop.id}`} color="primary" size="small" />
-                                            <Chip label={prop.area} variant="outlined" size="small" />
-                                        </Box>
-
-                                        <Box sx={{ mb: 2 }}>
-                                            <TextMui value={prop.topic} variant="h6" />
+                                    <Box sx={{ mb: 2 }}>
+                                        <TextMui value={prop.topic} variant="h6" sx={{ fontWeight: 'bold', mb: 1 }} />
+                                        <Box sx={{ p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
                                             <TextMui value={prop.description} variant="body2" />
                                         </Box>
+                                    </Box>
 
+                                    {prop.reviews && prop.reviews.length > 0 && (
+                                        <Box sx={{ mt: 2, mb: 2 }}>
+                                            <TextMui value="Votación y Comentarios de Tutores:" variant="subtitle2" sx={{ fontWeight: 'bold', color: '#1a237e', mb: 1 }} />
+                                            <Stack spacing={1}>
+                                                {prop.reviews.map((rev, idx) => (
+                                                    <Box key={idx} sx={{ p: 1.5, borderLeft: '3px solid #1a237e', bgcolor: '#e8eaf6', borderRadius: '0 4px 4px 0' }}>
+                                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                                                            <TextMui value={rev.tutor} variant="caption" sx={{ fontWeight: 'bold' }} />
+                                                            <Chip
+                                                                label={`Prioridad: ${rev.priority}`}
+                                                                size="small"
+                                                                color={rev.priority === 1 ? "success" : "default"}
+                                                                variant="outlined"
+                                                            />
+                                                        </Box>
+                                                        <TextMui value={rev.justification || 'Sin comentarios adicionales.'} variant="body2" sx={{ fontStyle: 'italic' }} />
+                                                    </Box>
+                                                ))}
+                                            </Stack>
+                                        </Box>
+                                    )}
+
+                                    {prop.fileUrl && (
                                         <Box sx={{
                                             mt: 2,
                                             p: 2,
@@ -161,137 +272,92 @@ function ProposalDetail() {
                                                 <AttachFileIcon color="action" />
                                                 <TextMui value={prop.file} variant="body2" />
                                             </Box>
-                                            <Box sx={{ width: '150px' }}>
+                                            <Box sx={{ width: '180px' }}>
                                                 <ButtonMui
-                                                    name="Descargar"
+                                                    name="Descargar PDF"
                                                     startIcon={<DownloadIcon />}
-                                                    onClick={() => { console.log(`Descargando ${prop.file}`) }}
+                                                    onClick={() => handleDownload(prop.fileUrl, prop.file)}
                                                     backgroundColor="#0288d1"
                                                 />
                                             </Box>
                                         </Box>
-                                    </Grid>
-
-                                    {/* Columna Derecha (50%) - Feedback y Decisión */}
-                                    <Grid item xs={12} md={6} sx={{ display: 'flex', flexDirection: 'column', borderLeft: { xs: 'none', md: '1px solid #eee' }, pl: { md: 3 } }}>
-
-                                        {/* Sección Feedback del Tribunal */}
-                                        <Box sx={{ mb: 3, p: 2, bgcolor: '#f5f5f5', borderRadius: 2 }}>
-                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                                                <TextMui value="Feedback del Tribunal" variant="subtitle1" />
-                                                <Stack direction="row" spacing={1}>
-                                                    <Chip icon={<CheckCircleIcon />} label={`${votes.favor} Favor`} color="success" size="small" variant="outlined" />
-                                                    <Chip icon={<CancelIcon />} label={`${votes.contra} Contra`} color="error" size="small" variant="outlined" />
-                                                </Stack>
-                                            </Box>
-
-                                            {prop.reviews && prop.reviews.length > 0 ? (
-                                                <Stack spacing={1} sx={{ mt: 1 }}>
-                                                    {prop.reviews.map(review => (
-                                                        <Box key={review.id} sx={{ p: 1, textOverflow: 'ellipsis', bgcolor: 'white', borderRadius: 1, border: '1px solid #eee' }}>
-                                                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                                <TextMui value={review.reviewer} variant="caption" />
-                                                                {review.vote ?
-                                                                    <CheckCircleIcon color="success" fontSize="small" /> :
-                                                                    <CancelIcon color="error" fontSize="small" />
-                                                                }
-                                                            </Box>
-                                                            <TextMui value={review.comment} variant="body2" />
-                                                        </Box>
-                                                    ))}
-                                                </Stack>
-                                            ) : (
-                                                <TextMui value="Aún no hay revisiones registradas." variant="caption" />
-                                            )}
-                                        </Box>
-
-                                        <TextMui value="Decisión Final del Director:" variant="subtitle2" />
-
-                                        <Stack direction="row" spacing={1} sx={{ mb: 2, mt: 1 }}>
-                                            <Box sx={{ width: '33%' }}>
-                                                <ButtonMui
-                                                    name="Aprobar"
-                                                    variant={prop.status === 'approved' ? "contained" : "outlined"}
-                                                    backgroundColor={prop.status === 'approved' ? "#2e7d32" : "transparent"}
-                                                    color={prop.status === 'approved' ? "white" : "#2e7d32"}
-                                                    startIcon={<CheckCircleIcon />}
-                                                    onClick={() => handleStatusChange(prop.id, 'approved')}
-                                                />
-                                            </Box>
-                                            <Box sx={{ width: '33%' }}>
-                                                <ButtonMui
-                                                    name="Observar"
-                                                    variant={prop.status === 'approved_with_obs' ? "contained" : "outlined"}
-                                                    backgroundColor={prop.status === 'approved_with_obs' ? "#ed6c02" : "transparent"}
-                                                    color={prop.status === 'approved_with_obs' ? "white" : "#ed6c02"}
-                                                    startIcon={<WarningIcon />}
-                                                    onClick={() => handleStatusChange(prop.id, 'approved_with_obs')}
-                                                />
-                                            </Box>
-                                            <Box sx={{ width: '33%' }}>
-                                                <ButtonMui
-                                                    name="Rechazar"
-                                                    variant={prop.status === 'rejected' ? "contained" : "outlined"}
-                                                    backgroundColor={prop.status === 'rejected' ? "#d32f2f" : "transparent"}
-                                                    color={prop.status === 'rejected' ? "white" : "#d32f2f"}
-                                                    startIcon={<CancelIcon />}
-                                                    onClick={() => handleStatusChange(prop.id, 'rejected')}
-                                                />
-                                            </Box>
-                                        </Stack>
-
-                                        {prop.status === 'approved' && (
-                                            <AlertMui status="success" message="Propuesta Aprobada sin observaciones." />
-                                        )}
-
-                                        {prop.status === 'approved_with_obs' && (
-                                            <Box sx={{ width: '100%', flexGrow: 1 }}>
-                                                <TextMui value="Observaciones Finales (Condicionada):" variant="caption" />
-                                                <InputMui
-                                                    multiline={true}
-                                                    rows={4}
-                                                    placeholder="Ej: Se aprueba el tema pero debe..."
-                                                    value={prop.observation}
-                                                    onChange={(e) => handleObservationChange(prop.id, e.target.value)}
-                                                />
-                                            </Box>
-                                        )}
-
-                                        {prop.status === 'rejected' && (
-                                            <Box sx={{ width: '100%', flexGrow: 1 }}>
-                                                <TextMui value="Motivo del rechazo final:" variant="caption" />
-                                                <InputMui
-                                                    multiline={true}
-                                                    rows={4}
-                                                    placeholder="Ej: El tema no es viable..."
-                                                    value={prop.observation}
-                                                    onChange={(e) => handleObservationChange(prop.id, e.target.value)}
-                                                />
-                                            </Box>
-                                        )}
-                                    </Grid>
+                                    )}
                                 </Grid>
-                            </Paper>
-                        </Grid>
-                    );
-                })}
+
+                                <Grid item xs={12} md={5} sx={{ display: 'flex', flexDirection: 'column', borderLeft: { xs: 'none', md: '1px solid #eee' }, pl: { md: 3 } }}>
+
+                                    <TextMui value="Decisión del Director:" variant="subtitle2" sx={{ mb: 1 }} />
+
+                                    <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+                                        <Box sx={{ flex: 1 }}>
+                                            <ButtonMui
+                                                name="Aprobar"
+                                                variant={prop.status === 'approved' ? "contained" : "outlined"}
+                                                backgroundColor={prop.status === 'approved' ? "#2e7d32" : "transparent"}
+                                                color={prop.status === 'approved' ? "white" : "#2e7d32"}
+                                                startIcon={<CheckCircleIcon />}
+                                                onClick={() => handleStatusChange(prop.id, 'approved')}
+                                            />
+                                        </Box>
+                                        <Box sx={{ flex: 1 }}>
+                                            <ButtonMui
+                                                name="Observar"
+                                                variant={prop.status === 'approved_with_obs' ? "contained" : "outlined"}
+                                                backgroundColor={prop.status === 'approved_with_obs' ? "#ed6c02" : "transparent"}
+                                                color={prop.status === 'approved_with_obs' ? "white" : "#ed6c02"}
+                                                startIcon={<WarningIcon />}
+                                                onClick={() => handleStatusChange(prop.id, 'approved_with_obs')}
+                                            />
+                                        </Box>
+                                        <Box sx={{ flex: 1 }}>
+                                            <ButtonMui
+                                                name="Rechazar"
+                                                variant={prop.status === 'rejected' ? "contained" : "outlined"}
+                                                backgroundColor={prop.status === 'rejected' ? "#d32f2f" : "transparent"}
+                                                color={prop.status === 'rejected' ? "white" : "#d32f2f"}
+                                                startIcon={<CancelIcon />}
+                                                onClick={() => handleStatusChange(prop.id, 'rejected')}
+                                            />
+                                        </Box>
+                                    </Stack>
+
+                                    <Box sx={{ width: '100%', flexGrow: 1 }}>
+                                        <TextMui value={prop.status === 'rejected' ? "Motivo del rechazo:" : "Observaciones / Sugerencias:"} variant="caption" sx={{ fontWeight: 'bold' }} />
+                                        <InputMui
+                                            multiline={true}
+                                            rows={4}
+                                            placeholder="Ingrese sus comentarios aquí..."
+                                            value={prop.observation}
+                                            onChange={(e) => handleObservationChange(prop.id, e.target.value)}
+                                        />
+                                    </Box>
+
+                                    {prop.status === 'approved' && (
+                                        <AlertMui status="success" message="Esta será la propuesta oficial." sx={{ mt: 1 }} />
+                                    )}
+
+                                </Grid>
+                            </Grid>
+                        </Paper>
+                    </Grid>
+                ))}
             </Grid>
 
-            <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-                <Box sx={{ width: '200px' }}>
+            <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', gap: 2, mb: 4 }}>
+                <Box sx={{ width: '150px' }}>
                     <ButtonMui
-                        name="Volver"
+                        name="Cancelar"
                         onClick={() => navigate('/director/proposals')}
                         startIcon={<ArrowBackIcon />}
-                        backgroundColor="red"
+                        backgroundColor="#757575"
                     />
                 </Box>
-                <Box sx={{ width: '200px' }}>
+                <Box sx={{ width: '220px' }}>
                     <ButtonMui
-                        name="Guardar Decisión"
+                        name="Enviar Revisiones"
                         onClick={handleSaveClick}
-                        backgroundColor={canSave ? "#2e7d32" : "green"}
-                        disabled={!canSave}
+                        backgroundColor={hasChanges ? "#1976d2" : "#bdbdbd"}
+                        disabled={!hasChanges}
                     />
                 </Box>
             </Box>
@@ -299,11 +365,11 @@ function ProposalDetail() {
             <AlertMui
                 open={openAlert}
                 handleClose={() => setOpenAlert(false)}
-                title="Confirmar Decisión"
-                message="¿Está seguro de guardar estos cambios? Se notificará al estudiante y al tribunal."
+                title="Confirmar Envío"
+                message="¿Está seguro de enviar estas revisiones? Los estudiantes recibirán una notificación con sus sugerencias o aprobación."
                 status="warning"
                 showBtnL={true}
-                btnNameL="Confirmar y Guardar"
+                btnNameL="Confirmar y Enviar"
                 actionBtnL={confirmSave}
                 showBtnR={true}
                 btnNameR="Cancelar"

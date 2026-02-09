@@ -93,7 +93,7 @@ function RouterPages() {
                         <Route path="tutors/assign" element={<DirectorAssignTutor />} />
                         <Route path="proposals" element={<DirectorProposalReview />} />
                         <Route path="proposals/detail/:id" element={<DirectorProposalDetail />} />
-                        <Route path="defense" element={<DirectorThesisDefense />} />
+                        <Route path="defenses" element={<DirectorThesisDefense />} />
                         <Route path="committee" element={<DirectorCommitteeManagement />} />
                         <Route path="prerequisites" element={<DirectorPrerequisites />} />
                         <Route path="meetings" element={<SharedMeetingHistory />} />

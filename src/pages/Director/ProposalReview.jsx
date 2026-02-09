@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Box, Grid, Chip, Card, CardContent } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, Grid, Chip, Card, CardContent, CircularProgress } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -12,65 +12,140 @@ import SearchBar from '../../components/SearchBar.component';
 import TextMui from '../../components/text.mui.component';
 import StatsCard from '../../components/common/StatsCard';
 
+import { ProposalService } from '../../services/proposal.service';
+
 function ProposalReview() {
     const navigate = useNavigate();
-
-    // Headers actualizados según requerimiento
-    const headers = ['Estudiante', 'Malla', 'Período Lectivo', 'Fecha Envío', 'Propuestas', 'Estado'];
-    const periodo = "SEM LOJA OCT 2025 – FEB 2026";
-
-    // Mock Data con estados variados para demos
-    const [students, setStudents] = useState([
-        {
-            id: 1,
-            student: 'Ana Torres',
-            malla: 'ITIL_MALLA 2019',
-            period: periodo,
-            date: '2025-01-28',
-            count: '3/3',
-            status: 'Pendiente'
-        },
-        {
-            id: 2,
-            student: 'Luis Gomez',
-            malla: 'SINL_MALLA 2023',
-            period: periodo,
-            date: '2025-01-29',
-            count: '3/3',
-            status: 'Revisado' // Mocking one reviewed
-        },
-        {
-            id: 3,
-            student: 'Carla Diaz',
-            malla: 'ITIL_MALLA 2023',
-            period: periodo,
-            date: '2025-01-30',
-            count: '3/3',
-            status: 'Pendiente'
-        },
-    ]);
-
+    const [loading, setLoading] = useState(true);
+    const [proposals, setProposals] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [filterStatus, setFilterStatus] = useState("all");
 
-    // Lógica de Filtrado
-    const filteredStudents = students.filter((student) => {
-        const matchesSearch = student.student.toLowerCase().includes(searchTerm.toLowerCase());
+    // Headers actualizados para vista agrupada
+    const headers = ['Estudiante', 'Malla', 'Período', 'Propuestas', 'Estado'];
 
-        if (filterStatus === "pending") return matchesSearch && student.status === 'Pendiente';
-        if (filterStatus === "reviewed") return matchesSearch && student.status === 'Revisado';
+    useEffect(() => {
+        loadProposals();
+    }, []);
+
+    const loadProposals = async () => {
+        setLoading(true);
+        try {
+            const data = await ProposalService.getAll();
+            console.log("ProposalReview data received:", data);
+
+            if (!data || data.length === 0) {
+                console.warn("No data received from ProposalService.getAll()");
+                setProposals([]);
+                return;
+            }
+
+            // Agrupar por estudiante de forma robusta
+            const grouped = data.reduce((acc, curr) => {
+                const student = curr.estudiante;
+                // Intentar obtener una clave única del estudiante: ID, Cédula o Nombre completo
+                const studentKey = curr.fkEstudiante || student?.id || student?.cedula || (student ? `${student.nombres} ${student.apellidos}` : null) || `temp-${curr.id}`;
+
+                if (!acc[studentKey]) {
+                    const perfil = student?.estudiantePerfil;
+                    // El ID preferido para navegación es el del estudiante, fallback al de la propuesta
+                    const navId = curr.fkEstudiante || student?.id || curr.id;
+
+                    acc[studentKey] = {
+                        studentId: navId,
+                        studentObj: student || {
+                            id: navId,
+                            nombres: 'Estudiante',
+                            apellidos: !student ? `(Propuesta ${curr.id})` : '',
+                            cedula: student?.cedula || 'N/A'
+                        },
+                        malla: curr.malla || perfil?.malla || 'N/A',
+                        period: perfil?.periodoLectivo || '-',
+                        proposals: []
+                    };
+                }
+                acc[studentKey].proposals.push(curr);
+                return acc;
+            }, {});
+
+            console.log("Grouped proposals:", grouped);
+
+            const formatted = Object.values(grouped).map(group => {
+                const totalProposals = group.proposals.length;
+                // Determine overall status
+                const hasApproved = group.proposals.some(p => p.estado === 'APROBADA');
+                const hasRejected = group.proposals.some(p => p.estado === 'RECHAZADA');
+
+                // Map specific status for display
+                const displayStatus = group.proposals.every(p => p.estado === 'PENDIENTE') ? 'Pendiente' :
+                    hasApproved ? 'Finalizado' : 'En Revisión';
+
+                return {
+                    id: group.studentObj.id || group.studentId, // ID para navegación
+                    student: `${group.studentObj.nombres} ${group.studentObj.apellidos}`,
+                    malla: group.malla,
+                    period: group.period,
+                    // Lista de títulos para mostrar en la tabla
+                    propuestas: (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                            {group.proposals.map((p, idx) => (
+                                <Box key={p.id} sx={{ fontSize: '0.8rem', borderLeft: '2px solid #ccc', pl: 1 }}>
+                                    {idx + 1}. {p.titulo}
+                                </Box>
+                            ))}
+                            <Chip
+                                label={`${totalProposals}/3 Enviadas`}
+                                size="small"
+                                color={totalProposals === 3 ? "success" : "warning"}
+                                variant="outlined"
+                                sx={{ mt: 1, width: 'fit-content' }}
+                            />
+                        </Box>
+                    ),
+                    status: displayStatus
+                };
+            });
+
+            setProposals(formatted);
+        } catch (error) {
+            console.error("Error loading proposals", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const mapStatus = (status) => {
+        // No longer used directly in row, but logic moved to grouping
+        return status;
+    };
+
+    // Lógica de Filtrado
+    const filteredProposals = proposals.filter((p) => {
+        const studentName = p.student.toLowerCase();
+        const matchesSearch = studentName.includes(searchTerm.toLowerCase());
+
+        if (filterStatus === "pending") return matchesSearch && p.status === 'Pendiente';
+        if (filterStatus === "reviewed") return matchesSearch && p.status !== 'Pendiente';
         return matchesSearch;
     });
 
     // Estadísticas
     const stats = {
-        pending: students.filter(s => s.status === 'Pendiente').length,
-        reviewed: students.filter(s => s.status === 'Revisado').length
+        pending: proposals.filter(p => p.status === 'Pendiente').length,
+        reviewed: proposals.filter(p => p.status !== 'Pendiente').length
     };
 
-    const handleReview = (student) => {
-        navigate(`/director/proposals/detail/${student.id}`);
+    const handleReview = (proposal) => {
+        navigate(`/director/proposals/detail/${proposal.id}`);
     };
+
+    if (loading) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                <CircularProgress />
+            </Box>
+        );
+    }
 
     return (
         <Box>
@@ -81,7 +156,7 @@ function ProposalReview() {
 
             {/* Dashboard Stats */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                     <TooltipMui title="Filtrar pendientes" placement="top">
                         <Box
                             onClick={() => setFilterStatus(filterStatus === 'pending' ? 'all' : 'pending')}
@@ -101,7 +176,7 @@ function ProposalReview() {
                         </Box>
                     </TooltipMui>
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                     <TooltipMui title="Filtrar revisados" placement="top">
                         <Box
                             onClick={() => setFilterStatus(filterStatus === 'reviewed' ? 'all' : 'reviewed')}
@@ -127,25 +202,23 @@ function ProposalReview() {
             <SearchBar
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Buscar por estudiante..."
+                placeholder="Buscar por estudiante o título..."
                 title="Buscar Propuestas"
             />
             <Card>
                 <CardContent>
                     <TableMui
                         headers={headers}
-                        data={filteredStudents.map(({ id, ...rest }) => rest)}
+                        data={filteredProposals.map(({ id, ...rest }) => rest)}
                         actions={(row, index) => {
-                            // Recover original student object from filteredStudents using index
-                            // NOTE: index matches filteredStudents array, so safe to use filteredStudents[index]
-                            const originalStudent = filteredStudents[index];
+                            const original = filteredProposals[index];
                             return (
                                 <Box sx={{ minWidth: 120 }}>
                                     <ButtonMui
-                                        name={originalStudent.status === 'Revisado' ? "Ver Detalle" : "Revisar"}
-                                        onClick={() => handleReview(originalStudent)}
-                                        startIcon={originalStudent.status === 'Revisado' ? <CheckCircleIcon /> : <AssignmentIcon />}
-                                        backgroundColor={originalStudent.status === 'Revisado' ? "#2e7d32" : "#1976d2"}
+                                        name={original.status !== 'Pendiente' ? "Ver Detalle" : "Revisar"}
+                                        onClick={() => handleReview(original)}
+                                        startIcon={original.status !== 'Pendiente' ? <CheckCircleIcon /> : <AssignmentIcon />}
+                                        backgroundColor={original.status !== 'Pendiente' ? "#2e7d32" : "#1976d2"}
                                     />
                                 </Box>
                             );

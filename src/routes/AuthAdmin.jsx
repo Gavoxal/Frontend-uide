@@ -5,7 +5,8 @@ function AuthAdmin({ }) {
     const dataUser = getDataUser();
 
 
-    console.log(dataUser);
+
+
     const allowedRoles = ["admin", "director", "coordinador", "student", "tutor", "reviewer", "docente_integracion"];
 
     return dataUser && allowedRoles.includes(dataUser.role) ? <Outlet /> : <Navigate to="/ingreso" replace />;

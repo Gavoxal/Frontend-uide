@@ -41,10 +41,15 @@ import AlertMui from '../../components/alert.mui.component';
 import NotificationMui from '../../components/notification.mui.component';
 import TooltipMui from '../../components/tooltip.mui.component';
 
+import { CommitteeService } from '../../services/committee.service';
+import { useEffect } from 'react';
+
 function DirectorCommitteeManagement() {
     // Form state
     const [formData, setFormData] = useState({
-        name: '',
+        cedula: '',
+        nombres: '',
+        apellidos: '',
         email: '',
         password: '',
         role: ''
@@ -52,41 +57,47 @@ function DirectorCommitteeManagement() {
     const [showPassword, setShowPassword] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [successMsg, setSuccessMsg] = useState('');
+    const [errorMsg, setErrorMsg] = useState('');
     const [openDeleteAlert, setOpenDeleteAlert] = useState(false);
     const [openConfirmAlert, setOpenConfirmAlert] = useState(false);
     const [selectedMember, setSelectedMember] = useState(null);
     const [editMode, setEditMode] = useState(false);
     const [pendingFormData, setPendingFormData] = useState(null);
+    const [loading, setLoading] = useState(false);
 
-    // Mock data - committee members
-    const [members, setMembers] = useState([
-        {
-            id: 1,
-            name: 'Dr. Carlos Mendoza',
-            email: 'carlos.mendoza@uide.edu.ec',
-            role: 'Presidente',
-            status: 'Activo',
-            createdAt: '2025-01-15'
-        },
-        {
-            id: 2,
-            name: 'Msc. Ana Silva',
-            email: 'ana.silva@uide.edu.ec',
-            role: 'Juez 1',
-            status: 'Activo',
-            createdAt: '2025-01-16'
-        },
-        {
-            id: 3,
-            name: 'Ing. Pedro Ramírez',
-            email: 'pedro.ramirez@uide.edu.ec',
-            role: 'Juez 2',
-            status: 'Activo',
-            createdAt: '2025-01-16'
+    // Dynamic data - committee members
+    const [members, setMembers] = useState([]);
+
+    const fetchMembers = async () => {
+        setLoading(true);
+        try {
+            const data = await CommitteeService.getMembers();
+            // Mapear datos del backend al formato esperado por el frontend si es necesario
+            const mappedMembers = data.map(m => ({
+                id: m.id,
+                name: `${m.nombres} ${m.apellidos}`,
+                email: m.correoInstitucional,
+                cedula: m.cedula,
+                role: m.designacion || 'Miembro',
+                status: 'Activo',
+                createdAt: m.createdAt.split('T')[0],
+                nombres: m.nombres,
+                apellidos: m.apellidos
+            }));
+            setMembers(mappedMembers);
+        } catch (error) {
+            console.error("Error fetching members:", error);
+            setErrorMsg("Error al cargar los miembros del comité.");
+        } finally {
+            setLoading(false);
         }
-    ]);
+    };
 
-    const roles = ['Presidente', 'Juez 1', 'Juez 2'];
+    useEffect(() => {
+        fetchMembers();
+    }, []);
+
+    const roles = ['Presidente', 'Jurado 1', 'Jurado 2', 'Miembro'];
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -98,37 +109,33 @@ function DirectorCommitteeManagement() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!formData.name || !formData.email || !formData.password || !formData.role) {
-            alert('Por favor complete todos los campos');
+        if (!formData.nombres || !formData.apellidos || !formData.email || (!editMode && !formData.password) || !formData.cedula) {
+            alert('Por favor complete todos los campos requeridos');
             return;
         }
         setPendingFormData(formData);
         setOpenConfirmAlert(true);
     };
 
-    const confirmSubmit = () => {
+    const confirmSubmit = async () => {
         if (!pendingFormData) return;
 
-        if (editMode && selectedMember) {
-            setMembers(prev => prev.map(m =>
-                m.id === selectedMember.id
-                    ? { ...m, ...pendingFormData }
-                    : m
-            ));
-            setSuccessMsg(`Miembro del comité "${pendingFormData.name}" actualizado exitosamente.`);
-            setEditMode(false);
-        } else {
-            const newMember = {
-                id: members.length + 1,
-                ...pendingFormData,
-                status: 'Activo',
-                createdAt: new Date().toISOString().split('T')[0]
-            };
-            setMembers(prev => [...prev, newMember]);
-            setSuccessMsg(`Miembro del comité "${pendingFormData.name}" agregado exitosamente.`);
+        try {
+            if (editMode && selectedMember) {
+                // TODO: Implementar update en el service si es necesario
+                // Por ahora solo mostraremos éxito mock para edición si no está el endpoint listo
+                setSuccessMsg(`Funcionalidad de edición en desarrollo.`);
+            } else {
+                await CommitteeService.createMember(pendingFormData);
+                setSuccessMsg(`Miembro del comité "${pendingFormData.nombres} ${pendingFormData.apellidos}" registrado exitosamente. Se ha enviado un correo con sus credenciales.`);
+                fetchMembers();
+            }
+        } catch (error) {
+            console.error("Error saving member:", error);
+            setErrorMsg("Error al guardar el miembro. Verifique si el correo ya existe.");
         }
 
-        setFormData({ name: '', email: '', password: '', role: '' });
+        setFormData({ cedula: '', nombres: '', apellidos: '', email: '', password: '', role: '' });
         setSelectedMember(null);
         setOpenConfirmAlert(false);
         setPendingFormData(null);
@@ -136,10 +143,12 @@ function DirectorCommitteeManagement() {
 
     const handleEdit = (member) => {
         setFormData({
-            name: member.name,
+            cedula: member.cedula || '',
+            nombres: member.nombres || '',
+            apellidos: member.apellidos || '',
             email: member.email,
-            password: '********',
-            role: member.role
+            password: '',
+            role: member.role || 'Miembro'
         });
         setSelectedMember(member);
         setEditMode(true);
@@ -151,15 +160,21 @@ function DirectorCommitteeManagement() {
         setOpenDeleteAlert(true);
     };
 
-    const confirmDelete = () => {
-        setMembers(prev => prev.filter(m => m.id !== selectedMember.id));
-        setSuccessMsg(`Miembro "${selectedMember.name}" eliminado exitosamente.`);
+    const confirmDelete = async () => {
+        try {
+            await CommitteeService.deleteMember(selectedMember.id);
+            setSuccessMsg(`Miembro "${selectedMember.name}" eliminado exitosamente.`);
+            fetchMembers();
+        } catch (error) {
+            console.error("Error deleting member:", error);
+            setErrorMsg("No se pudo eliminar al miembro.");
+        }
         setOpenDeleteAlert(false);
         setSelectedMember(null);
     };
 
     const cancelEdit = () => {
-        setFormData({ name: '', email: '', password: '', role: '' });
+        setFormData({ cedula: '', name: '', email: '', password: '', role: '' });
         setSelectedMember(null);
         setEditMode(false);
     };
@@ -232,9 +247,27 @@ function DirectorCommitteeManagement() {
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
                                     <TextField
                                         fullWidth
-                                        label="Nombre Completo"
-                                        name="name"
-                                        value={formData.name}
+                                        label="Cédula"
+                                        name="cedula"
+                                        value={formData.cedula}
+                                        onChange={handleInputChange}
+                                        required
+                                        size="small"
+                                    />
+                                    <TextField
+                                        fullWidth
+                                        label="Nombres"
+                                        name="nombres"
+                                        value={formData.nombres}
+                                        onChange={handleInputChange}
+                                        required
+                                        size="small"
+                                    />
+                                    <TextField
+                                        fullWidth
+                                        label="Apellidos"
+                                        name="apellidos"
+                                        value={formData.apellidos}
                                         onChange={handleInputChange}
                                         required
                                         size="small"
@@ -376,7 +409,7 @@ function DirectorCommitteeManagement() {
                             {editMode ? '¿Actualizar información?' : '¿Registrar nuevo miembro?, se enviara un correo para confirmar el registro'}
                         </Typography>
                         <Box sx={{ bgcolor: '#f5f5f5', p: 2, borderRadius: 2, border: '1px solid #e0e0e0' }}>
-                            <Typography variant="body2"><strong>Nombre:</strong> {pendingFormData?.name}</Typography>
+                            <Typography variant="body2"><strong>Nombre:</strong> {pendingFormData?.nombres} {pendingFormData?.apellidos}</Typography>
                             <Typography variant="body2"><strong>Rol:</strong> {pendingFormData?.role}</Typography>
                         </Box>
                     </Box>

@@ -87,5 +87,50 @@ export const ProposalService = {
             console.error("ProposalService.create error:", error);
             throw error;
         }
+    },
+
+    /**
+     * Obtiene las propuestas de un estudiante específico (para Directores)
+     * @param {number|string} studentId
+     * @returns {Promise<Array>}
+     */
+    async getByStudent(studentId) {
+        try {
+            const response = await apiFetch(`/api/v1/propuestas/?estudianteId=${studentId}`);
+            if (!response.ok) return [];
+            return await response.json();
+        } catch (error) {
+            console.error("ProposalService.getByStudent error:", error);
+            return [];
+        }
+    },
+
+    /**
+     * Actualiza el estado de una propuesta (Director)
+     * @param {number|string} id 
+     * @param {string} status 
+     * @param {string} comment 
+     * @returns {Promise<Object>}
+     */
+    async updateStatus(id, status, comment) {
+        try {
+            // El endpoint de revisión es /revision (según propuesta.routes.ts)
+            const response = await apiFetch(`/api/v1/propuestas/${id}/revision`, {
+                method: 'PUT',
+                body: JSON.stringify({
+                    estadoRevision: status,
+                    comentariosRevision: comment
+                })
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.message || 'Error actualizando estado');
+            }
+            return await response.json();
+        } catch (error) {
+            console.error("ProposalService.updateStatus error:", error);
+            throw error;
+        }
     }
 };

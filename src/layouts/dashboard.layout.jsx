@@ -18,6 +18,7 @@ function DashboardLayout() {
         if (path.includes('/prerequisites')) return 'Prerrequisitos';
         if (path.includes('/students')) return 'Estudiantes';
         if (path.includes('/proposals')) return 'Propuestas';
+        if (path.includes('/tutors/assign')) return 'Asignar Tutor';
         if (path.includes('/tutors')) return 'Tutores';
         if (path.includes('/avances')) return 'Avances';
         if (path.includes('/defenses')) return 'Defensas';

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Card, CardContent, Grid } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import SearchIcon from '@mui/icons-material/Search';
@@ -13,51 +13,49 @@ import StudentCard from '../../components/Director/StudentCard.mui';
 function DirectorStudentList() {
     const navigate = useNavigate();
 
-    // Mock Data
-    const [students, setStudents] = useState([
-        {
-            id: 1,
-            cedula: '1150077467',
-            name: 'Abad Montesdeoca Nicole Belen',
-            sex: 'Femenino',
-            status: 'Activo',
-            campus: 'UIDE - Loja',
-            school: 'Ingenieria en Tecnologias de la Información - Loja',
-            malla: 'ITIL_MALLA 2019',
-            period: 'SEM LOJA OCT 2025 – FEB 2026',
-            email: 'niabadmo@uide.edu.ec',
-            location: 'LOJA, ECUADOR',
-            photoUrl: ""
-        },
-        {
-            id: 2,
-            cedula: '1900714773',
-            name: 'Acacho Yangari Daddy Abel',
-            sex: 'Masculino',
-            status: 'Activo',
-            campus: 'UIDE - Loja',
-            school: 'Ingenieria en Tecnologias de la Información - Loja',
-            malla: 'ITIL_MALLA 2019',
-            period: 'SEM LOJA OCT 2025 – FEB 2026',
-            email: 'daacachoya@uide.edu.ec',
-            location: 'ZAMORA, ECUADOR',
-            photoUrl: ""
-        },
-        {
-            id: 3,
-            cedula: '1050195104',
-            name: 'Ajila Armijos Cristian Xavier',
-            sex: 'Masculino',
-            status: 'Activo',
-            campus: 'UIDE - Loja',
-            school: 'Sistemas de Información Loja',
-            malla: 'SINL_MALLA 2023',
-            period: 'SEM LOJA OCT 2025 – FEB 2026',
-            email: 'crajilaar@uide.edu.ec',
-            location: 'LOJA, ECUADOR',
-            photoUrl: ""
+    const [students, setStudents] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        loadStudents();
+    }, []);
+
+    const loadStudents = async () => {
+        try {
+            // Asumimos que hay un servicio para obtener estudiantes
+            // Si no existe, debemos crearlo o usar uno existente
+            // Revisando servicios... UserService.getAll() podría servir si filtra por rol
+            // O crear un endpoint específico.
+            // Por ahora, intentemos usar la API de usuarios con filtro
+            // Importar UserService al inicio del archivo
+            const response = await fetch('/api/v1/usuarios?rol=ESTUDIANTE', {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                // Mapear datos al formato de la tarjeta
+                const mapped = data.map(u => ({
+                    id: u.id,
+                    cedula: u.cedula,
+                    name: `${u.nombres} ${u.apellidos}`,
+                    sex: 'No especificado', // No está en modelo Usuario simple
+                    status: u.activo ? 'Activo' : 'Inactivo',
+                    campus: 'UIDE - Loja', // Hardcoded o de perfil
+                    school: u.estudiantePerfil?.escuela || 'Sin Carrera',
+                    malla: u.estudiantePerfil?.malla || 'Sin Malla',
+                    period: 'Periodo Actual',
+                    email: u.email,
+                    location: 'Loja, Ecuador',
+                    photoUrl: ""
+                }));
+                setStudents(mapped);
+            }
+        } catch (error) {
+            console.error("Error loading students:", error);
+        } finally {
+            setLoading(false);
         }
-    ]);
+    };
 
     const [searchTerm, setSearchTerm] = useState("");
 

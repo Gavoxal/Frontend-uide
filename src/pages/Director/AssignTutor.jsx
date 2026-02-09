@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Box,
     Chip,
@@ -14,7 +14,8 @@ import {
     TableHead,
     TableRow,
     Paper,
-    Typography
+    Typography,
+    CircularProgress
 } from '@mui/material';
 
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
@@ -31,60 +32,65 @@ import NotificationMui from '../../components/notification.mui.component';
 import StatsCard from '../../components/common/StatsCard';
 import InputMui from '../../components/input.mui.component';
 
+import { ProposalService } from '../../services/proposal.service';
+import { TutoringService } from '../../services/tutoring.service';
+
 function DirectorAssignTutor() {
 
     const [openAlert, setOpenAlert] = useState(false);
     const [selectedProject, setSelectedProject] = useState(null);
     const [selectedTutor, setSelectedTutor] = useState('');
     const [successMsg, setSuccessMsg] = useState('');
+    const [errorMsg, setErrorMsg] = useState('');
     const [filterStatus, setFilterStatus] = useState("all");
     const [searchTerm, setSearchTerm] = useState("");
+    const [loading, setLoading] = useState(true);
 
-    const [projects, setProjects] = useState([
-        {
-            id: 101,
-            student: 'Ana Torres',
-            cedula: '1105001234',
-            email: 'ana.torres@uide.edu.ec',
-            topic: 'Implementación de IA para optimización de tráfico urbano',
-            area: 'Ciencia de Datos',
-            status: 'Aprobado',
-            tutor: null,
-            career: 'Ingeniería de Software',
-            malla: 'Malla 2020'
-        },
-        {
-            id: 102,
-            student: 'Luis Gomez',
-            cedula: '1105005678',
-            email: 'luis.gomez@uide.edu.ec',
-            topic: 'Sistema de gestión documental con Blockchain y seguridad distribuida avanzada empresarial',
-            area: 'Transformación Digital',
-            status: 'Tutor Asignado',
-            tutor: 'Ing. Carlos Mendez, PhD',
-            career: 'Tecnologías de la Información',
-            malla: 'Malla 2019'
-        },
-        {
-            id: 103,
-            student: 'Pedro Perez',
-            cedula: '1105009012',
-            email: 'pedro.perez@uide.edu.ec',
-            topic: 'Aplicación Móvil para Turismo',
-            area: 'Desarrollo Software',
-            status: 'Aprobado',
-            tutor: null,
-            career: 'Ingeniería de Software',
-            malla: 'Malla 2020'
+    const [projects, setProjects] = useState([]);
+    const [tutors, setTutors] = useState([]);
+
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            // Cargar propuestas (solo aprobadas o con tutor)
+            const proposalsData = await ProposalService.getAll();
+            const mappedProjects = proposalsData
+                .filter(p => p.estado === 'APROBADA' || p.estado === 'APROBADA_CON_COMENTARIOS' || p.trabajosTitulacion?.length > 0)
+                .map(p => {
+                    const activeAssigment = p.trabajosTitulacion?.find(a => a.estadoAsignacion === 'ACTIVO');
+                    return {
+                        id: p.id,
+                        student: `${p.estudiante?.nombres} ${p.estudiante?.apellidos}`,
+                        cedula: p.estudiante?.cedula || 'N/A',
+                        email: p.estudiante?.correoInstitucional || 'N/A',
+                        topic: p.titulo,
+                        area: p.areaConocimiento?.nombre || 'General',
+                        status: activeAssigment ? 'Tutor Asignado' : 'Aprobado',
+                        tutor: activeAssigment ? `${activeAssigment.tutor?.nombres} ${activeAssigment.tutor?.apellidos}` : null,
+                        career: p.estudiante?.estudiantePerfil?.escuela || 'Ingeniería',
+                        malla: p.estudiante?.estudiantePerfil?.malla || 'N/A'
+                    };
+                });
+            setProjects(mappedProjects);
+
+            // Cargar tutores
+            const tutorsData = await TutoringService.getTutorsStats();
+            setTutors(tutorsData.map(t => ({
+                id: t.id,
+                name: `${t.nombres} ${t.apellidos}`
+            })));
+
+        } catch (error) {
+            console.error("Error loading data:", error);
+            setErrorMsg("Error al cargar los datos de asignación.");
+        } finally {
+            setLoading(false);
         }
-    ]);
+    };
 
-    // Mock Tutors List
-    const tutors = [
-        { id: 1, name: 'Ing. Carlos Mendez, PhD' },
-        { id: 2, name: 'Dra. Maria Elena Silva' },
-        { id: 3, name: 'Msc. Jorge Ramiro' }
-    ];
+    useEffect(() => {
+        fetchData();
+    }, []);
 
     const handleAssignClick = (project) => {
         setSelectedProject(project);
@@ -92,22 +98,28 @@ function DirectorAssignTutor() {
         setOpenAlert(true);
     };
 
-    const confirmAssignment = () => {
-        if (!selectedTutor) return;
+    const confirmAssignment = async () => {
+        if (!selectedTutor || !selectedProject) return;
 
-        const tutorName = tutors.find(t => t.id === selectedTutor)?.name;
+        try {
+            await TutoringService.assignTutor({
+                propuestaId: selectedProject.id,
+                tutorId: selectedTutor,
+                observaciones: "Asignación inicial de tutor académico."
+            });
 
-        setProjects(prev =>
-            prev.map(p =>
-                p.id === selectedProject.id
-                    ? { ...p, tutor: tutorName, status: 'Tutor Asignado' }
-                    : p
-            )
-        );
+            const tutorName = tutors.find(t => t.id === selectedTutor)?.name;
+            setSuccessMsg(`Se ha asignado el tutor ${tutorName} al estudiante ${selectedProject.student}.`);
 
-        setSuccessMsg(`Se ha asignado el tutor ${tutorName} al estudiante ${selectedProject.student}.`);
-        setOpenAlert(false);
-        setSelectedProject(null);
+            // Recargar datos para reflejar el cambio
+            fetchData();
+
+            setOpenAlert(false);
+            setSelectedProject(null);
+        } catch (error) {
+            console.error("Error assigning tutor:", error);
+            setErrorMsg(error.message || "Error al realizar la asignación.");
+        }
     };
 
     const stats = {
@@ -172,6 +184,14 @@ function DirectorAssignTutor() {
                 </Box>
             )}
 
+            {errorMsg && (
+                <Box sx={{ mb: 3 }}>
+                    <NotificationMui severity="error" onClose={() => setErrorMsg('')}>
+                        {errorMsg}
+                    </NotificationMui>
+                </Box>
+            )}
+
             {/* BARRA DE BÚSQUEDA */}
             <SearchBar
                 value={searchTerm}
@@ -195,7 +215,13 @@ function DirectorAssignTutor() {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {filteredProjects.length > 0 ? (
+                        {loading ? (
+                            <TableRow>
+                                <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                                    <CircularProgress sx={{ color: '#667eea' }} />
+                                </TableCell>
+                            </TableRow>
+                        ) : filteredProjects.length > 0 ? (
                             filteredProjects.map((project) => (
                                 <TableRow
                                     key={project.id}
@@ -274,15 +300,14 @@ function DirectorAssignTutor() {
                                     </TableCell>
 
                                     <TableCell align="center">
-                                        {!project.tutor && (
-                                            <ButtonMui
-                                                name="Asignar"
-                                                onClick={() => handleAssignClick(project)}
-                                                startIcon={<PersonAddIcon />}
-                                                backgroundColor="#ed6c02"
-                                                size="small"
-                                            />
-                                        )}
+                                        <ButtonMui
+                                            name={project.tutor ? "Asignado" : "Asignar"}
+                                            onClick={() => handleAssignClick(project)}
+                                            startIcon={project.tutor ? <CheckCircleIcon /> : <PersonAddIcon />}
+                                            backgroundColor={project.tutor ? "#2e7d32" : "#ed6c02"}
+                                            size="small"
+                                            disabled={!!project.tutor}
+                                        />
                                     </TableCell>
                                 </TableRow>
                             ))
