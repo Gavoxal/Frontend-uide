@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Typography, Grid, Card, CardContent, Divider, Chip, Avatar, Tooltip, Tabs, Tab } from '@mui/material';
 import SearchBar from '../../components/SearchBar.component';
 import TextMui from '../../components/text.mui.component';
@@ -7,6 +7,7 @@ import StatsCard from '../../components/common/StatsCard';
 import InputMui from '../../components/input.mui.component';
 import AlertMui from '../../components/alert.mui.component';
 import NotificationMui from '../../components/notification.mui.component';
+import { DefenseService } from '../../services/defense.service';
 
 // Icons
 import SchoolIcon from '@mui/icons-material/School';
@@ -25,91 +26,72 @@ function ThesisDefense() {
     const [tabValue, setTabValue] = useState(0); // 0: Privada, 1: Pública
     const [openConfirmAlert, setOpenConfirmAlert] = useState(false);
     const [pendingAssignmentData, setPendingAssignmentData] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [studentsReady, setStudentsReady] = useState([]);
+    const [searchTerm, setSearchTerm] = useState("");
+
+    const fetchProposals = async () => {
+        setLoading(true);
+        try {
+            const data = await DefenseService.getProposalsForDefense();
+            // Filtrar solo las propuestas aprobadas o aprobadas con comentarios
+            const filteredProposals = data.filter(p =>
+                p.estado === 'APROBADA' || p.estado === 'APROBADA_CON_COMENTARIOS'
+            ).map(p => ({
+                id: p.id,
+                name: `${p.estudiante.nombres} ${p.estudiante.apellidos}`,
+                email: p.estudiante.correoInstitucional,
+                topic: p.titulo,
+                director: p.trabajosTitulacion?.[0]?.tutor ? `${p.trabajosTitulacion[0].tutor.nombres} ${p.trabajosTitulacion[0].tutor.apellidos}` : 'No asignado',
+                career: p.carrera || p.estudiante.estudiantePerfil?.escuela || 'N/A',
+                campus: p.estudiante.estudiantePerfil?.sede || 'UIDE',
+                documents: {
+                    programmerManual: p.entregablesFinales?.some(e => e.tipo === 'TESIS') || false,
+                    userManual: p.entregablesFinales?.some(e => e.tipo === 'MANUAL_USUARIO') || false,
+                    scientificArticle: p.entregablesFinales?.some(e => e.tipo === 'ARTICULO') || false
+                },
+                privateDefense: {
+                    status: (p.defensaPrivada?.estado === 'PROGRAMADA' || p.defensaPrivada?.estado === 'APROBADA') ? 'assigned' : (p.defensaPrivada?.estado?.toLowerCase() || 'pending'),
+                    date: p.defensaPrivada?.fechaDefensa ? p.defensaPrivada.fechaDefensa.split('T')[0] : null,
+                    time: p.defensaPrivada?.horaDefensa ? new Date(p.defensaPrivada.horaDefensa).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null,
+                    classroom: p.defensaPrivada?.aula || null,
+                    tribunal: p.defensaPrivada?.participantes || []
+                },
+                publicDefense: {
+                    status: (p.defensaPublica?.estado === 'PROGRAMADA' || p.defensaPublica?.estado === 'APROBADA') ? 'assigned' : (p.defensaPublica?.estado?.toLowerCase() || (p.defensaPrivada?.estado === 'APROBADA' ? 'pending' : 'locked')),
+                    date: p.defensaPublica?.fechaDefensa ? p.defensaPublica.fechaDefensa.split('T')[0] : null,
+                    time: p.defensaPublica?.horaDefensa ? new Date(p.defensaPublica.horaDefensa).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null,
+                    classroom: p.defensaPublica?.aula || null,
+                    tribunal: p.defensaPublica?.participantes || []
+                }
+            }));
+            setStudentsReady(filteredProposals);
+        } catch (error) {
+            console.error("Error fetching proposals for defense:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchProposals();
+    }, []);
 
     const handleTabChange = (event, newValue) => {
         setTabValue(newValue);
     };
 
-    // Mock Data Completo con lógica Multi-Etapa
-    const [studentsReady, setStudentsReady] = useState([
-        {
-            id: 1,
-            name: 'Abad Montesdeoca Nicole Belen',
-            email: 'niabadmo@uide.edu.ec',
-            topic: 'Implementación de IA para optimización de tráfico urbano en Loja',
-            director: 'Ing. Wilson',
-            career: 'Ing. Tecnologías de la Información',
-            campus: 'UIDE - Loja',
-            documents: { programmerManual: true, userManual: true, scientificArticle: true },
-            privateDefense: {
-                status: 'pending', // pending, assigned, approved
-                date: null,
-                time: null,
-                classroom: null,
-                tribunal: []
-            },
-            publicDefense: {
-                status: 'locked', // locked, pending, assigned, approved
-                date: null,
-                time: null,
-                classroom: null,
-                tribunal: []
-            }
-        },
-        {
-            id: 2,
-            name: 'Acacho Yangari Daddy Abel',
-            email: 'daacachoya@uide.edu.ec',
-            topic: 'Sistema de gestión documental con Blockchain para la UIDE',
-            director: 'Ing. Lorena',
-            career: 'Ing. Tecnologías de la Información',
-            campus: 'UIDE - Loja',
-            documents: { programmerManual: true, userManual: false, scientificArticle: false },
-            privateDefense: {
-                status: 'pending',
-                date: null,
-                time: null,
-                classroom: null,
-                tribunal: []
-            },
-            publicDefense: {
-                status: 'locked',
-                date: null,
-                time: null,
-                classroom: null,
-                tribunal: []
-            }
-        },
-        {
-            id: 3,
-            name: 'Ajila Armijos Cristian Xavier',
-            email: 'crajilaar@uide.edu.ec',
-            topic: 'Aplicación móvil para turismo comunitario en Saraguro',
-            director: 'Ing. Gabriel',
-            career: 'Sistemas de Información',
-            campus: 'UIDE - Loja',
-            documents: { programmerManual: true, userManual: true, scientificArticle: true },
-            privateDefense: {
-                status: 'approved', // Ya aprobó la privada
-                date: '2025-01-15',
-                time: '10:00',
-                classroom: 'B-202',
-                tribunal: ['Ing. A', 'Ing. B']
-            },
-            publicDefense: {
-                status: 'pending', // Ahora espera pública
-                date: null,
-                time: null,
-                classroom: null,
-                tribunal: []
+    const handleCardClick = (student) => {
+        // Validación de documentos para defensa privada
+        if (tabValue === 0) {
+            const allDocsReady = student.documents.programmerManual && student.documents.userManual && student.documents.scientificArticle;
+            const isAssigned = student.privateDefense.status === 'assigned';
+
+            if (!allDocsReady && !isAssigned) {
+                setErrorMsg("El estudiante debe subir todos los documentos (Manual de Programador, Manual de Usuario, Artículo Científico) antes de asignar la defensa.");
+                return;
             }
         }
-    ]);
-
-    const [searchTerm, setSearchTerm] = useState("");
-
-    const handleCardClick = (student) => {
-        // Bloquear click si no está habilitado para la pestaña actual (aunque el filtrado ya maneja esto)
         setSelectedStudent(student);
     };
 
@@ -123,29 +105,43 @@ function ThesisDefense() {
         setOpenConfirmAlert(true);
     };
 
-    // Paso 2: Confirmar y Guardar
-    const confirmSaveAssignment = () => {
-        if (!selectedStudent || !pendingAssignmentData) return;
+    // Paso 2: Confirmar y Guardar Real
+    const confirmSaveAssignment = async () => {
+        const studentToSave = selectedStudent || pendingAssignmentData?.student;
+        if (!studentToSave || !pendingAssignmentData) return;
 
-        const updatedStudents = studentsReady.map(s => {
-            if (s.id === selectedStudent.id) {
-                const stageKey = tabValue === 0 ? 'privateDefense' : 'publicDefense';
-                return {
-                    ...s,
-                    [stageKey]: {
-                        ...s[stageKey],
-                        ...pendingAssignmentData,
-                        status: 'assigned'
-                    }
-                };
-            }
-            return s;
-        });
+        setLoading(true);
+        try {
+            const isPrivate = tabValue === 0;
+            const scheduleFunc = isPrivate ? DefenseService.schedulePrivate : DefenseService.schedulePublic;
 
-        setStudentsReady(updatedStudents);
-        setOpenConfirmAlert(false);
-        setSelectedStudent(null);
-        setPendingAssignmentData(null);
+            // 1. Programar la defensa
+            const defenseRes = await scheduleFunc(studentToSave.id, {
+                fechaDefensa: pendingAssignmentData.date,
+                horaDefensa: pendingAssignmentData.time,
+                aula: pendingAssignmentData.classroom
+            });
+
+            // 2. Asignar participantes (Tribunal)
+            const participantes = [
+                { usuarioId: pendingAssignmentData.president, tipoParticipante: 'INTERNO', rol: 'PRESIDENTE' },
+                { usuarioId: pendingAssignmentData.vocal1, tipoParticipante: 'INTERNO', rol: 'JURADO_1' },
+                { usuarioId: pendingAssignmentData.vocal2, tipoParticipante: 'INTERNO', rol: 'JURADO_2' }
+            ].filter(p => p.usuarioId); // Solo si se seleccionó alguien
+
+            await DefenseService.assignParticipants(defenseRes.id, isPrivate ? 'privada' : 'publica', participantes);
+
+            setSuccessMsg(`Defensa ${isPrivate ? 'Privada' : 'Pública'} programada y tribunal asignado exitosamente.`);
+            fetchProposals();
+        } catch (error) {
+            console.error("Error saving defense assignment:", error);
+            setErrorMsg("Error al guardar la asignación. Verifique los datos.");
+        } finally {
+            setLoading(false);
+            setOpenConfirmAlert(false);
+            setSelectedStudent(null);
+            setPendingAssignmentData(null);
+        }
     };
 
     // Helper: Get Initials
@@ -379,6 +375,7 @@ function ThesisDefense() {
             {selectedStudent && (
                 <TribunalAssignment
                     student={selectedStudent}
+                    type={tabValue === 0 ? 'private' : 'public'}
                     onClose={handleCloseAssignment}
                     onSave={handleAssignmentRequest} // Cambiado para interceptar y mostrar alerta
                 />
@@ -397,12 +394,12 @@ function ThesisDefense() {
 
                         <Box sx={{ p: 2, bgcolor: '#f9f9f9', borderRadius: 2, mb: 2, border: '1px solid #eee' }}>
                             <TextMui value="Detalles de la Asignación:" variant="subtitle2" sx={{ mb: 1, color: 'primary.main' }} />
-                            <TextMui value={`Estudiante: ${selectedStudent?.name}`} variant="body2" sx={{ fontWeight: 'bold' }} />
-                            <TextMui value={`Carrera: ${selectedStudent?.career}`} variant="caption" display="block" />
+                            <TextMui value={`Estudiante: ${selectedStudent?.name || pendingAssignmentData?.student?.name}`} variant="body2" sx={{ fontWeight: 'bold' }} />
+                            <TextMui value={`Carrera: ${selectedStudent?.career || pendingAssignmentData?.student?.career}`} variant="caption" display="block" />
                             <Divider sx={{ my: 1 }} />
                             <TextMui value={`Fecha: ${pendingAssignmentData?.date} | Hora: ${pendingAssignmentData?.time}`} variant="body2" />
                             <TextMui value={`Aula: ${pendingAssignmentData?.classroom}`} variant="body2" />
-                            <TextMui value={`Tribunal Asignado: ${pendingAssignmentData?.tribunal?.length || 0} docentes`} variant="caption" />
+                            <TextMui value={`Tribunal Asignado: ${[pendingAssignmentData?.president, pendingAssignmentData?.vocal1, pendingAssignmentData?.vocal2].filter(Boolean).length} docentes`} variant="caption" />
                         </Box>
 
                         <TextMui value="¿Desea proceder con la asignación y el envío de notificaciones?" variant="body2" />

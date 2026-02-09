@@ -7,6 +7,8 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import ButtonMui from '../button.mui.component';
 
+import { CommitteeService } from '../../services/committee.service';
+
 function TribunalAssignment({ student, onClose, onSave }) {
     const [assignment, setAssignment] = useState({
         president: '',
@@ -16,26 +18,47 @@ function TribunalAssignment({ student, onClose, onSave }) {
         time: '',
         classroom: ''
     });
+    const [members, setMembers] = useState([]);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        const fetchMembers = async () => {
+            setLoading(true);
+            try {
+                const data = await CommitteeService.getMembers();
+                setMembers(data);
+            } catch (error) {
+                console.error("Error fetching members for tribunal:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchMembers();
+    }, []);
 
     useEffect(() => {
         if (student) {
+            const defenseData = type === 'public' ? student.publicDefense : student.privateDefense;
             setAssignment({
-                president: student.president || '',
-                vocal1: student.vocal1 || '',
-                vocal2: student.vocal2 || '',
-                date: student.date || '',
-                time: student.time || '',
-                classroom: student.classroom || ''
+                president: defenseData?.tribunal?.find(p => p.rol === 'PRESIDENTE')?.usuarioId || '',
+                vocal1: defenseData?.tribunal?.find(p => p.rol === 'JURADO_1')?.usuarioId || '',
+                vocal2: defenseData?.tribunal?.find(p => p.rol === 'JURADO_2')?.usuarioId || '',
+                date: defenseData?.date || '',
+                time: defenseData?.time || '',
+                classroom: defenseData?.classroom || ''
             });
         }
-    }, [student]);
+    }, [student, type]);
 
     const handleChange = (e) => {
         setAssignment({ ...assignment, [e.target.name]: e.target.value });
     };
 
     const handleSaveClick = () => {
-        onSave(assignment);
+        onSave({
+            ...assignment,
+            student: student // Include student data here
+        });
     };
 
     if (!student) return null;
@@ -87,9 +110,11 @@ function TribunalAssignment({ student, onClose, onSave }) {
                                 onChange={handleChange}
                                 sx={{ minWidth: '220px' }}
                             >
-                                <MenuItem value="Ing. Lorena">Ing. Lorena</MenuItem>
-                                <MenuItem value="Ing. Wilson">Ing. Wilson</MenuItem>
-                                <MenuItem value="Ing. Charly">Ing. Charly</MenuItem>
+                                {members.map(m => (
+                                    <MenuItem key={m.id} value={m.id}>
+                                        {m.nombres} {m.apellidos} ({m.rol === 'TUTOR' ? 'Tutor' : (m.designacion || 'Comité')})
+                                    </MenuItem>
+                                ))}
                             </Select>
                         </FormControl>
                     </Grid>
@@ -105,8 +130,11 @@ function TribunalAssignment({ student, onClose, onSave }) {
                                 onChange={handleChange}
                                 sx={{ minWidth: '150px' }}
                             >
-                                <MenuItem value="Ing. Gabriel">Ing. Gabriel</MenuItem>
-                                <MenuItem value="Ing. Eduardo">Ing. Eduardo</MenuItem>
+                                {members.map(m => (
+                                    <MenuItem key={m.id} value={m.id}>
+                                        {m.nombres} {m.apellidos} ({m.rol === 'TUTOR' ? 'Tutor' : (m.designacion || 'Comité')})
+                                    </MenuItem>
+                                ))}
                             </Select>
                         </FormControl>
                     </Grid>
@@ -122,8 +150,11 @@ function TribunalAssignment({ student, onClose, onSave }) {
                                 onChange={handleChange}
                                 sx={{ minWidth: '150px' }}
                             >
-                                <MenuItem value="Ing. Fernando">Ing. Fernando</MenuItem>
-                                <MenuItem value="Ing. Dario">Ing. Dario</MenuItem>
+                                {members.map(m => (
+                                    <MenuItem key={m.id} value={m.id}>
+                                        {m.nombres} {m.apellidos} ({m.rol === 'TUTOR' ? 'Tutor' : (m.designacion || 'Comité')})
+                                    </MenuItem>
+                                ))}
                             </Select>
                         </FormControl>
                     </Grid>

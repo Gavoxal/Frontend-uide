@@ -26,6 +26,8 @@ import SchoolIcon from "@mui/icons-material/School";
 import GavelIcon from "@mui/icons-material/Gavel";
 import RateReviewIcon from "@mui/icons-material/RateReview";
 import EventNoteIcon from "@mui/icons-material/EventNote";
+import GroupsIcon from "@mui/icons-material/Groups";
+import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
 import { useState, useEffect } from "react";
 import { getDataUser } from "../storage/user.model.jsx";
 import { useUserProgress } from "../contexts/UserProgressContext";
@@ -61,6 +63,8 @@ const MENU_BY_ROLE = {
         { icon: ChecklistIcon, label: "Prerrequisitos", path: "/director/prerequisites" },
         { icon: AssignmentIcon, label: "Propuestas", path: "/director/proposals" },
         { icon: SchoolIcon, label: "Tutores", path: "/director/tutors" },
+        { icon: AssignmentIndIcon, label: "Asignar Tutor", path: "/director/tutors/assign" },
+        { icon: GroupsIcon, label: "Comité", path: "/director/committee" },
         { icon: GavelIcon, label: "Defensas", path: "/director/defenses" },
     ],
     student: [

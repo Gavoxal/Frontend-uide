@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     Box,
     Card,
@@ -13,67 +13,77 @@ import StatsCard from "../../components/common/StatsCard";
 import TableRequisitosMui from "../../components/Director/Table.requisitos.mui";
 import AlertMui from "../../components/alert.mui.component";
 import TooltipMui from '../../components/tooltip.mui.component';
+import { PrerequisiteService } from "../../services/prerequisites.service";
 import SearchBar from '../../components/SearchBar.component';
 import TextMui from "../../components/text.mui.component";
 import InputMui from "../../components/input.mui.component";
 
 function DirectorPrerequisites() {
-    // Datos de ejemplo - en producción vendrían de una API
-    const [students, setStudents] = useState([
-        {
-            id: 2,
-            name: "Gabriel Serrango",
-            cedula: "0987654321",
-            malla: "ITIL_MALLA 2019",
-            career: "Tecnologías de la Información",
-            english: { completed: true, verified: false },
-            internship: { completed: true, verified: false },
-            community: { completed: true, verified: true },
-            accessGranted: false,
-        },
-        {
-            id: 3,
-            name: "Ana García",
-            cedula: "5566778899",
-            malla: "ITIL_MALLA 2019",
-            career: "Tecnologías de la Información",
-            english: { completed: true, verified: true },
-            internship: { completed: true, verified: true },
-            community: { completed: true, verified: true },
-            accessGranted: true,
-        },
-        {
-            id: 4,
-            name: "Eduardo Pardo",
-            cedula: "1234567890",
-            malla: "SINL_MALLA 2023",
-            career: "Sistemas de Información",
-            english: { completed: true, verified: true },
-            internship: { completed: true, verified: true },
-            community: { completed: true, verified: true },
-            accessGranted: false,
-        },
-    ]);
+    // Estado para datos reales
+    const [students, setStudents] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     const [searchTerm, setSearchTerm] = useState("");
     const [filterStatus, setFilterStatus] = useState("all");
     const [openDialog, setOpenDialog] = useState(false);
     const [selectedStudent, setSelectedStudent] = useState(null);
 
-    const handleVerify = (studentId, prerequisite) => {
+    // Cargar datos al montar
+    useEffect(() => {
+        loadDashboard();
+    }, []);
+
+    const loadDashboard = async () => {
+        setLoading(true);
+        try {
+            const data = await PrerequisiteService.getDashboard();
+            setStudents(data);
+        } catch (error) {
+            console.error("Error loading dashboard:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleVerify = async (studentId, prerequisiteKey) => {
+        // Encontrar el estudiante y el requisito
+        const student = students.find(s => s.id === studentId);
+        if (!student) return;
+
+        const prereq = student[prerequisiteKey];
+        // Solo permitir verificar si existe un registro (studentPrereqId)
+        if (!prereq || !prereq.studentPrereqId) {
+            console.warn("No hay registro para verificar");
+            return;
+        }
+
+        const newStatus = !prereq.verified;
+
+        // Actualización optimista en UI
         setStudents((prev) =>
-            prev.map((student) =>
-                student.id === studentId
+            prev.map((s) =>
+                s.id === studentId
                     ? {
-                        ...student,
-                        [prerequisite]: {
-                            ...student[prerequisite],
-                            verified: !student[prerequisite].verified,
+                        ...s,
+                        [prerequisiteKey]: {
+                            ...s[prerequisiteKey],
+                            verified: newStatus,
                         },
                     }
-                    : student
+                    : s
             )
         );
+
+        try {
+            // Llamada al backend
+            await PrerequisiteService.validate(prereq.studentPrereqId, newStatus);
+            // Opcional: Recargar todo para asegurar consistencia
+            // loadDashboard(); 
+        } catch (error) {
+            console.error("Error validating prerequisite:", error);
+            // Revertir cambio si falla (opcional, por simplicidad dejamos esto pendiente)
+            loadDashboard(); // Recargar para volver al estado real
+        }
     };
 
     const handleGrantAccessClick = (student) => {
@@ -81,13 +91,22 @@ function DirectorPrerequisites() {
         setOpenDialog(true);
     };
 
-    const confirmGrantAccess = () => {
+    const confirmGrantAccess = async () => {
         if (selectedStudent) {
-            setStudents((prev) =>
-                prev.map((s) =>
-                    s.id === selectedStudent.id ? { ...s, accessGranted: true } : s
-                )
-            );
+            try {
+                await PrerequisiteService.grantAccess(selectedStudent.id);
+                // Actualizar UI
+                setStudents((prev) =>
+                    prev.map((s) =>
+                        s.id === selectedStudent.id ? { ...s, accessGranted: true } : s
+                    )
+                );
+                // Podrías poner un toast/alert aquí de éxito
+                alert("Acceso habilitado correctamente para " + selectedStudent.name);
+            } catch (error) {
+                console.error("Error habilitando acceso:", error);
+                alert("Error: " + error.message);
+            }
         }
         handleCloseDialog();
     };
@@ -100,9 +119,13 @@ function DirectorPrerequisites() {
     const filteredStudents = students.filter((student) => {
         const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             student.cedula.includes(searchTerm);
-        const allVerified = student.english.verified &&
-            student.internship.verified &&
-            student.community.verified;
+
+        // Verificar existencia de objetos antes de acceder a propiedades
+        const englishVerified = student.english?.verified || false;
+        const internshipVerified = student.internship?.verified || false;
+        const communityVerified = student.community?.verified || false;
+
+        const allVerified = englishVerified && internshipVerified && communityVerified;
 
         if (filterStatus === "pending") return matchesSearch && !allVerified;
         if (filterStatus === "approved") return matchesSearch && allVerified;
@@ -111,10 +134,10 @@ function DirectorPrerequisites() {
 
     const stats = {
         pending: students.filter(
-            (s) => !s.english.verified || !s.internship.verified || !s.community.verified
+            (s) => !(s.english?.verified && s.internship?.verified && s.community?.verified)
         ).length,
         approved: students.filter(
-            (s) => s.english.verified && s.internship.verified && s.community.verified
+            (s) => s.english?.verified && s.internship?.verified && s.community?.verified
         ).length,
     };
 

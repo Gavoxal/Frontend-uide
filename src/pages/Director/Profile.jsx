@@ -13,6 +13,7 @@ import {
 import ProfileHeader from "../../components/Profile/ProfileHeader";
 import InfoCard from "../../components/Profile/InfoCard";
 import ChangePasswordDialog from "../../components/Profile/ChangePasswordDialog";
+import { AuthService } from "../../services/auth.service";
 
 // Director Profile Component standardized with Student Profile
 function DirectorProfile() {
@@ -46,10 +47,14 @@ function DirectorProfile() {
 
     // Handlers
     const handleChangePassword = () => setOpenPasswordDialog(true);
-    const handlePasswordSubmit = (passwordData) => {
-        console.log("Cambiar contraseña:", passwordData);
-        // TODO: Implement API call to change password
-        alert("Contraseña cambiada exitosamente");
+    const handlePasswordSubmit = async (passwordData) => {
+        try {
+            await AuthService.changePassword(passwordData.currentPassword, passwordData.newPassword);
+            alert("Contraseña cambiada exitosamente");
+        } catch (error) {
+            console.error("Error cambiando contraseña:", error);
+            alert(error.message || "Error al cambiar la contraseña");
+        }
     };
     const handleEditPersonalInfo = () => console.log("Editar información personal");
 

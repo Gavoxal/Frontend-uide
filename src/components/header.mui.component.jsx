@@ -1,6 +1,6 @@
 import { AppBar, Toolbar, IconButton, Typography, Box, Badge } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import NotificationsIcon from '@mui/icons-material/Notifications';
+import NotificationBell from './common/NotificationBell';
 
 function HeaderMui({
   title = "Tablero",
@@ -54,11 +54,7 @@ function HeaderMui({
 
         {/* Notificaciones */}
         {showNotifications && (
-          <IconButton>
-            <Badge badgeContent={3} color="error">
-              <NotificationsIcon />
-            </Badge>
-          </IconButton>
+          <NotificationBell />
         )}
       </Toolbar>
     </AppBar>

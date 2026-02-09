@@ -142,5 +142,36 @@ export const AuthService = {
         localStorage.removeItem('token');
         localStorage.removeItem('userEmail');
         // Limpieza adicional si es necesaria
+    },
+
+    /**
+     * Cambia la contraseña del usuario actual.
+     * @param {string} currentPassword - Contraseña actual
+     * @param {string} newPassword - Nueva contraseña
+     * @returns {Promise<Object>} Respuesta del servidor
+     */
+    async changePassword(currentPassword, newPassword) {
+        const token = localStorage.getItem('token');
+        if (!token) throw new Error('No hay sesión activa');
+
+        const response = await fetch('/api/v1/usuarios/cambiar-clave', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                claveActual: currentPassword,
+                nuevaClave: newPassword
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Error al cambiar la contraseña');
+        }
+
+        return data;
     }
 };
