@@ -28,7 +28,8 @@ export const NotificationService = {
     markAsRead: async (id) => {
         try {
             const response = await apiFetch(`/api/v1/notificaciones/${id}/read`, {
-                method: 'PATCH'
+                method: 'PATCH',
+                body: JSON.stringify({})
             });
             if (!response.ok) throw new Error('Error marking as read');
             return await response.json();
@@ -41,7 +42,8 @@ export const NotificationService = {
     markAllAsRead: async () => {
         try {
             const response = await apiFetch('/api/v1/notificaciones/mark-all-read', {
-                method: 'PATCH'
+                method: 'PATCH',
+                body: JSON.stringify({})
             });
             if (!response.ok) throw new Error('Error marking all as read');
             return await response.json();

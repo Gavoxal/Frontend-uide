@@ -179,7 +179,7 @@ function DetailsModal({
                                         onClick={() => {
                                             const fileUrl = progressData.studentSubmission.fileUrl;
                                             if (fileUrl) {
-                                                const url = fileUrl.startsWith('http') ? fileUrl : `/api/v1/actividades/file/${fileUrl.split('/').pop()}`;
+                                                const url = fileUrl.startsWith('http') ? fileUrl : `/api/v1/actividades/evidencias/file/${fileUrl.split('/').pop()}`;
                                                 downloadFile(url, progressData.studentSubmission.uploadedFile);
                                             }
                                         }}

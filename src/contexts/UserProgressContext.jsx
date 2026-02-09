@@ -91,10 +91,10 @@ export function UserProgressProvider({ children }) {
             return false;
         }
 
-        // Secciones que requieren las 15 semanas completadas
-        const requires15Weeks = ['defensa'];
-        if (requires15Weeks.includes(sectionName.toLowerCase())) {
-            return progressState.hasProjectAccess;
+        // Secciones que requieren las 16 semanas completadas
+        const requires16Weeks = ['defensa'];
+        if (requires16Weeks.includes(sectionName.toLowerCase())) {
+            return progressState.completedWeeks >= 16;
         }
 
         // Para el resto de secciones (propuestas, avances), solo necesita prerrequisitos aprobados
@@ -111,10 +111,10 @@ export function UserProgressProvider({ children }) {
             return 'Debes completar y aprobar tus prerrequisitos primero';
         }
 
-        const requires15Weeks = ['defensa'];
-        if (requires15Weeks.includes(sectionName.toLowerCase())) {
-            const remaining = 15 - progressState.completedWeeks;
-            return `Requiere completar las 15 semanas de avances (${remaining} restantes)`;
+        const requires16Weeks = ['defensa'];
+        if (requires16Weeks.includes(sectionName.toLowerCase())) {
+            const remaining = 16 - progressState.completedWeeks;
+            return `Requiere completar las 16 semanas de avances (${remaining} restantes)`;
         }
 
         return 'Acceso no disponible';
@@ -129,9 +129,9 @@ export function UserProgressProvider({ children }) {
     const getProgressSummary = () => {
         return {
             prerequisitesApproved: progressState.prerequisitesStatus === 'approved',
-            weeklyProgress: `${progressState.completedWeeks}/15`,
-            weeklyPercentage: (progressState.completedWeeks / 15) * 100,
-            projectUnlocked: progressState.hasProjectAccess,
+            weeklyProgress: `${progressState.completedWeeks}/16`,
+            weeklyPercentage: (progressState.completedWeeks / 16) * 100,
+            projectUnlocked: progressState.completedWeeks >= 16,
             fullAccessGranted: progressState.prerequisitesStatus === 'approved' && progressState.hasProjectAccess
         };
     };

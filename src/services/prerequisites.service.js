@@ -10,6 +10,7 @@ export const PrerequisiteService = {
             if (!response.ok) return [];
 
             const data = await response.json();
+            console.log("PrerequisiteService.getByStudent raw data:", data);
 
             return data.map(item => {
                 let frontendKey = 'other';
@@ -53,62 +54,41 @@ export const PrerequisiteService = {
         }
     },
 
-    /**
-     * Sube un archivo de prerrequisito.
-     * Soporta llamada con objeto: upload({ id: 1, archivo: File, ... })
-     * O llamada directa: upload(1, File)
-     */
     async upload(arg1, arg2) {
         try {
             let prerequisitoId, file;
-            let archivoUrl = null;
 
             // Detectar si se llama con un objeto (desde Prerequisites.jsx)
             if (typeof arg1 === 'object' && !(arg1 instanceof File)) {
                 file = arg1.archivo;
-                // Usar ID del catálogo directamente
-                prerequisitoId = arg1.id || arg1.prerequisitoId;
+                prerequisitoId = arg1.id || arg1.prerequisitoId || arg1.catalogoId;
             } else {
-                // Llamada directa backward compatibility
                 prerequisitoId = arg1;
                 file = arg2;
             }
 
             if (!prerequisitoId) throw new Error("No se pudo identificar el ID para el requisito.");
 
-            // Paso 1: Subir Archivo Físico (Solo si hay archivo)
+            const formData = new FormData();
+            formData.append('prerequisitoId', prerequisitoId);
             if (file) {
-                const formData = new FormData();
                 formData.append('file', file);
-
-                const token = localStorage.getItem('token');
-                const uploadResponse = await fetch('/api/v1/prerequisitos/upload', {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` },
-                    body: formData
-                });
-
-                if (!uploadResponse.ok) {
-                    const err = await uploadResponse.json().catch(() => ({}));
-                    throw new Error(err.message || 'Error al subir el archivo físico');
-                }
-
-                const uploadResult = await uploadResponse.json();
-                archivoUrl = uploadResult.url;
             }
 
-            // Paso 2: Registrar en Base de Datos (Con o sin archivo)
-            const response = await apiFetch('/api/v1/prerequisitos/', {
+            const token = localStorage.getItem('token');
+            // Usamos fetch directo para Multipart ya que apiFetch añade JSON Content-Type por defecto
+            const response = await fetch('/api/v1/prerequisitos/', {
                 method: 'POST',
-                body: JSON.stringify({
-                    prerequisitoId: Number(prerequisitoId),
-                    archivoUrl: archivoUrl
-                })
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                    // NO añadir Content-Type, fetch lo hará con el boundary correcto
+                },
+                body: formData
             });
 
             if (!response.ok) {
                 const err = await response.json().catch(() => ({}));
-                throw new Error(err.message || 'Error al registrar el prerrequisito');
+                throw new Error(err.message || 'Error al procesar el prerrequisito');
             }
 
             return await response.json();

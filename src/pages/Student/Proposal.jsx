@@ -581,6 +581,7 @@ function ThesisProposal() {
                                                 </Box>
                                                 <Button
                                                     startIcon={<VisibilityIcon />}
+                                                    onClick={() => window.open(currentProposal.file.url, '_blank')}
                                                     sx={{ textTransform: 'none', fontWeight: 600 }}
                                                 >
                                                     Ver
@@ -598,7 +599,7 @@ function ThesisProposal() {
                         <Grid item xs={12} md={5}>
                             <Card sx={{ borderRadius: 3, boxShadow: 2, position: 'sticky', top: 20 }}>
                                 <CardContent sx={{ p: 3 }}>
-                                    <CommentSection proposal={currentProposal} />
+                                    <CommentSection proposalId={currentProposal.id} revisionComment={currentProposal.comentarioRevision} />
                                 </CardContent>
                             </Card>
                         </Grid>

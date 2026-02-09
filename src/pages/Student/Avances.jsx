@@ -11,6 +11,14 @@ import {
     Stepper,
     Step,
     StepLabel,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Divider,
+    List,
+    ListItem,
+    ListItemText
 } from '@mui/material';
 import {
     PlayCircleOutline,
@@ -29,6 +37,7 @@ import { useEffect } from 'react';
 import { ActivityService } from '../../services/activity.service';
 import { ProposalService } from '../../services/proposal.service';
 import { UserService } from '../../services/user.service';
+import { BitacoraService } from '../../services/bitacora.service';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 
@@ -38,6 +47,9 @@ function StudentAvances() {
     const [initialTab, setInitialTab] = useState(0);
     const [loading, setLoading] = useState(true);
     const [weeklyProgress, setWeeklyProgress] = useState([]);
+    const [meetings, setMeetings] = useState([]);
+    const [meetingModalOpen, setMeetingModalOpen] = useState(false);
+    const [selectedMeeting, setSelectedMeeting] = useState(null);
     const [proposal, setProposal] = useState(null);
     const [alertState, setAlertState] = useState({
         open: false,
@@ -139,6 +151,15 @@ function StudentAvances() {
                 };
             });
 
+            // 4. Obtener reuniones (Bitácora)
+            try {
+                const meetingsData = await BitacoraService.getReuniones();
+                setMeetings(meetingsData || []);
+            } catch (meetingError) {
+                console.error("Error fetching meetings:", meetingError);
+                // No bloqueamos la carga principal si fallan las reuniones
+            }
+
             // Ordenar por fecha o ID si es necesario
             setWeeklyProgress(mapped);
         } catch (error) {
@@ -181,7 +202,7 @@ function StudentAvances() {
             formData.append('file', uploadedFile);
             // Calculamos la semana basada en el progreso actual o la asignada
             formData.append('semana', selectedProgress.weekNumber || (weeklyProgress.length + 1));
-            formData.append('contenido', comment || 'Avance semanal subido desde el frontend');
+            formData.append('contenido', comment || 'Avance semanal');
 
             await ActivityService.createEvidencia(selectedProgress.id, formData);
 
@@ -238,9 +259,22 @@ function StudentAvances() {
                 title: `S${progress.weekNumber}: ${title}`,
                 date: progress.dueDate ? new Date(progress.dueDate) : null,
                 color: color,
-                progressId: progress.id
+                progressId: progress.id,
+                type: 'activity'
             };
         });
+
+    // Agregar reuniones al calendario
+    const meetingEvents = meetings.map(meeting => ({
+        title: `Reunión: ${meeting.motivo}`,
+        date: new Date(meeting.fecha),
+        color: '#1976d2', // Azul para reuniones
+        meetingId: meeting.id,
+        type: 'meeting',
+        originalData: meeting // Store full object
+    }));
+
+    const allCalendarEvents = [...calendarEvents, ...meetingEvents];
 
     const getStateConfig = (state) => {
         switch (state) {
@@ -256,9 +290,14 @@ function StudentAvances() {
     };
 
     const handleEventClick = (event) => {
-        const progress = weeklyProgress.find(p => p.id === event.progressId);
-        if (progress) {
-            openDetailModal(progress);
+        if (event.type === 'activity') {
+            const progress = weeklyProgress.find(p => p.id === event.progressId);
+            if (progress) {
+                openDetailModal(progress);
+            }
+        } else if (event.type === 'meeting') {
+            setSelectedMeeting(event.originalData);
+            setMeetingModalOpen(true);
         }
     };
 
@@ -310,7 +349,7 @@ function StudentAvances() {
                 {/* Calendario */}
                 <Box sx={{ mb: 4 }}>
                     <CalendarMui
-                        events={calendarEvents}
+                        events={allCalendarEvents}
                         onEventClick={handleEventClick}
                         onDateClick={handleDateClick}
                         showViewToggle={false}
@@ -497,6 +536,97 @@ function StudentAvances() {
                 onSubmit={handleSubmitProgress}
                 initialTab={initialTab}
             />
+
+            {/* Modal de Detalle de Reunión */}
+            <Dialog
+                open={meetingModalOpen}
+                onClose={() => setMeetingModalOpen(false)}
+                maxWidth="sm"
+                fullWidth
+            >
+                {selectedMeeting && (
+                    <>
+                        <DialogTitle sx={{ backgroundColor: '#1976d2', color: 'white' }}>
+                            Detalle de Reunión
+                        </DialogTitle>
+                        <DialogContent sx={{ pt: 3 }}>
+                            <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+
+                                <Box>
+                                    <Typography variant="subtitle2" color="text.secondary">Motivo</Typography>
+                                    <Typography variant="h6">{selectedMeeting.motivo}</Typography>
+                                </Box>
+
+                                <Box sx={{ display: 'flex', gap: 4 }}>
+                                    <Box>
+                                        <Typography variant="subtitle2" color="text.secondary">Fecha</Typography>
+                                        <Typography variant="body1">
+                                            {new Date(selectedMeeting.fecha).toLocaleDateString()}
+                                        </Typography>
+                                    </Box>
+                                    <Box>
+                                        <Typography variant="subtitle2" color="text.secondary">Horario</Typography>
+                                        <Typography variant="body1">
+                                            {new Date(selectedMeeting.horaInicio).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} -
+                                            {new Date(selectedMeeting.horaFin).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </Typography>
+                                    </Box>
+                                </Box>
+
+                                <Box>
+                                    <Typography variant="subtitle2" color="text.secondary">Modalidad</Typography>
+                                    <Chip
+                                        label={selectedMeeting.modalidad}
+                                        color="primary"
+                                        variant="outlined"
+                                        size="small"
+                                    />
+                                </Box>
+
+                                <Divider />
+
+                                <Box>
+                                    <Typography variant="subtitle2" color="text.secondary">Resumen / Observaciones</Typography>
+                                    <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>
+                                        {selectedMeeting.resumen || "Sin resumen registrado"}
+                                    </Typography>
+                                </Box>
+
+                                {selectedMeeting.compromisos && Array.isArray(selectedMeeting.compromisos) && selectedMeeting.compromisos.length > 0 && (
+                                    <>
+                                        <Divider />
+                                        <Box>
+                                            <Typography variant="subtitle2" color="text.secondary">Compromisos</Typography>
+                                            <List dense>
+                                                {selectedMeeting.compromisos.map((c, i) => (
+                                                    <ListItem key={i}>
+                                                        <ListItemText
+                                                            primary={typeof c === 'string' ? c : c.descripcion || JSON.stringify(c)}
+                                                        />
+                                                    </ListItem>
+                                                ))}
+                                            </List>
+                                        </Box>
+                                    </>
+                                )}
+
+                                <Box sx={{ mt: 1, p: 2, backgroundColor: '#f5f5f5', borderRadius: 2 }}>
+                                    <Typography variant="subtitle2" color="text.secondary">Tutor</Typography>
+                                    <Typography variant="body2">
+                                        {selectedMeeting.tutor ? `${selectedMeeting.tutor.nombres} ${selectedMeeting.tutor.apellidos}` : 'No especificado'}
+                                    </Typography>
+                                </Box>
+
+                            </Box>
+                        </DialogContent>
+                        <DialogActions>
+                            <Button onClick={() => setMeetingModalOpen(false)} variant="contained">
+                                Cerrar
+                            </Button>
+                        </DialogActions>
+                    </>
+                )}
+            </Dialog>
 
             {/* Alert Component */}
             <AlertMui

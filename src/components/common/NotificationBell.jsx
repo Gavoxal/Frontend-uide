@@ -70,11 +70,11 @@ const NotificationBell = () => {
     };
 
     const handleMarkAsRead = async (notification) => {
-        if (!notification.leida) {
+        if (!notification.leido) {
             try {
                 await NotificationService.markAsRead(notification.id);
                 setNotifications(prev =>
-                    prev.map(n => n.id === notification.id ? { ...n, leida: true } : n)
+                    prev.map(n => n.id === notification.id ? { ...n, leido: true } : n)
                 );
                 setUnreadCount(prev => Math.max(0, prev - 1));
             } catch (error) {
@@ -86,7 +86,7 @@ const NotificationBell = () => {
     const handleMarkAllAsRead = async () => {
         try {
             await NotificationService.markAllAsRead();
-            setNotifications(prev => prev.map(n => ({ ...n, leida: true })));
+            setNotifications(prev => prev.map(n => ({ ...n, leido: true })));
             setUnreadCount(0);
         } catch (error) {
             console.error("Error marking all as read", error);

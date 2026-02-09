@@ -48,6 +48,8 @@ function ProposalReview() {
 
                 if (!acc[studentKey]) {
                     const perfil = student?.estudiantePerfil;
+                    console.log(`[DEBUG] Processing student: ${student?.nombres} ${student?.apellidos}`, { perfil, student });
+
                     // El ID preferido para navegación es el del estudiante, fallback al de la propuesta
                     const navId = curr.fkEstudiante || student?.id || curr.id;
 
@@ -59,8 +61,8 @@ function ProposalReview() {
                             apellidos: !student ? `(Propuesta ${curr.id})` : '',
                             cedula: student?.cedula || 'N/A'
                         },
-                        malla: curr.malla || perfil?.malla || 'N/A',
-                        period: perfil?.periodoLectivo || '-',
+                        malla: (perfil && perfil.malla) ? perfil.malla : (curr.malla || 'Sin Datos'),
+                        period: (perfil && perfil.periodoLectivo) ? perfil.periodoLectivo : '-',
                         proposals: []
                     };
                 }

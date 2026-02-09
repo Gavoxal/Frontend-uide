@@ -8,7 +8,8 @@ function ButtonMUI({
     onClick = () => { },
     backgroundColor = 'white',
     color = 'white',
-    type = 'submit'
+    type = 'submit',
+    ...props
 }) {
     return (
         <Button
@@ -20,6 +21,7 @@ function ButtonMUI({
                 color: color,
                 backgroundColor: backgroundColor
             }}
+            {...props}
         >
             {name}
         </Button>

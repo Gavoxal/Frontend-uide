@@ -6,7 +6,13 @@ import {
     Paper,
     Stack,
     Chip,
-    CircularProgress
+    CircularProgress,
+    Typography,
+    Button,
+    Card,
+    Divider,
+    TextField,
+    Alert
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -14,12 +20,11 @@ import AttachFileIcon from '@mui/icons-material/AttachFile';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import WarningIcon from '@mui/icons-material/Warning';
+import SaveIcon from '@mui/icons-material/Save';
 
-import TextMui from '../../components/text.mui.component';
 import ButtonMui from '../../components/button.mui.component';
 import AlertMui from '../../components/alert.mui.component';
-import NotificationMui from '../../components/notification.mui.component';
-import InputMui from '../../components/input.mui.component';
+import CommentSection from '../../components/comment.mui.component';
 
 import { ProposalService } from '../../services/proposal.service';
 
@@ -46,10 +51,14 @@ function ProposalDetail() {
             const data = await ProposalService.getByStudent(id);
             if (data.length > 0) {
                 const student = data[0].estudiante;
+                console.log("[DEBUG] ProposalDetail student:", student);
+                console.log("[DEBUG] ProposalDetail profile:", student?.estudiantePerfil);
+
                 setStudentInfo({
                     name: student ? `${student.nombres} ${student.apellidos}` : 'N/A',
-                    career: data[0].carrera || 'N/A',
-                    period: student?.estudiantePerfil?.periodoLectivo || '-'
+                    // Prioritize profile execution, then proposal field
+                    career: (student?.estudiantePerfil?.escuela) || data[0].carrera || 'Sin Datos',
+                    period: (student?.estudiantePerfil?.periodoLectivo) || '-'
                 });
 
                 // Map API data to component structure
@@ -185,182 +194,285 @@ function ProposalDetail() {
         }
     };
 
+    const getStatusColor = (status) => {
+        switch (status) {
+            case 'approved': return 'success';
+            case 'rejected': return 'error';
+            case 'approved_with_obs': return 'warning';
+            default: return 'default';
+        }
+    };
+
+    const getStatusLabel = (status) => {
+        switch (status) {
+            case 'approved': return 'APROBADA';
+            case 'rejected': return 'RECHAZADA';
+            case 'approved_with_obs': return 'OBSERVADA';
+            default: return 'PENDIENTE';
+        }
+    };
+
     if (loading) {
         return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', p: 4, height: '400px', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
                 <CircularProgress />
             </Box>
         );
     }
 
     return (
-        <Box>
-            <Box sx={{ mb: 4 }}>
-                <TextMui value={`Revisión de Propuestas: ${studentInfo.name}`} variant="h4" />
-                <TextMui value={`${studentInfo.career} - ${studentInfo.period}`} variant="h6" color="textSecondary" />
-                <NotificationMui severity="info" sx={{ mt: 2 }}>
-                    Aquí puede revisar las 3 propuestas enviadas por el estudiante. Seleccione <strong>Aprobar</strong> solo en la propuesta definitiva. Al aprobar una, se notificará automáticamente al estudiante.
-                </NotificationMui>
-            </Box>
+        <Box sx={{ maxWidth: '98%', margin: '0 auto', p: 3 }}>
+            {/* Header / Student Info */}
+            <Paper
+                elevation={0}
+                sx={{
+                    p: 4,
+                    mb: 4,
+                    borderRadius: 3,
+                    background: 'linear-gradient(135deg, #1a237e 0%, #0d47a1 100%)',
+                    color: 'white',
+                    position: 'relative',
+                    overflow: 'hidden'
+                }}
+            >
+                <Box sx={{ position: 'relative', zIndex: 2 }}>
+                    <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
+                        <Button
+                            startIcon={<ArrowBackIcon />}
+                            onClick={() => navigate('/director/proposals')}
+                            sx={{ color: 'white', opacity: 0.8, '&:hover': { opacity: 1, bgcolor: 'rgba(255,255,255,0.1)' } }}
+                        >
+                            Volver
+                        </Button>
+                    </Stack>
+                    <Typography variant="h4" fontWeight="bold" gutterBottom>
+                        {studentInfo.name}
+                    </Typography>
+                    <Typography variant="h6" sx={{ opacity: 0.9, fontWeight: 'normal' }}>
+                        {studentInfo.career} • {studentInfo.period}
+                    </Typography>
+                </Box>
+                {/* Decorative circle */}
+                <Box sx={{
+                    position: 'absolute',
+                    top: -50,
+                    right: -50,
+                    width: 300,
+                    height: 300,
+                    borderRadius: '50%',
+                    bgcolor: 'rgba(255,255,255,0.05)',
+                    zIndex: 1
+                }} />
+            </Paper>
 
-            <Grid container spacing={3} direction="column">
+            <Grid container spacing={4}>
                 {proposals.map((prop, index) => (
                     <Grid item xs={12} key={prop.id}>
-                        <Paper
+                        <Card
                             elevation={3}
                             sx={{
-                                p: 3,
-                                border: (prop.status === 'approved' || prop.status === 'approved_with_obs') ? '2px solid #2e7d32' : '1px solid #e0e0e0',
-                                backgroundColor: (prop.status === 'approved' || prop.status === 'approved_with_obs') ? '#f1f8e9' : 'white',
-                                transition: '0.3s',
-                                borderRadius: 2
+                                borderRadius: 3,
+                                border: (prop.status === 'approved') ? '2px solid #2e7d32' : '1px solid rgba(0,0,0,0.08)',
+                                overflow: 'visible',
+                                transition: 'transform 0.2s',
+                                '&:hover': { transform: 'translateY(-2px)' }
                             }}
                         >
-                            <Grid container spacing={4}>
-                                <Grid item xs={12} md={7}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                                        <Chip label={`Opción ${index + 1}`} color="primary" size="small" />
-                                        <Chip label={prop.area} variant="outlined" size="small" />
-                                        <Chip
-                                            label={prop.status.toUpperCase()}
-                                            color={prop.status === 'approved' ? "success" : prop.status === 'rejected' ? "error" : "default"}
-                                            size="small"
-                                        />
-                                    </Box>
+                            <Box sx={{ p: 4 }}>
+                                <Grid container spacing={4}>
+                                    {/* Left Column: Proposal Content */}
+                                    <Grid item xs={12}>
+                                        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+                                            <Chip
+                                                label={`Propuesta ${index + 1}`}
+                                                color="primary"
+                                                sx={{ fontWeight: 'bold' }}
+                                            />
+                                            <Chip
+                                                label={prop.area}
+                                                variant="outlined"
+                                            />
+                                            <Chip
+                                                label={getStatusLabel(prop.status)}
+                                                color={getStatusColor(prop.status)}
+                                                sx={{ fontWeight: 'bold' }}
+                                            />
+                                        </Stack>
 
-                                    <Box sx={{ mb: 2 }}>
-                                        <TextMui value={prop.topic} variant="h6" sx={{ fontWeight: 'bold', mb: 1 }} />
-                                        <Box sx={{ p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
-                                            <TextMui value={prop.description} variant="body2" />
-                                        </Box>
-                                    </Box>
+                                        <Typography variant="h5" fontWeight="bold" sx={{ mb: 2, color: '#1a1a1a' }}>
+                                            {prop.topic}
+                                        </Typography>
 
-                                    {prop.reviews && prop.reviews.length > 0 && (
-                                        <Box sx={{ mt: 2, mb: 2 }}>
-                                            <TextMui value="Votación y Comentarios de Tutores:" variant="subtitle2" sx={{ fontWeight: 'bold', color: '#1a237e', mb: 1 }} />
-                                            <Stack spacing={1}>
-                                                {prop.reviews.map((rev, idx) => (
-                                                    <Box key={idx} sx={{ p: 1.5, borderLeft: '3px solid #1a237e', bgcolor: '#e8eaf6', borderRadius: '0 4px 4px 0' }}>
-                                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-                                                            <TextMui value={rev.tutor} variant="caption" sx={{ fontWeight: 'bold' }} />
-                                                            <Chip
-                                                                label={`Prioridad: ${rev.priority}`}
-                                                                size="small"
-                                                                color={rev.priority === 1 ? "success" : "default"}
-                                                                variant="outlined"
-                                                            />
-                                                        </Box>
-                                                        <TextMui value={rev.justification || 'Sin comentarios adicionales.'} variant="body2" sx={{ fontStyle: 'italic' }} />
+                                        <Typography variant="body1" color="text.secondary" paragraph sx={{ lineHeight: 1.7 }}>
+                                            {prop.description}
+                                        </Typography>
+
+                                        {prop.fileUrl && (
+                                            <Paper variant="outlined" sx={{ p: 2, mt: 3, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: '#f8f9fa' }}>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                    <Box sx={{ bgcolor: '#e3f2fd', p: 1, borderRadius: 1 }}>
+                                                        <AttachFileIcon color="primary" />
                                                     </Box>
-                                                ))}
-                                            </Stack>
-                                        </Box>
-                                    )}
-
-                                    {prop.fileUrl && (
-                                        <Box sx={{
-                                            mt: 2,
-                                            p: 2,
-                                            border: '1px dashed #bdbdbd',
-                                            borderRadius: 1,
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'space-between',
-                                            backgroundColor: '#fafafa'
-                                        }}>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                <AttachFileIcon color="action" />
-                                                <TextMui value={prop.file} variant="body2" />
-                                            </Box>
-                                            <Box sx={{ width: '180px' }}>
+                                                    <Box>
+                                                        <Typography variant="body2" fontWeight="600">Documento Adjunto</Typography>
+                                                        <Typography variant="caption" color="text.secondary">{prop.file}</Typography>
+                                                    </Box>
+                                                </Box>
                                                 <ButtonMui
-                                                    name="Descargar PDF"
+                                                    name="Descargar"
+                                                    size="small"
                                                     startIcon={<DownloadIcon />}
                                                     onClick={() => handleDownload(prop.fileUrl, prop.file)}
                                                     backgroundColor="#0288d1"
                                                 />
+                                            </Paper>
+                                        )}
+
+                                        {prop.reviews && prop.reviews.length > 0 && (
+                                            <Box sx={{ mt: 4 }}>
+                                                <Typography variant="subtitle2" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 1, mb: 2, fontWeight: 'bold' }}>
+                                                    Evaluación de Tutores
+                                                </Typography>
+                                                <Stack spacing={2}>
+                                                    {prop.reviews.map((rev, idx) => (
+                                                        <Paper key={idx} elevation={0} sx={{ p: 2, bgcolor: '#f5f5f5', borderRadius: 2 }}>
+                                                            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+                                                                <Typography variant="subtitle2" fontWeight="bold">{rev.tutor}</Typography>
+                                                                <Chip
+                                                                    label={`Prioridad: ${rev.priority}`}
+                                                                    size="small"
+                                                                    color={rev.priority === 1 ? "success" : "default"}
+                                                                />
+                                                            </Stack>
+                                                            <Typography variant="body2" color="text.secondary">
+                                                                "{rev.justification || 'Sin comentarios adicionales.'}"
+                                                            </Typography>
+                                                        </Paper>
+                                                    ))}
+                                                </Stack>
                                             </Box>
-                                        </Box>
-                                    )}
+                                        )}
+                                    </Grid>
+
+                                    {/* Right Column: Director Actions & Comments */}
+                                    <Grid item xs={12} md={4}>
+                                        <Stack spacing={3}>
+                                            {/* Dictamen Section */}
+                                            <Box sx={{
+                                                p: 3,
+                                                bgcolor: '#f8f9fa',
+                                                borderRadius: 3,
+                                                border: '1px solid rgba(0,0,0,0.05)'
+                                            }}>
+                                                <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ mb: 2 }}>
+                                                    Dictamen
+                                                </Typography>
+
+                                                <Stack direction="column" spacing={2} sx={{ mb: 3 }}>
+                                                    <Button
+                                                        variant={prop.status === 'approved' ? "contained" : "outlined"}
+                                                        color="success"
+                                                        startIcon={<CheckCircleIcon />}
+                                                        onClick={() => handleStatusChange(prop.id, 'approved')}
+                                                        fullWidth
+                                                        sx={{ justifyContent: 'flex-start', py: 1.5 }}
+                                                    >
+                                                        Aprobar
+                                                    </Button>
+                                                    <Button
+                                                        variant={prop.status === 'approved_with_obs' ? "contained" : "outlined"}
+                                                        color="warning"
+                                                        startIcon={<WarningIcon />}
+                                                        onClick={() => handleStatusChange(prop.id, 'approved_with_obs')}
+                                                        fullWidth
+                                                        sx={{ justifyContent: 'flex-start', py: 1.5 }}
+                                                    >
+                                                        Observar
+                                                    </Button>
+                                                    <Button
+                                                        variant={prop.status === 'rejected' ? "contained" : "outlined"}
+                                                        color="error"
+                                                        startIcon={<CancelIcon />}
+                                                        onClick={() => handleStatusChange(prop.id, 'rejected')}
+                                                        fullWidth
+                                                        sx={{ justifyContent: 'flex-start', py: 1.5 }}
+                                                    >
+                                                        Rechazar
+                                                    </Button>
+                                                </Stack>
+
+                                                <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                                                    {prop.status === 'rejected' ? "Motivo del rechazo:" : "Observaciones Oficiales:"}
+                                                </Typography>
+
+                                                {prop.status === 'approved' && (
+                                                    <Alert severity="success" sx={{ mt: 2, fontSize: '0.85rem' }}>
+                                                        Propuesta definitiva.
+                                                    </Alert>
+                                                )}
+                                            </Box>
+
+                                            {/* Comment Section (Chat) */}
+                                            <Box sx={{
+                                                p: 3,
+                                                bgcolor: '#ffffff',
+                                                borderRadius: 3,
+                                                border: '1px solid #e0e0e0',
+                                                minHeight: '400px'
+                                            }}>
+                                                <CommentSection proposalId={prop.id} />
+                                            </Box>
+                                        </Stack>
+                                    </Grid>
                                 </Grid>
-
-                                <Grid item xs={12} md={5} sx={{ display: 'flex', flexDirection: 'column', borderLeft: { xs: 'none', md: '1px solid #eee' }, pl: { md: 3 } }}>
-
-                                    <TextMui value="Decisión del Director:" variant="subtitle2" sx={{ mb: 1 }} />
-
-                                    <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
-                                        <Box sx={{ flex: 1 }}>
-                                            <ButtonMui
-                                                name="Aprobar"
-                                                variant={prop.status === 'approved' ? "contained" : "outlined"}
-                                                backgroundColor={prop.status === 'approved' ? "#2e7d32" : "transparent"}
-                                                color={prop.status === 'approved' ? "white" : "#2e7d32"}
-                                                startIcon={<CheckCircleIcon />}
-                                                onClick={() => handleStatusChange(prop.id, 'approved')}
-                                            />
-                                        </Box>
-                                        <Box sx={{ flex: 1 }}>
-                                            <ButtonMui
-                                                name="Observar"
-                                                variant={prop.status === 'approved_with_obs' ? "contained" : "outlined"}
-                                                backgroundColor={prop.status === 'approved_with_obs' ? "#ed6c02" : "transparent"}
-                                                color={prop.status === 'approved_with_obs' ? "white" : "#ed6c02"}
-                                                startIcon={<WarningIcon />}
-                                                onClick={() => handleStatusChange(prop.id, 'approved_with_obs')}
-                                            />
-                                        </Box>
-                                        <Box sx={{ flex: 1 }}>
-                                            <ButtonMui
-                                                name="Rechazar"
-                                                variant={prop.status === 'rejected' ? "contained" : "outlined"}
-                                                backgroundColor={prop.status === 'rejected' ? "#d32f2f" : "transparent"}
-                                                color={prop.status === 'rejected' ? "white" : "#d32f2f"}
-                                                startIcon={<CancelIcon />}
-                                                onClick={() => handleStatusChange(prop.id, 'rejected')}
-                                            />
-                                        </Box>
-                                    </Stack>
-
-                                    <Box sx={{ width: '100%', flexGrow: 1 }}>
-                                        <TextMui value={prop.status === 'rejected' ? "Motivo del rechazo:" : "Observaciones / Sugerencias:"} variant="caption" sx={{ fontWeight: 'bold' }} />
-                                        <InputMui
-                                            multiline={true}
-                                            rows={4}
-                                            placeholder="Ingrese sus comentarios aquí..."
-                                            value={prop.observation}
-                                            onChange={(e) => handleObservationChange(prop.id, e.target.value)}
-                                        />
-                                    </Box>
-
-                                    {prop.status === 'approved' && (
-                                        <AlertMui status="success" message="Esta será la propuesta oficial." sx={{ mt: 1 }} />
-                                    )}
-
-                                </Grid>
-                            </Grid>
-                        </Paper>
+                            </Box>
+                        </Card>
                     </Grid>
                 ))}
             </Grid>
 
-            <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', gap: 2, mb: 4 }}>
-                <Box sx={{ width: '150px' }}>
-                    <ButtonMui
-                        name="Cancelar"
-                        onClick={() => navigate('/director/proposals')}
-                        startIcon={<ArrowBackIcon />}
-                        backgroundColor="#757575"
-                    />
+            {/* Sticky Footer for Actions */}
+            <Paper
+                elevation={6}
+                sx={{
+                    position: 'fixed',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    p: 2,
+                    bgcolor: 'white',
+                    zIndex: 1000,
+                    borderTop: '1px solid #e0e0e0',
+                    display: hasChanges ? 'block' : 'none'
+                }}
+            >
+                <Box sx={{ maxWidth: '98%', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="body1" fontWeight="bold" color="text.secondary">
+                        Tienes cambios pendientes de guardar
+                    </Typography>
+                    <Stack direction="row" spacing={2}>
+                        <Button
+                            variant="outlined"
+                            color="inherit"
+                            onClick={() => navigate('/director/proposals')}
+                        >
+                            Cancelar
+                        </Button>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            startIcon={<SaveIcon />}
+                            onClick={handleSaveClick}
+                            sx={{ px: 4 }}
+                        >
+                            Guardar Cambios
+                        </Button>
+                    </Stack>
                 </Box>
-                <Box sx={{ width: '220px' }}>
-                    <ButtonMui
-                        name="Enviar Revisiones"
-                        onClick={handleSaveClick}
-                        backgroundColor={hasChanges ? "#1976d2" : "#bdbdbd"}
-                        disabled={!hasChanges}
-                    />
-                </Box>
-            </Box>
+            </Paper>
+
+            {/* Space for fixed footer */}
+            {hasChanges && <Box sx={{ height: 100 }} />}
 
             <AlertMui
                 open={openAlert}

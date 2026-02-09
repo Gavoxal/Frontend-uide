@@ -17,6 +17,22 @@ export const ProposalService = {
     },
 
     /**
+     * Obtiene las propuestas de un estudiante específico (para Directores/Coordinadores)
+     * @param {number|string} studentId
+     * @returns {Promise<Array>}
+     */
+    async getByStudent(studentId) {
+        try {
+            const response = await apiFetch(`/api/v1/propuestas/?estudianteId=${studentId}`);
+            if (!response.ok) return [];
+            return await response.json();
+        } catch (error) {
+            console.error("ProposalService.getByStudent error:", error);
+            return [];
+        }
+    },
+
+    /**
      * Obtiene la lista de áreas de conocimiento
      * @returns {Promise<Array>}
      */

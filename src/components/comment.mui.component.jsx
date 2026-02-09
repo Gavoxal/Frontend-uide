@@ -5,6 +5,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
+import { CommentService } from "../services/comment.service";
 
 function CommentSection({ proposalId, revisionComment }) {
     const [comments, setComments] = useState([]);
@@ -20,31 +21,23 @@ function CommentSection({ proposalId, revisionComment }) {
     const fetchComments = async () => {
         setLoading(true);
         try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`/api/v1/propuestas/${proposalId}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            if (response.ok) {
-                const data = await response.json();
-                if (data.comentarios) {
-                    const mappedComments = data.comentarios.map(c => ({
-                        id: c.id,
-                        author: `${c.usuario?.nombres} ${c.usuario?.apellidos}`,
-                        role: c.usuario?.rol,
-                        text: c.descripcion,
-                        date: new Date(c.createdAt || Date.now()).toLocaleDateString('es-ES', {
-                            day: '2-digit',
-                            month: 'short',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                        }),
-                        avatar: c.usuario?.nombres?.charAt(0) || '?',
-                        isMe: c.usuario?.rol === 'ESTUDIANTE'
-                    }));
-                    setComments(mappedComments);
-                }
+            const data = await CommentService.getByProposal(proposalId);
+            if (data) {
+                const mappedComments = data.map(c => ({
+                    id: c.id,
+                    author: `${c.usuario?.nombres} ${c.usuario?.apellidos}`,
+                    role: c.usuario?.rol || 'Estudiante',
+                    text: c.descripcion,
+                    date: new Date(c.createdAt || Date.now()).toLocaleDateString('es-ES', {
+                        day: '2-digit',
+                        month: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }),
+                    avatar: c.usuario?.nombres?.charAt(0) || '?',
+                    isMe: c.usuario?.rol === 'ESTUDIANTE'
+                }));
+                setComments(mappedComments);
             }
         } catch (error) {
             console.error("Error fetching comments:", error);
@@ -56,25 +49,14 @@ function CommentSection({ proposalId, revisionComment }) {
     const handleAddComment = async () => {
         if (newComment.trim() && proposalId) {
             try {
-                const token = localStorage.getItem('token');
-                const response = await fetch('/api/v1/comentarios/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                        descripcion: newComment,
-                        propuestaId: Number(proposalId)
-                    })
+                const result = await CommentService.create({
+                    descripcion: newComment,
+                    propuestaId: Number(proposalId)
                 });
 
-                if (response.ok) {
+                if (result) {
                     await fetchComments();
                     setNewComment("");
-                } else {
-                    const errorData = await response.json();
-                    alert(errorData.message || "Error al guardar comentario");
                 }
             } catch (error) {
                 console.error("Error adding comment:", error);
@@ -167,8 +149,8 @@ function CommentSection({ proposalId, revisionComment }) {
                         </Typography>
                     </Box>
                 ) : (
-                    comments.map((comment) => (
-                        <Box key={comment.id} sx={{
+                    comments.map((comment, index) => (
+                        <Box key={comment.id || index} sx={{
                             display: 'flex',
                             flexDirection: 'column',
                             alignItems: comment.isMe ? 'flex-end' : 'flex-start'
