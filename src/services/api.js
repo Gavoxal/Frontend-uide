@@ -41,3 +41,28 @@ export const apiFetch = async (endpoint, options = {}) => {
         throw error;
     }
 };
+
+/**
+ * Descarga un archivo desde una URL protegida por autenticación.
+ * @param {string} url - URL del archivo a descargar
+ * @param {string} filename - Nombre con el que se guardará el archivo
+ */
+export const downloadFile = async (url, filename) => {
+    try {
+        const response = await apiFetch(url);
+        if (!response.ok) throw new Error('Error al descargar el archivo');
+
+        const blob = await response.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+        console.error("Download error:", error);
+        alert("Error al descargar el archivo. Por favor intente nuevamente.");
+    }
+};

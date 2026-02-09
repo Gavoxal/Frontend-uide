@@ -123,7 +123,8 @@ function StudentAvances() {
                         uploadedFile: evidence.archivoUrl?.split('/').pop() || "archivo",
                         submittedDate: submissionDate ? new Date(submissionDate) : null,
                         comments: evidence.contenido || "",
-                        semana: evidence.semana
+                        semana: evidence.semana,
+                        fileUrl: evidence.archivoUrl
                     } : null,
 
                     grading: evidence && (evidence.calificacionTutor !== null || evidence.calificacionDocente !== null) ? {
@@ -209,7 +210,7 @@ function StudentAvances() {
     const progressData = {
         completedWeeks: weeklyProgress.filter(p => p.currentState === 'graded').length,
         totalWeeks: 16,
-        currentWeek: weeklyProgress.filter(p => p.studentSubmission).length + 1
+        currentWeek: Math.min(weeklyProgress.filter(p => p.studentSubmission).length + 1, 16)
     };
 
     // Convertir avances a eventos del calendario

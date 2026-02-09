@@ -3,10 +3,11 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DescriptionIcon from '@mui/icons-material/Description';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
 export default function FileUpload({ onFileSelect, uploadedFile, onRemoveFile }) {
   const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef(null);
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -38,6 +39,7 @@ export default function FileUpload({ onFileSelect, uploadedFile, onRemoveFile })
   };
 
   if (uploadedFile) {
+    // ... no changes in this block ...
     return (
       <Box
         sx={{
@@ -48,7 +50,7 @@ export default function FileUpload({ onFileSelect, uploadedFile, onRemoveFile })
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          minHeight: 114, // Coincidir con el estado vacío aproximado
+          minHeight: 114,
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, overflow: 'hidden' }}>
@@ -56,7 +58,7 @@ export default function FileUpload({ onFileSelect, uploadedFile, onRemoveFile })
             sx={{
               width: 40,
               height: 40,
-              minWidth: 40, // Prevent shrinking
+              minWidth: 40,
               backgroundColor: '#FEE2E2',
               borderRadius: 1,
               display: 'flex',
@@ -104,13 +106,13 @@ export default function FileUpload({ onFileSelect, uploadedFile, onRemoveFile })
         justifyContent: 'center',
         cursor: 'pointer',
         transition: 'all 0.2s',
-        minHeight: 114, // Estabilizar
+        minHeight: 114,
         '&:hover': {
           borderColor: '#000A9B',
           backgroundColor: '#F9FAFB',
         },
       }}
-      onClick={() => document.getElementById('file-input')?.click()}
+      onClick={() => fileInputRef.current?.click()}
     >
       <CloudUploadIcon sx={{ fontSize: 48, color: '#9CA3AF', mb: 2 }} />
       <Typography variant="body2" sx={{ color: 'text.secondary', mb: 0.5 }}>
@@ -120,7 +122,7 @@ export default function FileUpload({ onFileSelect, uploadedFile, onRemoveFile })
         PDF
       </Typography>
       <input
-        id="file-input"
+        ref={fileInputRef}
         type="file"
         accept=".pdf"
         style={{ display: 'none' }}

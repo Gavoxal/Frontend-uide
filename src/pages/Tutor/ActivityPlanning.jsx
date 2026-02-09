@@ -13,6 +13,11 @@ import {
     TableRow,
     Chip,
     IconButton,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Grid
 } from '@mui/material';
 import { useLocation } from 'react-router-dom';
 import ActivityForm from '../../components/activityform.mui.component';
@@ -41,6 +46,8 @@ function ActivityPlanning() {
     const [students, setStudents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [alertState, setAlertState] = useState({ open: false, message: '', severity: 'success' });
+    const [editingActivity, setEditingActivity] = useState(null);
+    const [viewingActivity, setViewingActivity] = useState(null);
 
     const loadHistory = async (studentList, preselected = null) => {
         try {
@@ -49,7 +56,8 @@ function ActivityPlanning() {
                 const activities = await ActivityService.getByPropuesta(preselected.propuesta.id);
                 allActivities = activities.map(a => ({
                     ...a,
-                    studentName: preselected.name
+                    studentName: preselected.name,
+                    studentId: preselected.id
                 }));
             } else {
                 // Fetch activities for all students who have a proposal
@@ -60,7 +68,8 @@ function ActivityPlanning() {
                             const activities = await ActivityService.getByPropuesta(s.propuestaId);
                             return activities.map(a => ({
                                 ...a,
-                                studentName: s.name
+                                studentName: s.name,
+                                studentId: s.id
                             }));
                         } catch (e) {
                             return [];
@@ -91,10 +100,13 @@ function ActivityPlanning() {
                     id: a.id,
                     assignedDate: formatDate(createDate) || 'N/A',
                     studentName: a.studentName,
+                    studentId: a.studentId,
                     activity: a.nombre,
                     description: a.descripcion,
                     deadline: formatDate(deliveryDate) || 'Sin fecha',
-                    status: a.estado?.toLowerCase() || 'pendiente',
+                    status: (a.evidencias && a.evidencias.length > 0 && (a.estado === 'NO_ENTREGADO' || !a.estado))
+                        ? 'entregado'
+                        : (a.estado?.toLowerCase() || 'pendiente'),
                     priority: 'media'
                 };
             }));
@@ -146,21 +158,30 @@ function ActivityPlanning() {
                 fechaEntrega: formData.deadline // Agregamos la fecha de entrega
             };
 
-            await ActivityService.create(activityData);
-
-            setAlertState({
-                open: true,
-                message: 'Actividad asignada y estudiante notificado correctamente',
-                severity: 'success'
-            });
+            if (editingActivity) {
+                await ActivityService.update(editingActivity.id, activityData);
+                setAlertState({
+                    open: true,
+                    message: 'Actividad actualizada correctamente',
+                    severity: 'success'
+                });
+            } else {
+                await ActivityService.create(activityData);
+                setAlertState({
+                    open: true,
+                    message: 'Actividad asignada y estudiante notificado correctamente',
+                    severity: 'success'
+                });
+            }
 
             // Recargar historial antes de cambiar la vista
             await loadHistory(students, preselectedStudent);
             setView('history');
+            setEditingActivity(null);
         } catch (error) {
             setAlertState({
                 open: true,
-                message: error.message || 'Error al crear la actividad',
+                message: error.response?.data?.message || error.message || 'Error al crear la actividad',
                 severity: 'error'
             });
         } finally {
@@ -209,6 +230,41 @@ function ActivityPlanning() {
         );
     };
 
+    const handleEdit = (activity) => {
+        // Map history item to form structure
+        // Need to parse date string back to Date object if needed
+        // activity.deadline is formatted string, so we might want original object or parse it
+        // Simpler: just pass what we have
+        setEditingActivity({
+            id: activity.id,
+            studentId: activity.studentId,
+            title: activity.activity,
+            description: activity.description,
+            deadline: activity.deadline === 'Sin fecha' ? new Date() : new Date(activity.deadline), // Simple parse, might need adjustment
+            resources: []
+        });
+        setView('create');
+    };
+
+    const handleDelete = async (id) => {
+        if (window.confirm('¿Estás seguro de que deseas eliminar esta actividad? Esta acción no se puede deshacer.')) {
+            setLoading(true);
+            try {
+                await ActivityService.delete(id);
+                setAlertState({ open: true, message: 'Actividad eliminada correctamente', severity: 'success' });
+                await loadHistory(students, preselectedStudent);
+            } catch (error) {
+                setAlertState({ open: true, message: 'Error al eliminar la actividad', severity: 'error' });
+            } finally {
+                setLoading(false);
+            }
+        }
+    };
+
+    const handleView = (activity) => {
+        setViewingActivity(activity);
+    };
+
 
 
     return (
@@ -238,24 +294,41 @@ function ActivityPlanning() {
                 </Box>
 
                 {view === 'history' ? (
-                    <Button
-                        variant="contained"
-                        startIcon={<AddIcon />}
-                        onClick={() => setView('create')}
-                        sx={{
-                            backgroundColor: '#667eea',
-                            fontWeight: 600,
-                            boxShadow: '0 4px 14px 0 rgba(102, 126, 234, 0.39)',
-                            '&:hover': { backgroundColor: '#5a6fd6' }
-                        }}
-                    >
-                        Nueva Actividad
-                    </Button>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        {preselectedStudent && (
+                            <Chip
+                                label={`Semanas Asignadas: ${history.filter(h => h.studentId === preselectedStudent.id).length} / 16`}
+                                color={history.filter(h => h.studentId === preselectedStudent.id).length >= 16 ? 'error' : 'primary'}
+                                variant="outlined"
+                                sx={{ fontWeight: 'bold' }}
+                            />
+                        )}
+                        <Button
+                            variant="contained"
+                            startIcon={<AddIcon />}
+                            onClick={() => setView('create')}
+                            disabled={preselectedStudent && history.filter(h => h.studentId === preselectedStudent.id).length >= 16}
+                            sx={{
+                                backgroundColor: '#667eea',
+                                fontWeight: 600,
+                                boxShadow: '0 4px 14px 0 rgba(102, 126, 234, 0.39)',
+                                '&:hover': { backgroundColor: '#5a6fd6' }
+                            }}
+                        >
+                            {preselectedStudent && history.filter(h => h.studentId === preselectedStudent.id).length >= 16
+                                ? 'Límite Semanal Alcanzado'
+                                : 'Nueva Actividad'
+                            }
+                        </Button>
+                    </Box>
                 ) : (
                     <Button
                         variant="outlined"
                         startIcon={<ArrowBackIcon />}
-                        onClick={() => setView('history')}
+                        onClick={() => {
+                            setView('history');
+                            setEditingActivity(null);
+                        }}
                         sx={{ fontWeight: 600 }}
                     >
                         Volver al Historial
@@ -264,106 +337,193 @@ function ActivityPlanning() {
             </Box>
 
             {/* View: Create Activity */}
-            {view === 'create' && (
-                <Card sx={{ borderRadius: 3, boxShadow: 2, mb: 4 }}>
-                    <CardContent sx={{ p: 4 }}>
-                        <Typography variant="h6" fontWeight="bold" gutterBottom>
-                            Crear Nueva Actividad/Acuerdo
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                            Completa el formulario para asignar una actividad.
-                            {preselectedStudent && view === 'create' && <strong style={{ color: '#667eea' }}> Asignando a: {preselectedStudent.name}</strong>}
-                        </Typography>
+            {
+                view === 'create' && (
+                    <Card sx={{ borderRadius: 3, boxShadow: 2, mb: 4 }}>
+                        <CardContent sx={{ p: 4 }}>
+                            <Typography variant="h6" fontWeight="bold" gutterBottom>
+                                {editingActivity ? 'Editar Actividad' : 'Crear Nueva Actividad/Acuerdo'}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                                Completa el formulario para asignar una actividad.
+                                {preselectedStudent && view === 'create' && <strong style={{ color: '#667eea' }}> Asignando a: {preselectedStudent.name}</strong>}
+                            </Typography>
 
-                        <ActivityForm
-                            students={students}
-                            onSubmit={handleSubmit}
-                            onDraft={handleDraft}
-                            initialData={preselectedStudent ? { studentId: preselectedStudent.id } : null}
-                        />
-                    </CardContent>
-                </Card>
-            )}
+                            <ActivityForm
+                                students={students}
+                                onSubmit={handleSubmit}
+                                onDraft={handleDraft}
+                                initialData={editingActivity || (preselectedStudent ? { studentId: preselectedStudent.id } : null)}
+                            />
+                        </CardContent>
+                    </Card>
+                )
+            }
 
             {/* View: History (Main View) */}
-            {view === 'history' && (
-                <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
-                    <CardContent sx={{ p: 3 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
-                            <Box>
-                                <Typography variant="h6" fontWeight="bold">
-                                    Historial de Actividades
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                    Registro de actividades y su estado de cumplimiento
-                                </Typography>
+            {
+                view === 'history' && (
+                    <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
+                        <CardContent sx={{ p: 3 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
+                                <Box>
+                                    <Typography variant="h6" fontWeight="bold">
+                                        Historial de Actividades
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        Registro de actividades y su estado de cumplimiento
+                                    </Typography>
+                                </Box>
+
+                                {/* Estadísticas rápidas */}
+                                <Box sx={{ display: 'flex', gap: 2 }}>
+                                    <Chip
+                                        label={`${history.filter(h => h.status === 'cumplido' || h.status === 'aprobado' || h.status === 'entregado').length} Cumplidos/Entregados`}
+                                        sx={{ backgroundColor: '#e8f5e9', color: '#4caf50', fontWeight: 600 }}
+                                    />
+                                    <Chip
+                                        label={`${history.filter(h => h.status === 'pendiente' || h.status === 'en_progreso').length} Pendientes`}
+                                        sx={{ backgroundColor: '#fff3e0', color: '#ff9800', fontWeight: 600 }}
+                                    />
+                                    <Chip
+                                        label={`${history.filter(h => h.status === 'no_cumplido' || h.status === 'retrasado').length} Incumplidos`}
+                                        sx={{ backgroundColor: '#ffebee', color: '#f44336', fontWeight: 600 }}
+                                    />
+                                </Box>
                             </Box>
 
-                            {/* Estadísticas rápidas */}
-                            <Box sx={{ display: 'flex', gap: 2 }}>
-                                <Chip
-                                    label={`${history.filter(h => h.status === 'cumplido').length} Cumplidos`}
-                                    sx={{ backgroundColor: '#e8f5e9', color: '#4caf50', fontWeight: 600 }}
-                                />
-                                <Chip
-                                    label={`${history.filter(h => h.status === 'pendiente').length} Pendientes`}
-                                    sx={{ backgroundColor: '#fff3e0', color: '#ff9800', fontWeight: 600 }}
-                                />
-                                <Chip
-                                    label={`${history.filter(h => h.status === 'no_cumplido').length} Incumplidos`}
-                                    sx={{ backgroundColor: '#ffebee', color: '#f44336', fontWeight: 600 }}
-                                />
-                            </Box>
-                        </Box>
-
-                        <TableContainer>
-                            <Table>
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell><strong>Fecha</strong></TableCell>
-                                        <TableCell><strong>Estudiante</strong></TableCell>
-                                        <TableCell><strong>Actividad</strong></TableCell>
-                                        <TableCell><strong>Límite</strong></TableCell>
-                                        <TableCell><strong>Estado</strong></TableCell>
-                                        <TableCell align="center"><strong>Acciones</strong></TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {history.map((item, idx) => (
-                                        <TableRow key={item.id || `act-${idx}`} hover>
-                                            <TableCell>{item.assignedDate}</TableCell>
-                                            <TableCell>
-                                                <Typography variant="body2" fontWeight="600">
-                                                    {item.studentName}
-                                                </Typography>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Typography variant="body2">
-                                                    {item.activity}
-                                                </Typography>
-                                            </TableCell>
-                                            <TableCell>{item.deadline}</TableCell>
-                                            <TableCell>{getStatusChip(item.status)}</TableCell>
-                                            <TableCell align="center">
-                                                <IconButton size="small" color="primary">
-                                                    <VisibilityIcon fontSize="small" />
-                                                </IconButton>
-                                                <IconButton size="small" color="primary">
-                                                    <EditIcon fontSize="small" />
-                                                </IconButton>
-                                                <IconButton size="small" color="error">
-                                                    <DeleteIcon fontSize="small" />
-                                                </IconButton>
-                                            </TableCell>
+                            <TableContainer>
+                                <Table>
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell><strong>Fecha</strong></TableCell>
+                                            <TableCell><strong>Estudiante</strong></TableCell>
+                                            <TableCell><strong>Actividad</strong></TableCell>
+                                            <TableCell><strong>Límite</strong></TableCell>
+                                            <TableCell><strong>Estado</strong></TableCell>
+                                            <TableCell align="center"><strong>Acciones</strong></TableCell>
                                         </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                    </CardContent>
-                </Card>
-            )}
-        </Box>
+                                    </TableHead>
+                                    <TableBody>
+                                        {history.map((item, idx) => (
+                                            <TableRow key={item.id || `act-${idx}`} hover>
+                                                <TableCell>{item.assignedDate}</TableCell>
+                                                <TableCell>
+                                                    <Typography variant="body2" fontWeight="600">
+                                                        {item.studentName}
+                                                    </Typography>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Typography variant="body2">
+                                                        {item.activity}
+                                                    </Typography>
+                                                </TableCell>
+                                                <TableCell>{item.deadline}</TableCell>
+                                                <TableCell>{getStatusChip(item.status)}</TableCell>
+                                                <TableCell align="center">
+                                                    <IconButton
+                                                        size="small"
+                                                        color="primary"
+                                                        onClick={() => handleView(item)}
+                                                    >
+                                                        <VisibilityIcon fontSize="small" />
+                                                    </IconButton>
+                                                    <IconButton
+                                                        size="small"
+                                                        color="primary"
+                                                        onClick={() => handleEdit(item)}
+                                                    >
+                                                        <EditIcon fontSize="small" />
+                                                    </IconButton>
+                                                    <IconButton
+                                                        size="small"
+                                                        color="error"
+                                                        onClick={() => handleDelete(item.id)}
+                                                    >
+                                                        <DeleteIcon fontSize="small" />
+                                                    </IconButton>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        </CardContent>
+                    </Card>
+                )
+            }
+            {/* Dialog de Visualización */}
+            <Dialog open={!!viewingActivity} onClose={() => setViewingActivity(null)} maxWidth="md" fullWidth>
+                <DialogTitle sx={{ backgroundColor: '#f5f5f5', pb: 2 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Typography variant="h6" fontWeight="bold">
+                            Detalle de Actividad
+                        </Typography>
+                        {viewingActivity && getStatusChip(viewingActivity.status)}
+                    </Box>
+                </DialogTitle>
+                <DialogContent sx={{ pt: 3 }}>
+                    {viewingActivity && (
+                        <Grid container spacing={3} sx={{ mt: 0 }}>
+                            {/* Header Section */}
+                            <Grid item xs={12}>
+                                <Typography variant="h5" fontWeight="bold" color="primary" gutterBottom>
+                                    {viewingActivity.activity}
+                                </Typography>
+                                <Typography variant="subtitle1" color="text.secondary">
+                                    Asignado a: <strong>{viewingActivity.studentName}</strong>
+                                </Typography>
+                            </Grid>
+
+                            {/* Dates Section */}
+                            <Grid item xs={12} md={6}>
+                                <Box sx={{ p: 2, bgcolor: '#f8f9fa', borderRadius: 2, border: '1px solid #e0e0e0' }}>
+                                    <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                                        FECHA DE ASIGNACIÓN
+                                    </Typography>
+                                    <Typography variant="body1" fontWeight="500">
+                                        {viewingActivity.assignedDate}
+                                    </Typography>
+                                </Box>
+                            </Grid>
+                            <Grid item xs={12} md={6}>
+                                <Box sx={{ p: 2, bgcolor: '#f8f9fa', borderRadius: 2, border: '1px solid #e0e0e0' }}>
+                                    <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                                        FECHA LÍMITE
+                                    </Typography>
+                                    <Typography variant="body1" fontWeight="500" color={new Date(viewingActivity.deadline) < new Date() ? 'error' : 'text.primary'}>
+                                        {viewingActivity.deadline}
+                                    </Typography>
+                                </Box>
+                            </Grid>
+
+                            {/* Description Section */}
+                            <Grid item xs={12}>
+                                <Typography variant="subtitle2" color="text.secondary" gutterBottom sx={{ mt: 1 }}>
+                                    DESCRIPCIÓN DE LA ACTIVIDAD
+                                </Typography>
+                                <Box sx={{
+                                    p: 3,
+                                    bgcolor: '#ffffff',
+                                    borderRadius: 2,
+                                    border: '1px solid #e0e0e0',
+                                    minHeight: '100px'
+                                }}>
+                                    <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
+                                        {viewingActivity.description}
+                                    </Typography>
+                                </Box>
+                            </Grid>
+                        </Grid>
+                    )}
+                </DialogContent>
+                <DialogActions sx={{ p: 3 }}>
+                    <Button onClick={() => setViewingActivity(null)} variant="outlined" color="primary">
+                        Cerrar
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        </Box >
     );
 }
 

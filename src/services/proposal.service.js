@@ -88,44 +88,24 @@ export const ProposalService = {
             throw error;
         }
     },
-
-    /**
-     * Obtiene las propuestas de un estudiante específico (para Directores)
-     * @param {number|string} studentId
-     * @returns {Promise<Array>}
-     */
-    async getByStudent(studentId) {
+    async updateStatus(id, status, feedback) {
         try {
-            const response = await apiFetch(`/api/v1/propuestas/?estudianteId=${studentId}`);
-            if (!response.ok) return [];
-            return await response.json();
-        } catch (error) {
-            console.error("ProposalService.getByStudent error:", error);
-            return [];
-        }
-    },
-
-    /**
-     * Actualiza el estado de una propuesta (Director)
-     * @param {number|string} id 
-     * @param {string} status 
-     * @param {string} comment 
-     * @returns {Promise<Object>}
-     */
-    async updateStatus(id, status, comment) {
-        try {
-            // El endpoint de revisión es /revision (según propuesta.routes.ts)
-            const response = await apiFetch(`/api/v1/propuestas/${id}/revision`, {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`/api/v1/propuestas/${id}/revision`, {
                 method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({
                     estadoRevision: status,
-                    comentariosRevision: comment
+                    comentariosRevision: feedback
                 })
             });
 
             if (!response.ok) {
-                const err = await response.json();
-                throw new Error(err.message || 'Error actualizando estado');
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `Error al actualizar estado: ${response.statusText}`);
             }
             return await response.json();
         } catch (error) {

@@ -8,93 +8,35 @@ import { useEffect } from 'react';
 import { TutorService } from '../../services/tutor.service';
 import LinearProgress from '@mui/material/LinearProgress';
 
-// Mock data de estudiantes asignados
-const MOCK_STUDENTS = [
-    {
-        id: 1,
-        name: "Juan Pérez",
-        email: "juan@uide.edu.ec",
-        thesis: "Sistema de IoT para agricultura inteligente",
-        career: "Ingeniería de Software",
-        status: "green",
-        lastActivity: {
-            date: "Hace 2 días",
-            title: "Implementación de sensores DHT22"
-        },
-        weekNumber: 8
-    },
-    {
-        id: 2,
-        name: "María García",
-        email: "maria@uide.edu.ec",
-        thesis: "Aplicación móvil de gestión académica con React Native",
-        career: "Ingeniería de Software",
-        status: "yellow",
-        lastActivity: {
-            date: "Hace 5 días",
-            title: "Módulo de autenticación"
-        },
-        weekNumber: 12
-    },
-    {
-        id: 3,
-        name: "Carlos López",
-        email: "carlos@uide.edu.ec",
-        thesis: "Sistema de reconocimiento facial con Deep Learning",
-        career: "Ingeniería de Software",
-        status: "red",
-        lastActivity: {
-            date: "Hace 10 días",
-            title: "Entrenamiento de modelo CNN"
-        },
-        weekNumber: 6
-    },
-    {
-        id: 4,
-        name: "Ana Martínez",
-        email: "ana@uide.edu.ec",
-        thesis: "Plataforma de e-commerce con microservicios",
-        career: "Ingeniería de Software",
-        status: "green",
-        lastActivity: {
-            date: "Hace 1 día",
-            title: "Implementación de gateway API"
-        },
-        weekNumber: 10
-    },
-    {
-        id: 5,
-        name: "Luis Rodríguez",
-        email: "luis@uide.edu.ec",
-        thesis: "Sistema de gestión hospitalaria con blockchain",
-        career: "Ingeniería de Software",
-        status: "yellow",
-        lastActivity: {
-            date: "Hace 4 días",
-            title: "Smart contracts en Solidity"
-        },
-        weekNumber: 9
-    },
-    {
-        id: 6,
-        name: "Sofia Hernández",
-        email: "sofia@uide.edu.ec",
-        thesis: "Chatbot inteligente con NLP para atención al cliente",
-        career: "Ingeniería de Software",
-        status: "green",
-        lastActivity: {
-            date: "Hace 3 días",
-            title: "Integración con RASA Framework"
-        },
-        weekNumber: 11
-    }
-];
+
+import { UserService } from '../../services/user.service';
 
 function TutorDashboard() {
     const user = getDataUser();
     const navigate = useNavigate();
     const [students, setStudents] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [tutorName, setTutorName] = useState((user?.nombres && user?.apellidos) ? `${user.nombres} ${user.apellidos}` : (user?.name || "Tutor"));
+
+    useEffect(() => {
+        const fetchUserData = async () => {
+            if (user?.id) {
+                try {
+                    const freshData = await UserService.getById(user.id);
+                    if (freshData) {
+                        const newName = freshData.nombres || freshData.nombre;
+                        const newLast = freshData.apellidos || freshData.apellido;
+                        if (newName && newLast) {
+                            setTutorName(`${newName} ${newLast}`);
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error fetching user data:", error);
+                }
+            }
+        };
+        fetchUserData();
+    }, [user?.id]);
 
     useEffect(() => {
         const fetchStudents = async () => {
@@ -108,11 +50,13 @@ function TutorDashboard() {
                     career: s.perfil?.escuela || 'UIDE',
                     status: s.propuesta?.estado === 'APROBADA' ? 'green' : 'yellow',
                     lastActivity: {
-                        date: s.actividadResumen?.ultimaFecha ? new Date(s.actividadResumen.ultimaFecha).toLocaleDateString() : 'N/A',
-                        title: s.actividadResumen?.ultimoContenido || 'Sin actividad'
+                        date: s.propuesta?.fechaPublicacion ? new Date(s.propuesta.fechaPublicacion).toLocaleDateString() : 'N/A',
+                        title: 'Última propuesta enviada'
                     },
-                    weekNumber: s.actividadResumen?.totalEvidencias || 0
+                    weekNumber: s.semanaActual || 0
                 }));
+
+                // Si la semana > 15, quizás mostrar 15+ o ajustar lógica visual
                 setStudents(mappedStudents);
             } catch (error) {
                 console.error("Error al cargar dashboard de tutor:", error);
@@ -151,7 +95,7 @@ function TutorDashboard() {
             {/* Encabezado */}
             <Box sx={{ mb: 4 }}>
                 <Typography variant="h4" fontWeight="bold" gutterBottom>
-                    ¡Hola, {user?.name || "Tutor"}! 👨‍🏫
+                    ¡Hola, {tutorName}! 👨‍🏫
                 </Typography>
                 <Typography variant="body1" color="text.secondary">
                     Panel de control de tus estudiantes de titulación

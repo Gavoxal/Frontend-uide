@@ -6,29 +6,29 @@ import {
     TextField,
     Button,
     Divider,
-    IconButton
+    IconButton,
+    MenuItem
 } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
-function FeedbackPanel({ submission, onSubmit, onCancel }) {
+function FeedbackPanel({ submission, onSubmit, onCancel, hideRating = false, sectionTitle = "Avance del Estudiante", statusOptions = [] }) {
     const [feedback, setFeedback] = useState({
         observations: submission?.tutorComments || '',
-        rating: submission?.grade || ''
+        rating: submission?.grade || '',
+        status: submission?.status || (statusOptions.length > 0 ? statusOptions[0].value : '')
     });
 
     const handleSubmit = () => {
         onSubmit?.(feedback);
     };
 
-
-
     return (
         <Box sx={{ display: 'flex', gap: 3, height: '100%' }}>
-            {/* Panel Izquierdo - Información del Avance */}
+            {/* Panel Izquierdo - Información */}
             <Paper sx={{ flex: 1, p: 3, borderRadius: 3, boxShadow: 2 }}>
                 <Typography variant="h6" fontWeight="bold" gutterBottom>
-                    Avance del Estudiante
+                    {sectionTitle}
                 </Typography>
 
                 <Divider sx={{ my: 2 }} />
@@ -45,7 +45,7 @@ function FeedbackPanel({ submission, onSubmit, onCancel }) {
 
                 <Box sx={{ mb: 3 }}>
                     <Typography variant="caption" color="text.secondary" display="block">
-                        Actividad
+                        {hideRating ? 'Título de Propuesta' : 'Actividad'}
                     </Typography>
                     <Typography variant="body1" fontWeight="500">
                         {submission?.title || 'Sin título'}
@@ -66,7 +66,7 @@ function FeedbackPanel({ submission, onSubmit, onCancel }) {
                 {/* Archivo/Link */}
                 <Box sx={{ mb: 3 }}>
                     <Typography variant="subtitle2" fontWeight="600" gutterBottom>
-                        Archivo del Estudiante
+                        {hideRating ? 'Documento Asociado' : 'Archivo del Estudiante'}
                     </Typography>
                     <Paper sx={{
                         p: 2,
@@ -85,21 +85,27 @@ function FeedbackPanel({ submission, onSubmit, onCancel }) {
                         </Box>
                         <IconButton
                             color="primary"
+                            disabled={!submission?.fileLink}
                             onClick={() => {
-                                // Lógica de descarga
+                                if (submission?.fileLink) {
+                                    // Si es una ruta relativa de API, asegurar que sea absoluta o correcta
+                                    // Asumiendo que fileLink es "/api/v1/..."
+                                    const url = submission.fileLink.startsWith('http')
+                                        ? submission.fileLink
+                                        : `${window.location.origin}${submission.fileLink}`;
+                                    window.open(url, '_blank');
+                                }
                             }}
                         >
                             <DownloadIcon />
                         </IconButton>
                     </Paper>
-
-                    {/* Link eliminado */}
                 </Box>
 
                 {/* Comentarios del estudiante */}
                 <Box>
                     <Typography variant="subtitle2" fontWeight="600" gutterBottom>
-                        Comentarios del Estudiante
+                        {hideRating ? 'Descripción de la Propuesta' : 'Comentarios del Estudiante'}
                     </Typography>
                     <Paper sx={{ p: 2, backgroundColor: '#f9f9f9' }}>
                         <Typography variant="body2" color="text.secondary">
@@ -117,29 +123,53 @@ function FeedbackPanel({ submission, onSubmit, onCancel }) {
 
                 <Divider sx={{ my: 2 }} />
 
-                {/* Calificación */}
-                <Box sx={{ mb: 3 }}>
-                    <Typography variant="subtitle2" fontWeight="600" gutterBottom>
-                        Calificación (0 - 10)
-                    </Typography>
-                    <TextField
-                        type="number"
-                        fullWidth
-                        placeholder="10"
-                        inputProps={{ min: 0, max: 10 }}
-                        value={feedback.rating}
-                        onChange={(e) => setFeedback({ ...feedback, rating: e.target.value })}
-                        sx={{
-                            backgroundColor: 'white'
-                        }}
-                    />
-                </Box>
+                {/* Estado/Decisión (Si hay opciones) */}
+                {statusOptions.length > 0 && (
+                    <Box sx={{ mb: 3 }}>
+                        <Typography variant="subtitle2" fontWeight="600" gutterBottom>
+                            Decisión / Estado
+                        </Typography>
+                        <TextField
+                            select
+                            fullWidth
+                            value={feedback.status}
+                            onChange={(e) => setFeedback({ ...feedback, status: e.target.value })}
+                            sx={{ backgroundColor: 'white' }}
+                        >
+                            {statusOptions.map((option) => (
+                                <MenuItem key={option.value} value={option.value}>
+                                    {option.label}
+                                </MenuItem>
+                            ))}
+                        </TextField>
+                    </Box>
+                )}
 
-                {/* Historial de Observaciones Técnicas */}
+                {/* Calificación - Condicional (Solo si NO se oculta) */}
+                {!hideRating && (
+                    <Box sx={{ mb: 3 }}>
+                        <Typography variant="subtitle2" fontWeight="600" gutterBottom>
+                            Calificación (0 - 10)
+                        </Typography>
+                        <TextField
+                            type="number"
+                            fullWidth
+                            placeholder="10"
+                            inputProps={{ min: 0, max: 10 }}
+                            value={feedback.rating}
+                            onChange={(e) => setFeedback({ ...feedback, rating: e.target.value })}
+                            sx={{
+                                backgroundColor: 'white'
+                            }}
+                        />
+                    </Box>
+                )}
+
+                {/* Historial de Observaciones */}
                 {submission?.historicalComments?.length > 0 && (
                     <Box sx={{ mb: 3 }}>
                         <Typography variant="subtitle2" fontWeight="600" gutterBottom>
-                            Historial de Observaciones Técnicas
+                            Historial de Observaciones
                         </Typography>
                         <Box sx={{ maxHeight: 200, overflowY: 'auto', p: 1, backgroundColor: '#f0f2f5', borderRadius: 2 }}>
                             {submission.historicalComments.map((c, i) => (
@@ -164,13 +194,13 @@ function FeedbackPanel({ submission, onSubmit, onCancel }) {
                 {/* Observaciones Técnicas (Nuevo Feedback) */}
                 <Box sx={{ mb: 3 }}>
                     <Typography variant="subtitle2" fontWeight="600" gutterBottom>
-                        Nueva Observación Técnica
+                        {hideRating ? 'Comentarios / Aprobación' : 'Nueva Observación Técnica'}
                     </Typography>
                     <TextField
                         fullWidth
                         multiline
                         rows={6}
-                        placeholder="Escribe tus comentarios, correcciones, felicitaciones o sugerencias..."
+                        placeholder="Escribe tus comentarios..."
                         value={feedback.observations}
                         onChange={(e) => setFeedback({ ...feedback, observations: e.target.value })}
                         sx={{
@@ -197,7 +227,11 @@ function FeedbackPanel({ submission, onSubmit, onCancel }) {
                         variant="contained"
                         fullWidth
                         onClick={handleSubmit}
-                        disabled={!feedback.observations.trim() || !feedback.rating}
+                        disabled={
+                            !feedback.observations.trim() ||
+                            (!hideRating && !feedback.rating) ||
+                            (statusOptions.length > 0 && !feedback.status)
+                        }
                         sx={{
                             backgroundColor: '#667eea',
                             '&:hover': {
@@ -206,7 +240,7 @@ function FeedbackPanel({ submission, onSubmit, onCancel }) {
                         }}
                         startIcon={<CheckCircleIcon />}
                     >
-                        Enviar Evaluación
+                        {hideRating ? 'Enviar Evaluación' : 'Enviar Evaluación'}
                     </Button>
                 </Box>
             </Paper>
