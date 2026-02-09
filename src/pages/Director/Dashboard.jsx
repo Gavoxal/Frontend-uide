@@ -6,17 +6,33 @@ import AssignmentIcon from "@mui/icons-material/Assignment";
 import SchoolIcon from "@mui/icons-material/School";
 import StatsCard from "../../components/common/StatsCard";
 import { getDataUser } from "../../storage/user.model.jsx";
+import { DashboardService } from "../../services/dashboard.service";
 
 const DirectorDashboard = () => {
     const navigate = useNavigate();
     const user = getDataUser();
+    const [loading, setLoading] = React.useState(true);
 
-    // Datos simulados para el dashboard
-    const stats = {
-        students: 120, // Simulando estudiantes activos
-        proposals: 15, // Simulando propuestas pendientes
-        defenses: 8,   // Simulando defensas programadas
-    };
+    // Datos reales para el dashboard
+    const [stats, setStats] = React.useState({
+        students: 0,
+        proposals: 0,
+        defenses: 0,
+    });
+
+    React.useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const data = await DashboardService.getStats();
+                setStats(data);
+            } catch (error) {
+                console.error("Error al cargar estadísticas:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchStats();
+    }, []);
 
     return (
         <Box>
@@ -35,7 +51,7 @@ const DirectorDashboard = () => {
 
                 {/* Gestión de Estudiantes */}
                 <Grid item xs={12} sm={6} md={4}>
-                    <Box onClick={() => navigate('/director/student-load')} sx={{ cursor: 'pointer', height: '100%' }}>
+                    <Box onClick={() => navigate('/director/students')} sx={{ cursor: 'pointer', height: '100%' }}>
                         <StatsCard
                             title="Estudiantes"
                             value={stats.students.toString()}
@@ -61,7 +77,7 @@ const DirectorDashboard = () => {
 
                 {/* Defensas y Tribunales */}
                 <Grid item xs={12} sm={6} md={4}>
-                    <Box onClick={() => navigate('/director/defense')} sx={{ cursor: 'pointer', height: '100%' }}>
+                    <Box onClick={() => navigate('/director/defenses')} sx={{ cursor: 'pointer', height: '100%' }}>
                         <StatsCard
                             title="Defensas"
                             value={stats.defenses.toString()}
