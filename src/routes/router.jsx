@@ -49,6 +49,8 @@ import SharedProposalList from "../pages/Shared/ProposalList";
 import SharedProposalReview from "../pages/Shared/ProposalReview";
 import SharedDefenseEvaluation from "../pages/Shared/DefenseEvaluation";
 import PublicDefense from "../pages/Tutor/PublicDefense";
+import TutorGrades from "../pages/Tutor/Grades";
+import TutorDefensas from "../pages/Tutor/TutorDefensas";
 
 
 // Docente Integración pages
@@ -130,6 +132,8 @@ function RouterPages() {
                     <Route element={<DashboardLayout />}>
                         <Route index element={<TutorDashboard />} />
                         <Route path="dashboard" element={<TutorDashboard />} />
+                        <Route path="grades" element={<TutorGrades />} />
+                        <Route path="defenses" element={<TutorDefensas />} />
                         <Route path="students" element={<TutorStudents />} />
                         <Route path="planning" element={<ActivityPlanning />} />
                         <Route path="review" element={<ReviewFeedback />} />

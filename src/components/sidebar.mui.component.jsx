@@ -29,6 +29,7 @@ import EventNoteIcon from "@mui/icons-material/EventNote";
 import GroupsIcon from "@mui/icons-material/Groups";
 import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
 import HistoryIcon from "@mui/icons-material/History";
+import GradeIcon from "@mui/icons-material/Grade";
 import { useState, useEffect } from "react";
 import { getDataUser } from "../storage/user.model.jsx";
 import { useUserProgress } from "../contexts/UserProgressContext";
@@ -42,7 +43,7 @@ const roleToRoute = {
     student: 'student',
     tutor: 'tutor',
     reviewer: 'reviewer',
-    coordinador: 'coordinador',
+    coordinador: 'director',
     docente_integracion: 'docente-integracion'
 };
 
@@ -86,7 +87,17 @@ const MENU_BY_ROLE = {
         { icon: GradeIcon, label: "Notas", path: "/tutor/grades" },
         { icon: EventNoteIcon, label: "Reuniones", path: "/tutor/meetings" },
         { icon: GavelIcon, label: "Defensas", path: "/tutor/defenses" },
-
+    ],
+    coordinador: [
+        { icon: DashboardIcon, label: "Dashboard", path: "/director/dashboard" },
+        { icon: PeopleIcon, label: "Estudiantes", path: "/director/students" },
+        { icon: ChecklistIcon, label: "Prerrequisitos", path: "/director/prerequisites" },
+        { icon: AssignmentIcon, label: "Propuestas", path: "/director/proposals" },
+        { icon: SchoolIcon, label: "Tutores", path: "/director/tutors" },
+        { icon: AssignmentIndIcon, label: "Asignar Tutor", path: "/director/tutors/assign" },
+        { icon: GroupsIcon, label: "Comité", path: "/director/committee" },
+        { icon: GavelIcon, label: "Defensas", path: "/director/defenses" },
+        { icon: RateReviewIcon, label: "Calificación", path: "/director/defense-grading" },
     ],
     reviewer: [
         { icon: DashboardIcon, label: "Dashboard", path: "/reviewer/dashboard" },

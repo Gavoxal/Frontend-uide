@@ -88,7 +88,7 @@ function ProposalReview() {
     if (loading) return <Box p={3}>Cargando...</Box>;
     if (!proposal) return <Box p={3}>Propuesta no encontrada.</Box>;
 
-    const isDirector = userRole === 'director' || userRole === 'admin';
+    const isDirector = userRole === 'director' || userRole === 'admin' || userRole === 'coordinador';
 
     return (
         <Box sx={{ height: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column', bgcolor: '#f5f7fa', overflow: 'hidden' }}>

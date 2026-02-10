@@ -39,21 +39,22 @@ export const menuConfig = {
     ],
 
     coordinador: [
-        { icon: DashboardIcon, label: "Dashboard", path: "/coordinador/dashboard" },
-        { icon: PeopleIcon, label: "Estudiantes", path: "/coordinador/students" },
-        { icon: ChecklistIcon, label: "Prerrequisitos", path: "/coordinador/prerequisites" },
-        { icon: AssignmentIcon, label: "Propuestas", path: "/coordinador/proposals" },
+        { icon: DashboardIcon, label: "Dashboard", path: "/director/dashboard" },
+        { icon: PeopleIcon, label: "Estudiantes", path: "/director/students" },
+        { icon: ChecklistIcon, label: "Prerrequisitos", path: "/director/prerequisites" },
+        { icon: AssignmentIcon, label: "Propuestas", path: "/director/proposals" },
         {
             icon: SchoolIcon,
             label: "Tutores",
-            path: "/coordinador/tutors",
+            path: "/director/tutors",
             children: [
-                { label: "Listado", path: "/coordinador/tutors" },
-                { label: "Asignar Tutor", path: "/coordinador/tutors/assign" }
+                { label: "Listado", path: "/director/tutors" },
+                { label: "Asignar Tutor", path: "/director/tutors/assign" }
             ]
         },
-        { icon: GavelIcon, label: "Defensas", path: "/coordinador/defense" },
-        { icon: EventNoteIcon, label: "Historial de Reuniones", path: "/coordinador/meetings" },
+        { icon: GavelIcon, label: "Defensas", path: "/director/defense" },
+        { icon: GroupsIcon, label: "Gestión de Comité", path: "/director/committee" },
+        { icon: EventNoteIcon, label: "Historial de Reuniones", path: "/director/meetings" },
     ],
 
     student: [
