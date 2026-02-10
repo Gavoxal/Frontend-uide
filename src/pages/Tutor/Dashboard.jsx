@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Typography, Grid, Card, CardContent } from '@mui/material';
+import { Box, Typography, Grid, Card, CardContent, Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
 import { getDataUser } from '../../storage/user.model.jsx';
 import StudentCard from '../../components/studentcard.mui.component';
 
@@ -17,6 +17,10 @@ function TutorDashboard() {
     const [students, setStudents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [tutorName, setTutorName] = useState((user?.nombres && user?.apellidos) ? `${user.nombres} ${user.apellidos}` : (user?.name || "Tutor"));
+
+    // State for student details dialog
+    const [openDialog, setOpenDialog] = useState(false);
+    const [selectedStudent, setSelectedStudent] = useState(null);
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -42,21 +46,32 @@ function TutorDashboard() {
         const fetchStudents = async () => {
             try {
                 const data = await TutorService.getAssignedStudents();
-                const mappedStudents = data.map(s => ({
-                    id: s.id,
-                    name: `${s.nombres} ${s.apellidos}`,
-                    email: s.correo,
-                    thesis: s.propuesta?.titulo || 'Sin propuesta',
-                    career: s.perfil?.escuela || 'UIDE',
-                    status: s.propuesta?.estado === 'APROBADA' ? 'green' : 'yellow',
-                    lastActivity: {
-                        date: s.propuesta?.fechaPublicacion ? new Date(s.propuesta.fechaPublicacion).toLocaleDateString() : 'N/A',
-                        title: 'Última propuesta enviada'
-                    },
-                    weekNumber: s.semanaActual || 0
-                }));
+                // Mapping logic improvement
+                const mappedStudents = data.map(s => {
+                    let status = 'gray'; // Default: No proposal
+                    if (s.propuesta) {
+                        if (s.propuesta.estado === 'APROBADA') status = 'green';
+                        else if (s.propuesta.estado === 'PENDIENTE') status = 'yellow';
+                        else if (s.propuesta.estado === 'RECHAZADA') status = 'red';
+                        else status = 'blue'; // Other states like REVISADA/OBSERVACIONES
+                    }
 
-                // Si la semana > 15, quizás mostrar 15+ o ajustar lógica visual
+                    return {
+                        id: s.id,
+                        name: `${s.nombres} ${s.apellidos}`,
+                        email: s.correo,
+                        thesis: s.propuesta?.titulo || 'Sin propuesta',
+                        career: s.perfil?.escuela || 'UIDE',
+                        status: status,
+                        lastActivity: {
+                            date: s.propuesta?.fechaPublicacion ? new Date(s.propuesta.fechaPublicacion).toLocaleDateString() : 'N/A',
+                            title: 'Última propuesta enviada'
+                        },
+                        weekNumber: s.semanaActual || 0,
+                        hasProposal: !!s.propuesta
+                    };
+                });
+
                 setStudents(mappedStudents);
             } catch (error) {
                 console.error("Error al cargar dashboard de tutor:", error);
@@ -68,17 +83,22 @@ function TutorDashboard() {
         fetchStudents();
     }, []);
 
-    // Calcular estadísticas
+    // Calculate statistics
     const totalStudents = students.length;
-    const pendingReview = students.filter(s => s.status === 'yellow').length;
-    const delayed = students.filter(s => s.status === 'red').length;
-    const onTrack = students.filter(s => s.status === 'green').length;
-
-
+    const pendingReview = students.filter(s => s.status === 'yellow').length; // PENDIENTE
+    const delayed = students.filter(s => s.status === 'red').length; // RECHAZADA (or use for delays logic if implemented)
+    const onTrack = students.filter(s => s.status === 'green').length; // APROBADA
+    const totalProposals = students.filter(s => s.hasProposal).length;
 
     const handleViewStudent = (student) => {
         console.log('Ver detalles de:', student.name);
-        // Navegar a vista de detalles
+        setSelectedStudent(student);
+        setOpenDialog(true);
+    };
+
+    const handleCloseDialog = () => {
+        setOpenDialog(false);
+        setSelectedStudent(null);
     };
 
     const handlePlanActivity = (student) => {
@@ -95,7 +115,7 @@ function TutorDashboard() {
             {/* Encabezado */}
             <Box sx={{ mb: 4 }}>
                 <Typography variant="h4" fontWeight="bold" gutterBottom>
-                    ¡Hola, {tutorName}! 👨‍🏫
+                    ¡Hola, {tutorName}! 
                 </Typography>
                 <Typography variant="body1" color="text.secondary">
                     Panel de control de tus estudiantes de titulación
@@ -109,7 +129,8 @@ function TutorDashboard() {
                         borderRadius: 3,
                         boxShadow: 2,
                         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        color: 'white'
+                        color: 'white',
+                        height: '100%' // Ensure uniform height
                     }}>
                         <CardContent sx={{ p: 3 }}>
                             <Typography variant="body2" sx={{ opacity: 0.9, mb: 1 }}>
@@ -127,11 +148,12 @@ function TutorDashboard() {
                         borderRadius: 3,
                         boxShadow: 2,
                         backgroundColor: '#4caf50',
-                        color: 'white'
+                        color: 'white',
+                        height: '100%' // Ensure uniform height
                     }}>
                         <CardContent sx={{ p: 3 }}>
                             <Typography variant="body2" sx={{ opacity: 0.9, mb: 1 }}>
-                                Al Día
+                                Al Día (Aprobados)
                             </Typography>
                             <Typography variant="h3" fontWeight="bold">
                                 {onTrack}
@@ -145,7 +167,8 @@ function TutorDashboard() {
                         borderRadius: 3,
                         boxShadow: 2,
                         backgroundColor: '#ff9800',
-                        color: 'white'
+                        color: 'white',
+                        height: '100%' // Ensure uniform height
                     }}>
                         <CardContent sx={{ p: 3 }}>
                             <Typography variant="body2" sx={{ opacity: 0.9, mb: 1 }}>
@@ -163,11 +186,12 @@ function TutorDashboard() {
                         borderRadius: 3,
                         boxShadow: 2,
                         backgroundColor: '#f44336',
-                        color: 'white'
+                        color: 'white',
+                        height: '100%' // Ensure uniform height
                     }}>
                         <CardContent sx={{ p: 3 }}>
                             <Typography variant="body2" sx={{ opacity: 0.9, mb: 1 }}>
-                                Retrasados
+                                Rechazados
                             </Typography>
                             <Typography variant="h3" fontWeight="bold">
                                 {delayed}
@@ -186,7 +210,8 @@ function TutorDashboard() {
                             color: 'white',
                             cursor: 'pointer',
                             transition: '0.3s',
-                            '&:hover': { transform: 'scale(1.02)' }
+                            '&:hover': { transform: 'scale(1.02)' },
+                            height: '100%' // Ensure uniform height
                         }}
                     >
                         <CardContent sx={{ p: 3 }}>
@@ -194,15 +219,12 @@ function TutorDashboard() {
                                 Propuestas Tesis
                             </Typography>
                             <Typography variant="h3" fontWeight="bold">
-                                3
+                                {totalProposals}
                             </Typography>
                         </CardContent>
                     </Card>
                 </Grid>
             </Grid>
-
-            {/* Sección de Alertas */}
-            {/* Sección de Alertas eliminada */}
 
             {/* Lista de Estudiantes */}
             <Box sx={{ mb: 3 }}>
@@ -226,6 +248,27 @@ function TutorDashboard() {
                     ))}
                 </Grid>
             </Box>
+
+            {/* Modal Detalle Estudiante */}
+            <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+                <DialogTitle sx={{ backgroundColor: '#f5f7fa', pb: 2 }}>
+                    Detalles del Estudiante
+                </DialogTitle>
+                <DialogContent sx={{ mt: 2 }}>
+                    {selectedStudent && (
+                        <Box>
+                            <Typography variant="h6" gutterBottom>{selectedStudent.name}</Typography>
+                            <Typography variant="body1"><strong>Email:</strong> {selectedStudent.email}</Typography>
+                            <Typography variant="body1"><strong>Carrera:</strong> {selectedStudent.career}</Typography>
+                            <Typography variant="body1"><strong>Tema de Tesis:</strong> {selectedStudent.thesis}</Typography>
+                            <Typography variant="body1" sx={{ mt: 2 }}><strong>Última Actividad:</strong> {selectedStudent.lastActivity.title} ({selectedStudent.lastActivity.date})</Typography>
+                        </Box>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseDialog} color="primary">Cerrar</Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 }

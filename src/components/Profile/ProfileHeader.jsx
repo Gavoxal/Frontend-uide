@@ -96,16 +96,16 @@ function ProfileHeader({ studentData, onEditProfile, onEditCover, onChangePasswo
                         {onChangePassword && (
                             <Button
                                 onClick={onChangePassword}
-                                variant="outlined"
+                                variant="contained"
                                 startIcon={<LockIcon />}
                                 size="small"
                                 sx={{
-                                    borderColor: '#667eea',
-                                    color: '#667eea',
+                                    bgcolor: '#2e7d32', // Green/Success color
+                                    color: 'white',
                                     '&:hover': {
-                                        bgcolor: '#e8eaf6',
-                                        borderColor: '#5c6bc0'
-                                    }
+                                        bgcolor: '#1b5e20',
+                                    },
+                                    boxShadow: 2
                                 }}
                             >
                                 Cambiar Contraseña

@@ -336,61 +336,60 @@ function StudentPrerequisites() {
                                         />
                                     </Box>
 
-                                    {!prerequisites.english.verified && (
-                                        <Box sx={{ mt: 2 }}>
-                                            {prerequisites.english.file ? (
-                                                <Box sx={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: 2,
-                                                    p: 2,
-                                                    backgroundColor: '#FFF',
-                                                    borderRadius: 2,
-                                                    border: '1px solid #e5e7eb'
-                                                }}>
-                                                    <DescriptionIcon sx={{ color: '#667eea', fontSize: 32 }} />
-                                                    <Box sx={{ flex: 1, overflow: 'hidden' }}>
-                                                        <Typography variant="body2" fontWeight="600" noWrap>
-                                                            {prerequisites.english.file.name}
-                                                        </Typography>
-                                                        <Typography variant="caption" color="text.secondary">
-                                                            {prerequisites.english.file.size || "PDF"}
-                                                        </Typography>
-                                                    </Box>
-                                                    <Box>
-                                                        {prerequisites.english.file.url && (
-                                                            <IconButton
-                                                                size="small"
-                                                                href={prerequisites.english.file.url}
-                                                                target="_blank"
-                                                                title="Ver documento"
-                                                            >
-                                                                <VisibilityIcon fontSize="small" />
-                                                            </IconButton>
-                                                        )}
-                                                        <IconButton
-                                                            size="small"
-                                                            onClick={() => handleFileRemove("english")}
-                                                            color="error"
-                                                            title="Eliminar"
-                                                        >
-                                                            <DeleteIcon fontSize="small" />
-                                                        </IconButton>
-                                                    </Box>
-                                                </Box>
-                                            ) : (
-                                                <>
-                                                    <Typography variant="body2" fontWeight="500" gutterBottom>
-                                                        Adjuntar certificado:
-                                                    </Typography>
-                                                    <FileUpload
-                                                        onFileSelect={(file) => handleFileSelect("english", file)}
-                                                        uploadedFile={null} // Pasamos null para que FileUpload siempre muestre input si no hay file arriba
-                                                        onRemoveFile={() => handleFileRemove("english")}
-                                                    />
-                                                </>
-                                            )}
+                                    {prerequisites.english.file ? (
+                                        <Box sx={{
+                                            mt: 2,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 2,
+                                            p: 2,
+                                            backgroundColor: '#FFF',
+                                            borderRadius: 2,
+                                            border: '1px solid #e5e7eb'
+                                        }}>
+                                            <DescriptionIcon sx={{ color: '#667eea', fontSize: 32 }} />
+                                            <Box sx={{ flex: 1, overflow: 'hidden' }}>
+                                                <Typography
+                                                    variant="body2"
+                                                    fontWeight="600"
+                                                    noWrap
+                                                    component="a"
+                                                    href={prerequisites.english.file.url}
+                                                    target="_blank"
+                                                    sx={{ textDecoration: 'none', color: 'inherit', '&:hover': { textDecoration: 'underline', color: 'primary.main' } }}
+                                                >
+                                                    {prerequisites.english.file.name}
+                                                </Typography>
+                                                <Typography variant="caption" color="text.secondary" display="block">
+                                                    {prerequisites.english.file.size || "PDF"}
+                                                </Typography>
+                                            </Box>
+                                            <Box>
+                                                {!prerequisites.english.verified && (
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={() => handleFileRemove("english")}
+                                                        color="error"
+                                                        title="Eliminar"
+                                                    >
+                                                        <DeleteIcon fontSize="small" />
+                                                    </IconButton>
+                                                )}
+                                            </Box>
                                         </Box>
+                                    ) : (
+                                        !prerequisites.english.verified && (
+                                            <Box sx={{ mt: 2 }}>
+                                                <Typography variant="body2" fontWeight="500" gutterBottom>
+                                                    Adjuntar certificado:
+                                                </Typography>
+                                                <FileUpload
+                                                    onFileSelect={(file) => handleFileSelect("english", file)}
+                                                    uploadedFile={null}
+                                                    onRemoveFile={() => handleFileRemove("english")}
+                                                />
+                                            </Box>
+                                        )
                                     )}
                                 </Box>
                             </Grid>
@@ -440,61 +439,60 @@ function StudentPrerequisites() {
                                         />
                                     </Box>
 
-                                    {!prerequisites.internship.verified && (
-                                        <Box sx={{ mt: 2 }}>
-                                            {prerequisites.internship.file ? (
-                                                <Box sx={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: 2,
-                                                    p: 2,
-                                                    backgroundColor: '#FFF',
-                                                    borderRadius: 2,
-                                                    border: '1px solid #e5e7eb'
-                                                }}>
-                                                    <DescriptionIcon sx={{ color: '#667eea', fontSize: 32 }} />
-                                                    <Box sx={{ flex: 1, overflow: 'hidden' }}>
-                                                        <Typography variant="body2" fontWeight="600" noWrap>
-                                                            {prerequisites.internship.file.name}
-                                                        </Typography>
-                                                        <Typography variant="caption" color="text.secondary">
-                                                            {prerequisites.internship.file.size || "PDF"}
-                                                        </Typography>
-                                                    </Box>
-                                                    <Box>
-                                                        {prerequisites.internship.file.url && (
-                                                            <IconButton
-                                                                size="small"
-                                                                href={prerequisites.internship.file.url}
-                                                                target="_blank"
-                                                                title="Ver documento"
-                                                            >
-                                                                <VisibilityIcon fontSize="small" />
-                                                            </IconButton>
-                                                        )}
-                                                        <IconButton
-                                                            size="small"
-                                                            onClick={() => handleFileRemove("internship")}
-                                                            color="error"
-                                                            title="Eliminar"
-                                                        >
-                                                            <DeleteIcon fontSize="small" />
-                                                        </IconButton>
-                                                    </Box>
-                                                </Box>
-                                            ) : (
-                                                <>
-                                                    <Typography variant="body2" fontWeight="500" gutterBottom>
-                                                        Adjuntar certificado:
-                                                    </Typography>
-                                                    <FileUpload
-                                                        onFileSelect={(file) => handleFileSelect("internship", file)}
-                                                        uploadedFile={null}
-                                                        onRemoveFile={() => handleFileRemove("internship")}
-                                                    />
-                                                </>
-                                            )}
+                                    {prerequisites.internship.file ? (
+                                        <Box sx={{
+                                            mt: 2,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 2,
+                                            p: 2,
+                                            backgroundColor: '#FFF',
+                                            borderRadius: 2,
+                                            border: '1px solid #e5e7eb'
+                                        }}>
+                                            <DescriptionIcon sx={{ color: '#667eea', fontSize: 32 }} />
+                                            <Box sx={{ flex: 1, overflow: 'hidden' }}>
+                                                <Typography
+                                                    variant="body2"
+                                                    fontWeight="600"
+                                                    noWrap
+                                                    component="a"
+                                                    href={prerequisites.internship.file.url}
+                                                    target="_blank"
+                                                    sx={{ textDecoration: 'none', color: 'inherit', '&:hover': { textDecoration: 'underline', color: 'primary.main' } }}
+                                                >
+                                                    {prerequisites.internship.file.name}
+                                                </Typography>
+                                                <Typography variant="caption" color="text.secondary" display="block">
+                                                    {prerequisites.internship.file.size || "PDF"}
+                                                </Typography>
+                                            </Box>
+                                            <Box>
+                                                {!prerequisites.internship.verified && (
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={() => handleFileRemove("internship")}
+                                                        color="error"
+                                                        title="Eliminar"
+                                                    >
+                                                        <DeleteIcon fontSize="small" />
+                                                    </IconButton>
+                                                )}
+                                            </Box>
                                         </Box>
+                                    ) : (
+                                        !prerequisites.internship.verified && (
+                                            <Box sx={{ mt: 2 }}>
+                                                <Typography variant="body2" fontWeight="500" gutterBottom>
+                                                    Adjuntar certificado:
+                                                </Typography>
+                                                <FileUpload
+                                                    onFileSelect={(file) => handleFileSelect("internship", file)}
+                                                    uploadedFile={null}
+                                                    onRemoveFile={() => handleFileRemove("internship")}
+                                                />
+                                            </Box>
+                                        )
                                     )}
                                 </Box>
                             </Grid>
@@ -544,61 +542,60 @@ function StudentPrerequisites() {
                                         />
                                     </Box>
 
-                                    {!prerequisites.community.verified && (
-                                        <Box sx={{ mt: 2 }}>
-                                            {prerequisites.community.file ? (
-                                                <Box sx={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: 2,
-                                                    p: 2,
-                                                    backgroundColor: '#FFF',
-                                                    borderRadius: 2,
-                                                    border: '1px solid #e5e7eb'
-                                                }}>
-                                                    <DescriptionIcon sx={{ color: '#667eea', fontSize: 32 }} />
-                                                    <Box sx={{ flex: 1, overflow: 'hidden' }}>
-                                                        <Typography variant="body2" fontWeight="600" noWrap>
-                                                            {prerequisites.community.file.name}
-                                                        </Typography>
-                                                        <Typography variant="caption" color="text.secondary">
-                                                            {prerequisites.community.file.size || "PDF"}
-                                                        </Typography>
-                                                    </Box>
-                                                    <Box>
-                                                        {prerequisites.community.file.url && (
-                                                            <IconButton
-                                                                size="small"
-                                                                href={prerequisites.community.file.url}
-                                                                target="_blank"
-                                                                title="Ver documento"
-                                                            >
-                                                                <VisibilityIcon fontSize="small" />
-                                                            </IconButton>
-                                                        )}
-                                                        <IconButton
-                                                            size="small"
-                                                            onClick={() => handleFileRemove("community")}
-                                                            color="error"
-                                                            title="Eliminar"
-                                                        >
-                                                            <DeleteIcon fontSize="small" />
-                                                        </IconButton>
-                                                    </Box>
-                                                </Box>
-                                            ) : (
-                                                <>
-                                                    <Typography variant="body2" fontWeight="500" gutterBottom>
-                                                        Adjuntar certificado:
-                                                    </Typography>
-                                                    <FileUpload
-                                                        onFileSelect={(file) => handleFileSelect("community", file)}
-                                                        uploadedFile={null}
-                                                        onRemoveFile={() => handleFileRemove("community")}
-                                                    />
-                                                </>
-                                            )}
+                                    {prerequisites.community.file ? (
+                                        <Box sx={{
+                                            mt: 2,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 2,
+                                            p: 2,
+                                            backgroundColor: '#FFF',
+                                            borderRadius: 2,
+                                            border: '1px solid #e5e7eb'
+                                        }}>
+                                            <DescriptionIcon sx={{ color: '#667eea', fontSize: 32 }} />
+                                            <Box sx={{ flex: 1, overflow: 'hidden' }}>
+                                                <Typography
+                                                    variant="body2"
+                                                    fontWeight="600"
+                                                    noWrap
+                                                    component="a"
+                                                    href={prerequisites.community.file.url}
+                                                    target="_blank"
+                                                    sx={{ textDecoration: 'none', color: 'inherit', '&:hover': { textDecoration: 'underline', color: 'primary.main' } }}
+                                                >
+                                                    {prerequisites.community.file.name}
+                                                </Typography>
+                                                <Typography variant="caption" color="text.secondary" display="block">
+                                                    {prerequisites.community.file.size || "PDF"}
+                                                </Typography>
+                                            </Box>
+                                            <Box>
+                                                {!prerequisites.community.verified && (
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={() => handleFileRemove("community")}
+                                                        color="error"
+                                                        title="Eliminar"
+                                                    >
+                                                        <DeleteIcon fontSize="small" />
+                                                    </IconButton>
+                                                )}
+                                            </Box>
                                         </Box>
+                                    ) : (
+                                        !prerequisites.community.verified && (
+                                            <Box sx={{ mt: 2 }}>
+                                                <Typography variant="body2" fontWeight="500" gutterBottom>
+                                                    Adjuntar certificado:
+                                                </Typography>
+                                                <FileUpload
+                                                    onFileSelect={(file) => handleFileSelect("community", file)}
+                                                    uploadedFile={null}
+                                                    onRemoveFile={() => handleFileRemove("community")}
+                                                />
+                                            </Box>
+                                        )
                                     )}
                                 </Box>
                             </Grid>

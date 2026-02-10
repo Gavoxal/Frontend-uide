@@ -153,14 +153,7 @@ function TutorProfile() {
                         Gestiona tu información profesional y configuración
                     </Typography>
                 </Box>
-                <Button
-                    variant="contained"
-                    startIcon={<EditIcon />}
-                    onClick={handleEditClick}
-                    sx={{ backgroundColor: '#667eea', '&:hover': { backgroundColor: '#5a6fd6' } }}
-                >
-                    Editar Información
-                </Button>
+                
             </Box>
 
             {/* Profile Header Card */}

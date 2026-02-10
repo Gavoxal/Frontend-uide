@@ -174,6 +174,7 @@ function AlertMui({
                     {/* Mensaje */}
                     {message && (
                         <DialogContentText
+                            component="div"
                             id="alert-dialog-description"
                             sx={{
                                 textAlign: 'center',

@@ -122,26 +122,6 @@ function RequirementItem({ requirement, onView, onEdit, onAction }) {
                     transition: "all 0.2s"
                 }}
             >
-                <Tooltip title="Ver Detalle">
-                    <IconButton
-                        size="small"
-                        onClick={() => onView && onView(requirement.id)}
-                        sx={{ "&:hover": { color: "#1976d2" } }}
-                    >
-                        <VisibilityIcon fontSize="small" />
-                    </IconButton>
-                </Tooltip>
-
-                <Tooltip title="Editar">
-                    <IconButton
-                        size="small"
-                        onClick={() => onEdit && onEdit(requirement.id)}
-                        sx={{ "&:hover": { color: "#1976d2" } }}
-                    >
-                        <EditIcon fontSize="small" />
-                    </IconButton>
-                </Tooltip>
-
                 <Tooltip title="Abrir enlace">
                     <IconButton
                         size="small"
@@ -190,8 +170,6 @@ function RequirementsCardModern({ requirements, onView, onEdit, onAction }) {
                         <RequirementItem
                             key={req.id}
                             requirement={req}
-                            onView={onView}
-                            onEdit={onEdit}
                             onAction={onAction}
                         />
                     ))}

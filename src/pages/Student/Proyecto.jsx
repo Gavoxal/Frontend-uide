@@ -58,10 +58,11 @@ function StudentProyecto() {
             setUnlockInfo({ approvedWeeks: status.approvedWeeks, requiredWeeks: status.requiredWeeks });
 
             if (status.unlocked) {
-                // 2. Obtener propuesta para el ID
+                // 2. Obtener propuesta aprobada (o la primera si no hay aprobada aún)
                 const proposals = await ProposalService.getAll();
                 if (proposals && proposals.length > 0) {
-                    const pid = proposals[0].id;
+                    const approved = proposals.find(p => p.estado === 'APROBADA' || p.estado === 'APROBADA_CON_COMENTARIOS');
+                    const pid = approved ? approved.id : proposals[0].id;
                     setProposalId(pid);
 
                     // 3. Cargar documentos actuales e historial

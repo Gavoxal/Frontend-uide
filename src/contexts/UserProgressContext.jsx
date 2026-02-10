@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { PrerequisiteService } from '../services/prerequisites.service';
+import { EntregableService } from '../services/entregable.service';
 import { getDataUser } from '../storage/user.model.jsx';
 
 const UserProgressContext = createContext();
@@ -12,15 +13,20 @@ export const useUserProgress = () => {
     return context;
 };
 
-// Mock data remains if needed elsewhere, but we prioritize real data
 export function UserProgressProvider({ children }) {
     const [progressState, setProgressState] = useState({
         prerequisitesStatus: 'pending', // 'pending', 'approved', 'rejected'
-        completedWeeks: 0, // 0-15
+        completedWeeks: 0, // 0-16
         hasProjectAccess: false,
         isLoadingProgress: true,
         studentName: '',
-        studentId: ''
+        studentId: '',
+        defenseUnlocked: false,
+        finalDocuments: {
+            hasTesis: false,
+            hasManual: false,
+            hasArticulo: false
+        }
     });
 
     useEffect(() => {
@@ -37,20 +43,20 @@ export function UserProgressProvider({ children }) {
         setProgressState(prev => ({ ...prev, isLoadingProgress: true }));
 
         try {
-            // Cargar registros personales (que ya vienen mapeados por el servicio)
+            // 1. Cargar prerrequisitos
             const prerequisites = await PrerequisiteService.getByStudent(user.id);
-            console.log("Context: Prerequisites loaded", prerequisites);
 
             let allApproved = false;
             if (Array.isArray(prerequisites)) {
-                // Buscamos específicamente los 3 obligatorios por sus claves mapeadas por el servicio
                 const requiredKeys = ["english", "internship", "community"];
-
                 allApproved = requiredKeys.every(key => {
                     const found = prerequisites.find(p => p.name === key);
                     return found && found.status === 'approved';
                 });
             }
+
+            // 2. Cargar estado de desbloqueo de proyecto y defensa
+            const unlockInfo = await EntregableService.getUnlockStatus();
 
             setProgressState(prev => ({
                 ...prev,
@@ -58,6 +64,9 @@ export function UserProgressProvider({ children }) {
                 studentId: user.id,
                 prerequisitesStatus: allApproved ? 'approved' : 'pending',
                 hasProjectAccess: allApproved,
+                completedWeeks: unlockInfo.approvedWeeks,
+                defenseUnlocked: unlockInfo.unlockedDefense,
+                finalDocuments: unlockInfo.documents || prev.finalDocuments,
                 isLoadingProgress: false
             }));
 
@@ -91,13 +100,12 @@ export function UserProgressProvider({ children }) {
             return false;
         }
 
-        // Secciones que requieren las 16 semanas completadas
-        const requires16Weeks = ['defensa'];
-        if (requires16Weeks.includes(sectionName.toLowerCase())) {
-            return progressState.completedWeeks >= 16;
+        // Sección de Defensa (Requiere 16 semanas + Documentos Finales)
+        if (sectionName.toLowerCase() === 'defensa') {
+            return progressState.defenseUnlocked;
         }
 
-        // Para el resto de secciones (propuestas, avances), solo necesita prerrequisitos aprobados
+        // Sección de Avance del Proyecto (Solo necesita Prerrequisitos aprobados)
         return true;
     };
 
@@ -111,10 +119,11 @@ export function UserProgressProvider({ children }) {
             return 'Debes completar y aprobar tus prerrequisitos primero';
         }
 
-        const requires16Weeks = ['defensa'];
-        if (requires16Weeks.includes(sectionName.toLowerCase())) {
-            const remaining = 16 - progressState.completedWeeks;
-            return `Requiere completar las 16 semanas de avances (${remaining} restantes)`;
+        if (sectionName.toLowerCase() === 'defensa') {
+            if (progressState.completedWeeks < 16) {
+                return `Requiere completar las 16 semanas de avances (${16 - progressState.completedWeeks} restantes)`;
+            }
+            return 'Debes subir los documentos finales (Tesis, Manual, Artículo) en la sección de Proyecto';
         }
 
         return 'Acceso no disponible';
@@ -132,7 +141,8 @@ export function UserProgressProvider({ children }) {
             weeklyProgress: `${progressState.completedWeeks}/16`,
             weeklyPercentage: (progressState.completedWeeks / 16) * 100,
             projectUnlocked: progressState.completedWeeks >= 16,
-            fullAccessGranted: progressState.prerequisitesStatus === 'approved' && progressState.hasProjectAccess
+            defenseUnlocked: progressState.defenseUnlocked,
+            fullAccessGranted: progressState.prerequisitesStatus === 'approved' && progressState.defenseUnlocked
         };
     };
 

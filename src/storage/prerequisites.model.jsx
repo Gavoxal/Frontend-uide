@@ -60,19 +60,22 @@ export const prerequisitesToRequirements = (prerequisites) => {
             id: 1,
             name: "Certificado de Inglés",
             status: getStatus(prerequisites.english),
-            color: getColor(getStatus(prerequisites.english))
+            color: getColor(getStatus(prerequisites.english)),
+            fileUrl: prerequisites.english?.fileUrl
         },
         {
             id: 2,
             name: "Certificado de Vinculación",
             status: getStatus(prerequisites.community),
-            color: getColor(getStatus(prerequisites.community))
+            color: getColor(getStatus(prerequisites.community)),
+            fileUrl: prerequisites.community?.fileUrl
         },
         {
             id: 3,
             name: "Horas de Práctica",
             status: getStatus(prerequisites.internship),
-            color: getColor(getStatus(prerequisites.internship))
+            color: getColor(getStatus(prerequisites.internship)),
+            fileUrl: prerequisites.internship?.fileUrl
         }
     ];
 };

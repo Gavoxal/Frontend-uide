@@ -28,7 +28,7 @@ import RateReviewIcon from "@mui/icons-material/RateReview";
 import EventNoteIcon from "@mui/icons-material/EventNote";
 import GroupsIcon from "@mui/icons-material/Groups";
 import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
-import GradeIcon from '@mui/icons-material/Grade';
+import HistoryIcon from "@mui/icons-material/History";
 import { useState, useEffect } from "react";
 import { getDataUser } from "../storage/user.model.jsx";
 import { useUserProgress } from "../contexts/UserProgressContext";
@@ -67,14 +67,15 @@ const MENU_BY_ROLE = {
         { icon: AssignmentIndIcon, label: "Asignar Tutor", path: "/director/tutors/assign" },
         { icon: GroupsIcon, label: "Comité", path: "/director/committee" },
         { icon: GavelIcon, label: "Defensas", path: "/director/defenses" },
+        { icon: RateReviewIcon, label: "Calificación", path: "/director/defense-grading" },
     ],
     student: [
         { icon: DashboardIcon, label: "Dashboard", path: "/student/dashboard" },
         { icon: ChecklistIcon, label: "Prerrequisitos", path: "/student/prerequisites" },
-        { icon: AssignmentIcon, label: "Mis Propuestas", path: "/student/proposals" },
-        { icon: AssignmentIcon, label: "Avances", path: "/student/avances" },
+        { icon: AssignmentIcon, label: "Propuestas", path: "/student/proposals" },
+        { icon: RateReviewIcon, label: "Avances", path: "/student/progress" },
         { icon: SchoolIcon, label: "Proyecto", path: "/student/proyecto" },
-        { icon: GavelIcon, label: "Defensa", path: "/student/defensa" },
+        { icon: GavelIcon, label: "Defensa", path: "/student/defense" },
     ],
     tutor: [
         { icon: DashboardIcon, label: "Dashboard", path: "/tutor/dashboard" },
@@ -84,6 +85,7 @@ const MENU_BY_ROLE = {
         { icon: RateReviewIcon, label: "Avances", path: "/tutor/review" },
         { icon: GradeIcon, label: "Notas", path: "/tutor/grades" },
         { icon: EventNoteIcon, label: "Reuniones", path: "/tutor/meetings" },
+        { icon: GavelIcon, label: "Defensas", path: "/tutor/defenses" },
 
     ],
     reviewer: [

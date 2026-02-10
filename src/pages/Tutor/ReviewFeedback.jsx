@@ -25,65 +25,6 @@ import { ActivityService } from '../../services/activity.service';
 import LinearProgress from '@mui/material/LinearProgress';
 import Snackbar from '@mui/material/Snackbar';
 
-// Mock data de avances por revisar
-const MOCK_SUBMISSIONS = [
-    {
-        id: 1,
-        student: "Juan Pérez",
-        studentId: 1,
-        title: "Implementación de sensores DHT22",
-        submissionDate: "2026-02-01 14:30",
-        fileName: "sensores_iot_v1.zip",
-        fileSize: "3.2 MB",
-        fileLink: "https://github.com/juan/iot-agricultura",
-        comments: "Implementé la lectura de temperatura y humedad con los sensores DHT22. También agregué un sistema de alertas cuando los valores están fuera de rango. El código está en el repositorio junto con el diagrama de conexiones.",
-        weekNumber: 8,
-        priority: "media",
-        status: "pending" // pending, reviewed
-    },
-    {
-        id: 2,
-        student: "María García",
-        studentId: 2,
-        title: "Módulo de autenticación JWT",
-        submissionDate: "2026-01-30 16:45",
-        fileName: "auth_module.zip",
-        fileSize: "1.8 MB",
-        fileLink: null,
-        comments: "Login y registro funcionando con JWT. Incluí refresh tokens y middleware de validación.",
-        weekNumber: 12,
-        priority: "alta",
-        status: "pending"
-    },
-    {
-        id: 3,
-        student: "Ana Martínez",
-        studentId: 4,
-        title: "Gateway API con Kong",
-        submissionDate: "2026-02-02 10:15",
-        fileName: "api_gateway.zip",
-        fileSize: "2.1 MB",
-        fileLink: "https://github.com/ana/ecommerce-gateway",
-        comments: "Configuré Kong como API Gateway. Rate limiting y autenticación funcionando correctamente. Toda la documentación está en el README.",
-        weekNumber: 10,
-        priority: "alta",
-        status: "pending"
-    },
-    {
-        id: 4,
-        student: "Luis Rodríguez",
-        studentId: 5,
-        title: "Smart Contracts básicos",
-        submissionDate: "2026-01-31 09:20",
-        fileName: "blockchain_contracts.zip",
-        fileSize: "892 KB",
-        fileLink: null,
-        comments: "Creé 3 smart contracts en Solidity para registro de pacientes, historiales médicos y prescripciones. Tests unitarios incluidos.",
-        weekNumber: 9,
-        priority: "media",
-        status: "pending"
-    }
-];
 
 function ReviewFeedback() {
     const location = useLocation();
@@ -302,7 +243,7 @@ function ReviewFeedback() {
             <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Box>
                     <Typography variant="h4" fontWeight="bold" gutterBottom>
-                        Revisión y Feedback ✍️
+                        Revisión y Feedback 
                     </Typography>
                     <Typography variant="body1" color="text.secondary">
                         {view === 'list'

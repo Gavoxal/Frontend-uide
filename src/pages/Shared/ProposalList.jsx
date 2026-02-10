@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
     Box, Typography, Button, Paper, Table,
     TableBody, TableCell, TableContainer, TableHead, TableRow,
-    Tooltip, Avatar, Chip, TextField, InputAdornment
+    Tooltip, Avatar, Chip, TextField, InputAdornment, Menu, MenuItem
 } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import SearchIcon from '@mui/icons-material/Search';
@@ -15,6 +15,8 @@ function SharedProposalList() {
     const navigate = useNavigate();
     const location = useLocation();
     const [searchTerm, setSearchTerm] = useState("");
+    const [statusFilter, setStatusFilter] = useState("all");
+    const [anchorElFilter, setAnchorElFilter] = useState(null);
     const [proposals, setProposals] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -73,10 +75,28 @@ function SharedProposalList() {
         navigate(`${basePath}/proposals/review/${id}`);
     };
 
-    const filteredProposals = proposals.filter(p =>
-        p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.student.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // Filter handlers
+    const handleFilterClick = (event) => {
+        setAnchorElFilter(event.currentTarget);
+    };
+
+    const handleFilterClose = (filter) => {
+        if (filter) setStatusFilter(filter);
+        setAnchorElFilter(null);
+    };
+
+    const filteredProposals = proposals.filter(p => {
+        const matchesSearch = p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            p.student.toLowerCase().includes(searchTerm.toLowerCase());
+
+        const matchesStatus = statusFilter === 'all' ||
+            (statusFilter === 'pending' && p.originalStatus === 'PENDIENTE') ||
+            (statusFilter === 'approved' && p.originalStatus === 'APROBADA') ||
+            (statusFilter === 'rejected' && p.originalStatus === 'RECHAZADA') ||
+            (statusFilter === 'comments' && p.originalStatus === 'APROBADA_CON_COMENTARIOS');
+
+        return matchesSearch && matchesStatus;
+    });
 
     const getStatusColor = (status) => {
         switch (status) {
@@ -105,7 +125,7 @@ function SharedProposalList() {
             {/* Header */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Box>
-                    <Typography variant="h5" fontWeight="bold" color="primary.main">
+                    <Typography variant="h4" fontWeight="bold" gutterBottom >
                         Foro de Propuestas
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
@@ -139,7 +159,25 @@ function SharedProposalList() {
                     }}
                     sx={{ maxWidth: 500 }}
                 />
-                <Button startIcon={<FilterListIcon />} color="inherit" size="small">Filtros</Button>
+                <Button
+                    startIcon={<FilterListIcon />}
+                    color="inherit"
+                    size="small"
+                    onClick={handleFilterClick}
+                >
+                    Filtros {statusFilter !== 'all' && `(${getStatusLabel(statusFilter === 'comments' ? 'APROBADA_CON_COMENTARIOS' : statusFilter.toUpperCase())})`}
+                </Button>
+                <Menu
+                    anchorEl={anchorElFilter}
+                    open={Boolean(anchorElFilter)}
+                    onClose={() => handleFilterClose(null)}
+                >
+                    <MenuItem onClick={() => handleFilterClose('all')}>Todos</MenuItem>
+                    <MenuItem onClick={() => handleFilterClose('pending')}>Pendientes</MenuItem>
+                    <MenuItem onClick={() => handleFilterClose('approved')}>Aprobadas</MenuItem>
+                    <MenuItem onClick={() => handleFilterClose('comments')}>Con Observaciones</MenuItem>
+                    <MenuItem onClick={() => handleFilterClose('rejected')}>Rechazadas</MenuItem>
+                </Menu>
             </Paper>
 
             {/* Content */}

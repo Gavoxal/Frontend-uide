@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button, TextField, Divider, Paper, Avatar, Chip, List, ListItem, ListItemAvatar, ListItemText } from '@mui/material';
+import { Box, Typography, Button, TextField, Divider, Paper, Avatar, Chip, List, ListItem, ListItemAvatar, ListItemText, Snackbar, Alert } from '@mui/material';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SaveIcon from '@mui/icons-material/Save';
@@ -21,6 +21,8 @@ function ProposalReview() {
     const [submitting, setSubmitting] = useState(false);
     const [newComment, setNewComment] = useState('');
     const [comments, setComments] = useState([]);
+
+    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
 
     const fetchProposal = async () => {
         try {
@@ -58,7 +60,7 @@ function ProposalReview() {
 
     const handleSaveEvaluation = async (status) => {
         if (!newComment.trim()) {
-            alert("Por favor escribe un comentario.");
+            setSnackbar({ open: true, message: "Por favor escribe un comentario.", severity: "warning" });
             return;
         }
 
@@ -67,10 +69,10 @@ function ProposalReview() {
             await ProposalService.updateStatus(id, status, newComment);
             setNewComment('');
             fetchProposal(); // Refresh to show new comment
-            alert("Evaluación guardada.");
+            setSnackbar({ open: true, message: "Evaluación guardada exitosamente.", severity: "success" });
         } catch (err) {
             console.error(err);
-            alert("Error al guardar.");
+            setSnackbar({ open: true, message: "Error al guardar la evaluación.", severity: "error" });
         } finally {
             setSubmitting(false);
         }
@@ -80,6 +82,8 @@ function ProposalReview() {
         // Simple history back or specific route logic if needed
         navigate(-1);
     };
+
+    const handleCloseSnackbar = () => setSnackbar({ ...snackbar, open: false });
 
     if (loading) return <Box p={3}>Cargando...</Box>;
     if (!proposal) return <Box p={3}>Propuesta no encontrada.</Box>;
@@ -214,6 +218,13 @@ function ProposalReview() {
                     </Box>
                 </Box>
             </Box>
+
+            {/* Snackbar Notification */}
+            <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={handleCloseSnackbar}>
+                <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 }

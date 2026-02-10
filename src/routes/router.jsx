@@ -20,6 +20,7 @@ import DirectorProposalDetail from "../pages/Director/ProposalDetail";
 import DirectorProfile from "../pages/Director/Profile";
 import DirectorThesisDefense from "../pages/Director/ThesisDefense";
 import DirectorCommitteeManagement from "../pages/Director/CommitteeManagement";
+import DirectorDefenseGradingTable from "../pages/Director/DirectorDefenseGradingTable";
 import SharedMeetingHistory from "../pages/Shared/MeetingHistory";
 
 
@@ -34,6 +35,7 @@ import StudentProyecto from "../pages/Student/Proyecto";
 import StudentProfile from "../pages/Student/Profile";
 import ThesisProposal from "../pages/Student/Proposal";
 import StudentAvances from "../pages/Student/Avances";
+import StudentDefense from "../pages/Student/StudentDefense";
 
 
 // Tutor pages
@@ -45,8 +47,8 @@ import TutorProfile from "../pages/Tutor/Profile";
 import TutorStudents from "../pages/Tutor/Students";
 import SharedProposalList from "../pages/Shared/ProposalList";
 import SharedProposalReview from "../pages/Shared/ProposalReview";
+import SharedDefenseEvaluation from "../pages/Shared/DefenseEvaluation";
 import PublicDefense from "../pages/Tutor/PublicDefense";
-import TutorGrades from "../pages/Tutor/Grades";
 
 
 // Docente Integración pages
@@ -97,6 +99,7 @@ function RouterPages() {
                         <Route path="proposals" element={<DirectorProposalReview />} />
                         <Route path="proposals/detail/:id" element={<DirectorProposalDetail />} />
                         <Route path="defenses" element={<DirectorThesisDefense />} />
+                        <Route path="defense-grading" element={<DirectorDefenseGradingTable />} />
                         <Route path="committee" element={<DirectorCommitteeManagement />} />
                         <Route path="prerequisites" element={<DirectorPrerequisites />} />
                         <Route path="meetings" element={<SharedMeetingHistory />} />
@@ -114,15 +117,11 @@ function RouterPages() {
                         <Route index element={<StudentDashboard />} />
                         <Route path="dashboard" element={<StudentDashboard />} />
                         <Route path="prerequisites" element={<StudentPrerequisites />} />
-
-                        <Route path="anteproyecto" element={<StudentAnteproyecto />} />
-                        <Route path="activities" element={<StudentActivities />} />
-
-                        <Route path="proyecto" element={<StudentProyecto />} />
-                        <Route path="profile" element={<StudentProfile />} />
                         <Route path="proposals" element={<ThesisProposal />} />
-                        <Route path="avances" element={<StudentAvances />} />
-
+                        <Route path="proyecto" element={<StudentProyecto />} />
+                        <Route path="progress" element={<StudentAvances />} />
+                        <Route path="defense" element={<StudentDefense />} />
+                        <Route path="profile" element={<StudentProfile />} />
                     </Route>
                 </Route>
 
@@ -137,7 +136,6 @@ function RouterPages() {
                         <Route path="proposals" element={<SharedProposalList />} />
                         <Route path="proposals/review/:id" element={<SharedProposalReview />} />
                         <Route path="meetings" element={<MeetingLog />} />
-                        <Route path="grades" element={<TutorGrades />} />
                         <Route path="profile" element={<TutorProfile />} />
                     </Route>
                 </Route>
@@ -154,6 +152,7 @@ function RouterPages() {
                         <Route path="review/:weekId/:studentId" element={<ReviewAdvance />} />
                         <Route path="proposals" element={<SharedProposalList />} />
                         <Route path="proposals/review/:id" element={<SharedProposalReview />} />
+                        <Route path="defenses" element={<SharedDefenseEvaluation />} />
                         <Route path="profile" element={<DocenteProfile />} />
                     </Route>
                 </Route>
@@ -180,6 +179,7 @@ function RouterPages() {
                         <Route path="tutors" element={<CoordinadorTutorList />} />
                         <Route path="tutors/assign" element={<CoordinadorAssignTutor />} />
                         <Route path="defense" element={<CoordinadorThesisDefense />} />
+                        <Route path="defenses" element={<SharedDefenseEvaluation />} />
                         <Route path="meetings" element={<SharedMeetingHistory />} />
                         <Route path="profile" element={<CoordinadorProfile />} />
                     </Route>

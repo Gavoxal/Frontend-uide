@@ -22,6 +22,7 @@ function DashboardLayout() {
         if (path.includes('/tutors')) return 'Tutores';
         if (path.includes('/avances')) return 'Avances';
         if (path.includes('/defenses')) return 'Defensas';
+        if (path.includes('/defense')) return 'Defensa';
         if (path.includes('/proyecto')) return 'Proyecto';
         if (path.includes('/profile')) return 'Perfil';
         if (path.includes('/planning')) return 'Planificación';

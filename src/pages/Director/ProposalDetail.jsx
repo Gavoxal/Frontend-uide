@@ -354,76 +354,93 @@ function ProposalDetail() {
                                         )}
                                     </Grid>
 
-                                    {/* Right Column: Director Actions & Comments */}
-                                    <Grid item xs={12} md={4}>
-                                        <Stack spacing={3}>
-                                            {/* Dictamen Section */}
-                                            <Box sx={{
-                                                p: 3,
-                                                bgcolor: '#f8f9fa',
-                                                borderRadius: 3,
-                                                border: '1px solid rgba(0,0,0,0.05)'
-                                            }}>
-                                                <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ mb: 2 }}>
-                                                    Dictamen
-                                                </Typography>
+                                    {/* Bottom Section: Dictamen & Comments (Side by Side) */}
+                                    <Grid item xs={12}>
+                                        <Grid container spacing={4}>
+                                            {/* Column 1: Dictamen */}
+                                            <Grid item xs={12} md={6}>
+                                                <Box sx={{
+                                                    p: 3,
+                                                    bgcolor: '#f8f9fa',
+                                                    borderRadius: 3,
+                                                    border: '1px solid rgba(0,0,0,0.05)',
+                                                    height: '100%'
+                                                }}>
+                                                    <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ mb: 2 }}>
+                                                        Dictamen
+                                                    </Typography>
 
-                                                <Stack direction="column" spacing={2} sx={{ mb: 3 }}>
-                                                    <Button
-                                                        variant={prop.status === 'approved' ? "contained" : "outlined"}
-                                                        color="success"
-                                                        startIcon={<CheckCircleIcon />}
-                                                        onClick={() => handleStatusChange(prop.id, 'approved')}
+                                                    <Stack direction="column" spacing={2} sx={{ mb: 3 }}>
+                                                        <Button
+                                                            variant={prop.status === 'approved' ? "contained" : "outlined"}
+                                                            color="success"
+                                                            startIcon={<CheckCircleIcon />}
+                                                            onClick={() => handleStatusChange(prop.id, 'approved')}
+                                                            fullWidth
+                                                            sx={{ justifyContent: 'flex-start', py: 1.5 }}
+                                                        >
+                                                            Aprobar
+                                                        </Button>
+                                                        <Button
+                                                            variant={prop.status === 'approved_with_obs' ? "contained" : "outlined"}
+                                                            color="warning"
+                                                            startIcon={<WarningIcon />}
+                                                            onClick={() => handleStatusChange(prop.id, 'approved_with_obs')}
+                                                            fullWidth
+                                                            sx={{ justifyContent: 'flex-start', py: 1.5 }}
+                                                        >
+                                                            Observar
+                                                        </Button>
+                                                        <Button
+                                                            variant={prop.status === 'rejected' ? "contained" : "outlined"}
+                                                            color="error"
+                                                            startIcon={<CancelIcon />}
+                                                            onClick={() => handleStatusChange(prop.id, 'rejected')}
+                                                            fullWidth
+                                                            sx={{ justifyContent: 'flex-start', py: 1.5 }}
+                                                        >
+                                                            Rechazar
+                                                        </Button>
+                                                    </Stack>
+
+                                                    <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                                                        {prop.status === 'rejected' ? "Motivo del rechazo:" : "Observaciones Oficiales:"}
+                                                    </Typography>
+                                                    <TextField
+                                                        multiline
+                                                        rows={4}
                                                         fullWidth
-                                                        sx={{ justifyContent: 'flex-start', py: 1.5 }}
-                                                    >
-                                                        Aprobar
-                                                    </Button>
-                                                    <Button
-                                                        variant={prop.status === 'approved_with_obs' ? "contained" : "outlined"}
-                                                        color="warning"
-                                                        startIcon={<WarningIcon />}
-                                                        onClick={() => handleStatusChange(prop.id, 'approved_with_obs')}
-                                                        fullWidth
-                                                        sx={{ justifyContent: 'flex-start', py: 1.5 }}
-                                                    >
-                                                        Observar
-                                                    </Button>
-                                                    <Button
-                                                        variant={prop.status === 'rejected' ? "contained" : "outlined"}
-                                                        color="error"
-                                                        startIcon={<CancelIcon />}
-                                                        onClick={() => handleStatusChange(prop.id, 'rejected')}
-                                                        fullWidth
-                                                        sx={{ justifyContent: 'flex-start', py: 1.5 }}
-                                                    >
-                                                        Rechazar
-                                                    </Button>
-                                                </Stack>
+                                                        placeholder="Escribe aquí las observaciones oficiales que se enviarán al estudiante..."
+                                                        value={prop.observation}
+                                                        onChange={(e) => handleObservationChange(prop.id, e.target.value)}
+                                                        variant="outlined"
+                                                        sx={{ bgcolor: 'white' }}
+                                                    />
 
-                                                <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-                                                    {prop.status === 'rejected' ? "Motivo del rechazo:" : "Observaciones Oficiales:"}
-                                                </Typography>
+                                                    {prop.status === 'approved' && (
+                                                        <Alert severity="success" sx={{ mt: 2, fontSize: '0.85rem' }}>
+                                                            Propuesta definitiva.
+                                                        </Alert>
+                                                    )}
+                                                </Box>
+                                            </Grid>
 
-                                                {prop.status === 'approved' && (
-                                                    <Alert severity="success" sx={{ mt: 2, fontSize: '0.85rem' }}>
-                                                        Propuesta definitiva.
-                                                    </Alert>
-                                                )}
-                                            </Box>
-
-                                            {/* Comment Section (Chat) */}
-                                            <Box sx={{
-                                                p: 3,
-                                                bgcolor: '#ffffff',
-                                                borderRadius: 3,
-                                                border: '1px solid #e0e0e0',
-                                                minHeight: '400px'
-                                            }}>
-                                                <CommentSection proposalId={prop.id} />
-                                            </Box>
-                                        </Stack>
+                                            {/* Column 2: Comment Section */}
+                                            <Grid item xs={12} md={6}>
+                                                <Box sx={{
+                                                    p: 3,
+                                                    bgcolor: '#ffffff',
+                                                    borderRadius: 3,
+                                                    border: '1px solid #e0e0e0',
+                                                    height: '100%',
+                                                    minHeight: '400px'
+                                                }}>
+                                                    <CommentSection proposalId={prop.id} />
+                                                </Box>
+                                            </Grid>
+                                        </Grid>
                                     </Grid>
+
                                 </Grid>
                             </Box>
                         </Card>
@@ -487,7 +504,7 @@ function ProposalDetail() {
                 btnNameR="Cancelar"
                 actionBtnR={() => setOpenAlert(false)}
             />
-        </Box>
+        </Box >
     );
 }
 

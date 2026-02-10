@@ -15,7 +15,8 @@ export const DefenseService = {
      */
     getPrivateDefense: async (propuestaId) => {
         const res = await apiFetch(`/api/v1/defensas/privada/propuesta/${propuestaId}`);
-        if (!res.ok) throw new Error('Defensa no encontrada');
+        if (res.status === 404) return null;
+        if (!res.ok) throw new Error('Error al obtener defensa privada');
         return await res.json();
     },
 
@@ -24,7 +25,8 @@ export const DefenseService = {
      */
     getPublicDefense: async (propuestaId) => {
         const res = await apiFetch(`/api/v1/defensas/publica/propuesta/${propuestaId}`);
-        if (!res.ok) throw new Error('Defensa no encontrada');
+        if (res.status === 404) return null;
+        if (!res.ok) throw new Error('Error al obtener defensa pública');
         return await res.json();
     },
 
@@ -32,15 +34,18 @@ export const DefenseService = {
      * Programar o actualizar defensa privada
      */
     schedulePrivate: async (propuestaId, data) => {
-        try {
-            const existing = await DefenseService.getPrivateDefense(propuestaId);
+        const existing = await DefenseService.getPrivateDefense(propuestaId);
+
+        if (existing) {
+            // Actualizar existente
             const res = await apiFetch(`/api/v1/defensas/privada/${existing.id}`, {
                 method: 'PUT',
                 body: JSON.stringify(data)
             });
             if (!res.ok) throw new Error('Error al actualizar defensa privada');
             return await res.json();
-        } catch (e) {
+        } else {
+            // Crear nueva
             const res = await apiFetch('/api/v1/defensas/privada', {
                 method: 'POST',
                 body: JSON.stringify({
@@ -57,15 +62,18 @@ export const DefenseService = {
      * Programar o actualizar defensa pública
      */
     schedulePublic: async (propuestaId, data) => {
-        try {
-            const existing = await DefenseService.getPublicDefense(propuestaId);
+        const existing = await DefenseService.getPublicDefense(propuestaId);
+
+        if (existing) {
+            // Actualizar existente
             const res = await apiFetch(`/api/v1/defensas/publica/${existing.id}`, {
                 method: 'PUT',
                 body: JSON.stringify(data)
             });
             if (!res.ok) throw new Error('Error al actualizar defensa pública');
             return await res.json();
-        } catch (e) {
+        } else {
+            // Crear nueva
             const res = await apiFetch('/api/v1/defensas/publica', {
                 method: 'POST',
                 body: JSON.stringify({
@@ -97,5 +105,40 @@ export const DefenseService = {
             }
         }
         return results;
+    },
+
+    /**
+     * Obtener defensas donde el usuario es jurado/tutor
+     */
+    getDefensasJurado: async () => {
+        const res = await apiFetch('/api/v1/defensas/jurado');
+        if (!res.ok) throw new Error('Error obteniendo defensas del jurado');
+        return await res.json();
+    },
+
+    /**
+     * Calificar defensa (privada o pública) - Para jurado/tribunal
+     */
+    calificarDefensa: async (tipo, evaluacionId, data) => {
+        const endpoint = tipo === 'PRIVADA' ? 'privada' : 'publica';
+        const res = await apiFetch(`/api/v1/defensas/${endpoint}/${evaluacionId}/calificar`, {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error('Error al calificar defensa');
+        return await res.json();
+    },
+
+    /**
+     * Finalizar defensa (Aprobar/Rechazar por el Director)
+     */
+    finalizeDefense: async (tipo, id, data) => {
+        const endpoint = tipo === 'PRIVADA' ? 'privada' : 'publica';
+        const res = await apiFetch(`/api/v1/defensas/${endpoint}/${id}/finalizar`, {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error('Error al finalizar defensa');
+        return await res.json();
     }
 };

@@ -5,7 +5,7 @@ export const CommitteeService = {
      * Obtener todos los miembros con rol COMITE
      */
     getMembers: async () => {
-        const res = await apiFetch('/api/v1/usuarios?rol=COMITE,TUTOR');
+        const res = await apiFetch('/api/v1/usuarios?rol=COMITE,TUTOR,DIRECTOR,COORDINADOR');
         if (!res.ok) return [];
         return await res.json();
     },

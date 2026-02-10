@@ -1,45 +1,122 @@
-import React, { useState } from "react";
-import { Box, Typography, Grid, ListItem, ListItemIcon, ListItemText } from "@mui/material";
+import { Box, Typography, Grid, IconButton, TextField, Button, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import {
     Email as EmailIcon,
     Phone as PhoneIcon,
     LocationOn as LocationIcon,
     School as SchoolIcon,
     Assignment as AssignmentIcon,
-    Business as BusinessIcon,
-    Badge as BadgeIcon
+    Work as WorkIcon,
+    DateRange as DateRangeIcon,
+    Edit as EditIcon
 } from "@mui/icons-material";
-
-import ProfileHeader from "../../components/Profile/ProfileHeader";
-import InfoCard from "../../components/Profile/InfoCard";
+import { useState, useEffect } from "react";
+import { getDataUser } from "../../storage/user.model.jsx";
+import { TutorService } from "../../services/tutor.service";
+import ProfileHeader from "../../components/Profile/tutor/ProfileHeader";
+import InfoCardModern from "../../components/Profile/tutor/InfoCardModern";
 import ChangePasswordDialog from "../../components/Profile/ChangePasswordDialog";
-import { AuthService } from "../../services/auth.service";
+import AlertMui from '../../components/alert.mui.component';
 
-// Director Profile Component standardized with Student Profile
-function DirectorProfile() {
-    // Mock user data for Director
-    const [directorData] = useState({
-        name: "Ing. Pablo Torres, PhD",
-        initials: "PT",
-        email: "pablo.torres@uide.edu.ec",
-        cedula: "1104567890",
-        sede: "UIDE - Loja",
-        role: "Director de Carrera",
-        department: "Facultad de Ingeniería",
-        status: "Activo",
-        telefono: "+593 991234567",
-        direccion: "Loja, Ecuador",
-        extension: "Ext. 2024"
+function TutorProfile() {
+    const user = getDataUser();
+
+    // Datos del tutor
+    const [tutorData, setTutorData] = useState({
+        name: "",
+        initials: "",
+        email: "",
+        cedula: "",
+        sede: "",
+        especialidad: "",
+        departamento: "",
+        titulo: "",
+        status: "",
+        celular: "",
+        direccion: "",
+        fechaIngreso: ""
     });
 
-    // Prepare personal info items for InfoCard
-    const personalInfoItems = [
-        { icon: <EmailIcon color="primary" />, label: "Email Institucional", value: directorData.email },
-        { icon: <PhoneIcon color="primary" />, label: "Teléfono", value: directorData.telefono },
-        { icon: <LocationIcon color="primary" />, label: "Ubicación", value: directorData.direccion },
-        { icon: <SchoolIcon color="primary" />, label: "Sede", value: directorData.sede },
-        { icon: <BusinessIcon color="primary" />, label: "Departamento", value: directorData.department },
-        { icon: <BadgeIcon color="primary" />, label: "Identificación", value: directorData.cedula }
+    const [loading, setLoading] = useState(true);
+    const [editDialogOpen, setEditDialogOpen] = useState(false);
+    const [editFormData, setEditFormData] = useState({});
+
+    // Alert state
+    const [alertConfig, setAlertConfig] = useState({ open: false, title: '', message: '', status: 'info' });
+    const showAlert = (title, message, status = 'info') => setAlertConfig({ open: true, title, message, status });
+    const closeAlert = () => setAlertConfig(prev => ({ ...prev, open: false }));
+
+    // Cargar datos
+    useEffect(() => {
+        fetchProfile();
+    }, []);
+
+    const fetchProfile = async () => {
+        try {
+            const data = await TutorService.getProfile();
+            const perfil = data.tutorPerfil || {};
+
+            setTutorData({
+                name: `${data.nombres} ${data.apellidos}`,
+                initials: (data.nombres[0] || "") + (data.apellidos[0] || ""),
+                email: data.correoInstitucional,
+                cedula: data.cedula,
+                sede: perfil.sede || "No registrado",
+                especialidad: perfil.especialidad || "Docente Titulación",
+                departamento: perfil.departamento || "No registrado",
+                titulo: perfil.titulo || "Docente",
+                status: "Activo", // El usuario siempre está activo si puede loguearse
+                celular: perfil.celular || "No registrado",
+                fechaIngreso: new Date(data.createdAt).toLocaleDateString()
+            });
+        } catch (error) {
+            console.error("Error fetching profile:", error);
+            showAlert("Error", "No se pudo cargar la información del perfil", "error");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleEditClick = () => {
+        setEditFormData({
+            titulo: tutorData.titulo === "Docente" ? "" : tutorData.titulo,
+            telefono: tutorData.telefono === "No registrado" ? "" : tutorData.telefono,
+            celular: tutorData.celular === "No registrado" ? "" : tutorData.celular,
+            sede: tutorData.sede === "No registrado" ? "" : tutorData.sede,
+            departamento: tutorData.departamento === "No registrado" ? "" : tutorData.departamento,
+            especialidad: tutorData.especialidad === "Docente Titulación" ? "" : tutorData.especialidad
+        });
+        setEditDialogOpen(true);
+    };
+
+    const handleEditChange = (e) => {
+        setEditFormData({
+            ...editFormData,
+            [e.target.name]: e.target.value
+        });
+    };
+
+    const handleEditSubmit = async () => {
+        try {
+            await TutorService.updateProfile(editFormData);
+            showAlert("Éxito", "Perfil actualizado correctamente", "success");
+            setEditDialogOpen(false);
+            fetchProfile(); // Recargar datos
+        } catch (error) {
+            console.error("Error updating profile:", error);
+            showAlert("Error", "No se pudo actualizar el perfil", "error");
+        }
+    };
+
+    // Preparar items de información profesional
+    const professionalInfoItems = [
+        { icon: <EmailIcon color="primary" />, label: "Email", value: tutorData.email },
+        { icon: <PhoneIcon color="primary" />, label: "Celular", value: tutorData.celular },
+        { icon: <LocationIcon color="primary" />, label: "Sede", value: tutorData.sede },
+        { icon: <AssignmentIcon color="primary" />, label: "Cédula", value: tutorData.cedula },
+        { icon: <WorkIcon color="primary" />, label: "Especialidad", value: tutorData.especialidad },
+        { icon: <SchoolIcon color="primary" />, label: "Título", value: tutorData.titulo },
+        { icon: <WorkIcon color="primary" />, label: "Departamento", value: tutorData.departamento },
+        { icon: <DateRangeIcon color="primary" />, label: "Ingreso", value: tutorData.fechaIngreso }
     ];
 
     // State for password change dialog
@@ -47,62 +124,106 @@ function DirectorProfile() {
 
     // Handlers
     const handleChangePassword = () => setOpenPasswordDialog(true);
-    const handlePasswordSubmit = async (passwordData) => {
-        try {
-            await AuthService.changePassword(passwordData.currentPassword, passwordData.newPassword);
-            alert("Contraseña cambiada exitosamente");
-        } catch (error) {
-            console.error("Error cambiando contraseña:", error);
-            alert(error.message || "Error al cambiar la contraseña");
-        }
+    const handlePasswordSubmit = (passwordData) => {
+        // TODO: Implement API call
+        console.log("Cambiar contraseña:", passwordData);
+        showAlert("Info", "Cambio de contraseña no implementado en esta demo", "info");
     };
-    const handleEditPersonalInfo = () => console.log("Editar información personal");
 
     return (
         <Box sx={{ width: "100%" }}>
+            <AlertMui
+                open={alertConfig.open}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                status={alertConfig.status}
+                handleClose={closeAlert}
+                showBtnL={true}
+                btnNameL="Aceptar"
+                actionBtnL={closeAlert}
+            />
+
             {/* Header */}
-            <Box sx={{ mb: 4 }}>
-                <Typography variant="h4" fontWeight="bold" gutterBottom>
-                    Perfil de Director
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                    Gestión de información académica y personal
-                </Typography>
+            <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box>
+                    <Typography variant="h4" fontWeight="bold" gutterBottom>
+                        Perfil del Tutor
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary">
+                        Gestiona tu información profesional y configuración
+                    </Typography>
+                </Box>
+                
             </Box>
 
             {/* Profile Header Card */}
             <ProfileHeader
-                name={directorData.name}
-                subtitle={directorData.role}
-                initials={directorData.initials}
-                tags={[directorData.sede, directorData.status]}
+                name={tutorData.name}
+                subtitle={tutorData.especialidad}
+                initials={tutorData.initials}
+                tags={[tutorData.departamento, tutorData.status]}
                 onChangePassword={handleChangePassword}
             />
 
             {/* Main Content Grid */}
             <Grid container spacing={3}>
-                {/* Personal Information - Full width since no Requirements card */}
-                <Grid item xs={12} md={8}>
-                    <InfoCard
-                        title="Información de Contacto"
-                        items={personalInfoItems}
-                        onEdit={handleEditPersonalInfo}
-                    />
-                </Grid>
-
-                {/* Optional Side Card for Stats or other info (Placeholder for layout consistency) */}
-                <Grid item xs={12} md={4}>
-                    <InfoCard
-                        title="Detalles Académicos"
-                        items={[
-                            { icon: <BadgeIcon color="secondary" />, label: "Cargo", value: directorData.role },
-                            { icon: <SchoolIcon color="secondary" />, label: "Facultad", value: "Ciencias de la Ingeniería" },
-                            { icon: <AssignmentIcon color="secondary" />, label: "Extensión", value: directorData.extension }
-                        ]}
-                        onEdit={() => console.log("Editar detalles")}
+                {/* Professional Information */}
+                <Grid item xs={12} md={12}>
+                    <InfoCardModern
+                        title="Información Profesional"
+                        items={professionalInfoItems}
+                        onEdit={handleEditClick}
                     />
                 </Grid>
             </Grid>
+
+            {/* Edit Dialog */}
+            <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
+                <DialogTitle>Editar Información Profesional</DialogTitle>
+                <DialogContent>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+                        <TextField
+                            label="Título Profesional"
+                            name="titulo"
+                            value={editFormData.titulo || ''}
+                            onChange={handleEditChange}
+                            fullWidth
+                        />
+                        <TextField
+                            label="Especialidad"
+                            name="especialidad"
+                            value={editFormData.especialidad || ''}
+                            onChange={handleEditChange}
+                            fullWidth
+                        />
+                        <TextField
+                            label="Departamento / Facultad"
+                            name="departamento"
+                            value={editFormData.departamento || ''}
+                            onChange={handleEditChange}
+                            fullWidth
+                        />
+                        <TextField
+                            label="Sede"
+                            name="sede"
+                            value={editFormData.sede || ''}
+                            onChange={handleEditChange}
+                            fullWidth
+                        />
+                        <TextField
+                            label="Teléfono Celular"
+                            name="celular"
+                            value={editFormData.celular || ''}
+                            onChange={handleEditChange}
+                            fullWidth
+                        />
+                    </Box>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setEditDialogOpen(false)}>Cancelar</Button>
+                    <Button onClick={handleEditSubmit} variant="contained" sx={{ backgroundColor: '#667eea' }}>Guardar</Button>
+                </DialogActions>
+            </Dialog>
 
             {/* Password Change Dialog */}
             <ChangePasswordDialog
@@ -114,4 +235,4 @@ function DirectorProfile() {
     );
 }
 
-export default DirectorProfile;
+export default TutorProfile;

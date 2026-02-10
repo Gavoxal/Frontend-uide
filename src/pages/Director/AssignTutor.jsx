@@ -301,12 +301,12 @@ function DirectorAssignTutor() {
 
                                     <TableCell align="center">
                                         <ButtonMui
-                                            name={project.tutor ? "Asignado" : "Asignar"}
+                                            name={project.tutor ? "Cambiar" : "Asignar"}
                                             onClick={() => handleAssignClick(project)}
-                                            startIcon={project.tutor ? <CheckCircleIcon /> : <PersonAddIcon />}
-                                            backgroundColor={project.tutor ? "#2e7d32" : "#ed6c02"}
+                                            startIcon={project.tutor ? <PersonAddIcon /> : <PersonAddIcon />}
+                                            backgroundColor={project.tutor ? "#1976d2" : "#ed6c02"} // Blue for change, Orange for new
                                             size="small"
-                                            disabled={!!project.tutor}
+                                            disabled={false} // Always enable to allow changing
                                         />
                                     </TableCell>
                                 </TableRow>

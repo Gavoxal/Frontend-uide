@@ -293,7 +293,7 @@ function ActivityPlanning() {
             <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Box>
                     <Typography variant="h4" fontWeight="bold" gutterBottom>
-                        Planificación de Actividades 📋
+                        Planificación de Actividades 
                     </Typography>
                     <Typography variant="body1" color="text.secondary">
                         {view === 'history'

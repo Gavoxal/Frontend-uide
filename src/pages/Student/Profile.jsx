@@ -27,7 +27,7 @@ function StudentProfile() {
         cedula: user?.cedula || "No registrada",
         sede: user?.sede || "UIDE - Loja",
         carrera: user?.carrera || "Ingeniería en Tecnologías de Información",
-        matla: user?.malla || "ITIL_MAI.2019",
+        malla: user?.malla || user?.codigoMalla || "ITIL_MAI.2019",
         semestre: user?.semestre || "8vo Semestre",
         status: user?.estado || "Activo",
         telefono: user?.telefono || "No registrado",
@@ -68,8 +68,9 @@ function StudentProfile() {
                             // Mapeo de campos de estudiantesperfil
                             sede: profile.sede || prev.sede,
                             carrera: profile.escuela || prev.carrera,
-                            matla: profile.mallla || profile.malla || prev.matla,
-                            direccion: profile.ciudad || prev.direccion, // Mapear ciudad a dirección
+                            malla: profile.malla || profile.codigoMalla || prev.malla,
+                            // Fix: Ensure ciudad is correctly mapped
+                            direccion: profile.ciudad || prev.direccion,
                             ubicacion: profile.ciudad ? `${profile.ciudad.toUpperCase()}, ECUADOR` : prev.ubicacion,
                             status: freshData.estado || prev.status
                         }));
@@ -107,7 +108,8 @@ function StudentProfile() {
                         if (apiPrerequisites[key]) {
                             apiPrerequisites[key] = {
                                 completed: item.status === 'pending' || item.status === 'approved', // Tiene archivo o está aprobado
-                                verified: item.status === 'approved'    // Está verificado/aprobado
+                                verified: item.status === 'approved',    // Está verificado/aprobado
+                                fileUrl: item.archivoUrl // Map fileUrl for opening
                             };
                         }
                     });
@@ -132,37 +134,23 @@ function StudentProfile() {
     // Preparar items de información personal
     const personalInfoItems = [
         { icon: <EmailIcon />, label: "Email", value: studentData.email },
-        { icon: <LocationIcon />, label: "Dirección", value: studentData.direccion },
+        { icon: <LocationIcon />, label: "Ciudad", value: studentData.direccion }, // Mapping ciudad to direccion state
         { icon: <SchoolIcon />, label: "Sede", value: studentData.sede },
         { icon: <AssignmentIcon />, label: "Cédula", value: studentData.cedula },
         { icon: <SchoolIcon />, label: "Carrera", value: studentData.carrera },
-        { icon: <AssignmentIcon />, label: "Malla", value: studentData.matla }
+        { icon: <AssignmentIcon />, label: "Malla", value: studentData.malla }
     ];
 
-    // Handlers
-    const handleEditProfile = () => {
-        console.log("Editar perfil");
-    };
-
-    const handleEditCover = () => {
-        console.log("Editar portada");
-    };
-
-    const handleEditPersonalInfo = () => {
-        console.log("Editar información personal");
-    };
-
     const handleRequirementAction = (requirementId) => {
-        console.log("Abrir requisito:", requirementId);
+        const req = requirements.find(r => r.id === requirementId);
+        if (req && req.fileUrl) {
+            window.open(req.fileUrl, '_blank');
+        } else {
+            console.warn("No file URL found for requirement:", requirementId);
+            alert("No hay archivo disponible para visualizar.");
+        }
     };
 
-    const handleRequirementView = (requirementId) => {
-        console.log("Visualizar requisito:", requirementId);
-    };
-
-    const handleRequirementEdit = (requirementId) => {
-        console.log("Editar requisito:", requirementId);
-    };
 
     const handleChangePassword = () => setOpenPasswordDialog(true);
     const handlePasswordSubmit = async (passwordData) => {
@@ -190,8 +178,6 @@ function StudentProfile() {
             {/* Profile Header Card */}
             <ProfileHeader
                 studentData={studentData}
-                onEditProfile={handleEditProfile}
-                onEditCover={handleEditCover}
                 onChangePassword={handleChangePassword}
             />
 
@@ -202,7 +188,6 @@ function StudentProfile() {
                     <InfoCardModern
                         title="Información Personal"
                         items={personalInfoItems}
-                        onEdit={handleEditPersonalInfo}
                     />
                 </Grid>
 
@@ -210,8 +195,6 @@ function StudentProfile() {
                 <Grid item xs={12} sm={6} md={6}>
                     <RequirementsCardModern
                         requirements={requirements}
-                        onView={handleRequirementView}
-                        onEdit={handleRequirementEdit}
                         onAction={handleRequirementAction}
                     />
                 </Grid>
