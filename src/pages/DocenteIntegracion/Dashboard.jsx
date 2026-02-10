@@ -77,7 +77,7 @@ function DocenteDashboard() {
     const onTrack = students.filter(s => s.status === 'green').length;
 
     const handleViewStudent = (student) => {
-        console.log('Ver detalles de:', student.name);
+
         // Navegar a vista de detalles si existiera
     };
 

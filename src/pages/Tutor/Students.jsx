@@ -28,7 +28,7 @@ function TutorStudents() {
                         date: s.actividadResumen?.ultimaFecha ? new Date(s.actividadResumen.ultimaFecha).toLocaleDateString() : 'N/A',
                         title: s.actividadResumen?.ultimoContenido || 'Sin actividad'
                     },
-                    weekNumber: s.actividadResumen?.totalEvidencias || 0
+                    weekNumber: s.actividadResumen?.totalActividadesTutoria || 0
                 }));
                 setStudents(mappedStudents);
             } catch (error) {
@@ -40,10 +40,6 @@ function TutorStudents() {
 
         fetchStudents();
     }, []);
-
-    const handleViewStudent = (student) => {
-        console.log('Ver detalles de:', student.name);
-    };
 
     const handlePlanActivity = (student) => {
         navigate('/tutor/planning', { state: { student } });
@@ -64,7 +60,7 @@ function TutorStudents() {
             <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
                 <Box>
                     <Typography variant="h4" fontWeight="bold" gutterBottom>
-                        Estudiantes Asignados 👥
+                        Estudiantes Asignados
                     </Typography>
                     <Typography variant="body1" color="text.secondary">
                         Gestiona el progreso y actividades de tus estudiantes
@@ -94,7 +90,6 @@ function TutorStudents() {
                         <Grid item xs={12} md={6} lg={4} key={student.id}>
                             <StudentCard
                                 student={student}
-                                onView={handleViewStudent}
                                 onPlan={handlePlanActivity}
                                 onReview={handleReviewStudent}
                             />

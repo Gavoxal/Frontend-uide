@@ -57,9 +57,9 @@ function ThesisDefense() {
                 career: p.carrera || p.estudiante.estudiantePerfil?.escuela || 'N/A',
                 campus: p.estudiante.estudiantePerfil?.sede || 'UIDE',
                 documents: {
-                    tesis: p.entregablesFinales?.find(e => e.tipo === 'TESIS' && e.isActive) || null,
-                    userManual: p.entregablesFinales?.find(e => e.tipo === 'MANUAL_USUARIO' && e.isActive) || null,
-                    scientificArticle: p.entregablesFinales?.find(e => e.tipo === 'ARTICULO' && e.isActive) || null
+                    tesis: p.entregablesFinales?.find(e => (e.tipo === 'TESIS' || e.tipo === 'tesis') && (e.isActive || e.is_active)) || null,
+                    userManual: p.entregablesFinales?.find(e => (e.tipo === 'MANUAL_USUARIO' || e.tipo === 'manual_usuario') && (e.isActive || e.is_active)) || null,
+                    scientificArticle: p.entregablesFinales?.find(e => (e.tipo === 'ARTICULO' || e.tipo === 'articulo') && (e.isActive || e.is_active)) || null
                 },
                 privateDefense: {
                     id: p.defensaPrivada?.id || null,

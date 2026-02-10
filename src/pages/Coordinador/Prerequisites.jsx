@@ -103,14 +103,14 @@ const CoordinadorPrerequisites = () => {
     const handleDeny = () => {
         // TODO: API - Denegar solicitud de prerrequisitos
         // await fetch(`/api/coordinador/students/${selectedStudent.id}/prerequisites/deny`, { method: 'POST' })
-        console.log('Denegar solicitud:', selectedStudent);
+
         alert(`Solicitud denegada para ${selectedStudent.name}`);
     };
 
     const handleApprove = () => {
         // TODO: API - Aprobar solicitud de prerrequisitos
         // await fetch(`/api/coordinador/students/${selectedStudent.id}/prerequisites/approve`, { method: 'POST' })
-        console.log('Aprobar solicitud:', selectedStudent);
+
         alert(`Solicitud aprobada para ${selectedStudent.name}`);
     };
 

@@ -32,7 +32,7 @@ function ProposalReview() {
         setLoading(true);
         try {
             const data = await ProposalService.getAll();
-            console.log("ProposalReview data received:", data);
+
 
             if (!data || data.length === 0) {
                 console.warn("No data received from ProposalService.getAll()");
@@ -48,7 +48,7 @@ function ProposalReview() {
 
                 if (!acc[studentKey]) {
                     const perfil = student?.estudiantePerfil;
-                    console.log(`[DEBUG] Processing student: ${student?.nombres} ${student?.apellidos}`, { perfil, student });
+
 
                     // El ID preferido para navegación es el del estudiante, fallback al de la propuesta
                     const navId = curr.fkEstudiante || student?.id || curr.id;
@@ -70,7 +70,7 @@ function ProposalReview() {
                 return acc;
             }, {});
 
-            console.log("Grouped proposals:", grouped);
+
 
             const formatted = Object.values(grouped).map(group => {
                 const totalProposals = group.proposals.length;

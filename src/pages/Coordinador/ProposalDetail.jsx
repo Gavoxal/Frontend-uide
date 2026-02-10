@@ -44,13 +44,13 @@ function CoordinadorProposalDetail() {
 
     const handleApprove = () => {
         // TODO: API - Aprobar propuesta
-        console.log("Aprobar propuesta", id, feedback);
+
         navigate('/coordinador/proposals');
     };
 
     const handleReject = () => {
         // TODO: API - Rechazar propuesta
-        console.log("Rechazar propuesta", id, feedback);
+
         navigate('/coordinador/proposals');
     };
 

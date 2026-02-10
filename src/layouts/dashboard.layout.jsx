@@ -12,7 +12,7 @@ function DashboardLayout() {
     const sidebarWidth = isExpanded ? 240 : 60;
 
     // Determinar título según la ruta actual
-    const getPageTitle = () => {
+const getPageTitle = () => {
         const path = location.pathname;
         if (path.includes('/dashboard')) return 'Tablero';
         if (path.includes('/prerequisites')) return 'Prerrequisitos';

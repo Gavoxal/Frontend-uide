@@ -1,7 +1,7 @@
-import { Box, Typography, Card, CardContent, Avatar, Chip, IconButton } from "@mui/material";
-import { CameraAlt as CameraIcon } from "@mui/icons-material";
+import { Box, Typography, Card, CardContent, Avatar, Chip, IconButton, Button } from "@mui/material";
+import { Lock as LockIcon } from "@mui/icons-material";
 
-function ProfileHeader({ name, subtitle, initials, tags, studentData }) {
+function ProfileHeader({ name, subtitle, initials, tags, studentData, onChangePassword }) {
     // Si se pasan props individuales, usarlas. Si no, intentar sacar de studentData (compatibilidad hacia atrás por si se reutiliza)
     const displayName = name || studentData?.name;
     const displaySubtitle = subtitle || (studentData ? `Estudiante de ${studentData?.carrera || 'Carrera no definida'}` : '');
@@ -42,23 +42,6 @@ function ProfileHeader({ name, subtitle, initials, tags, studentData }) {
                         >
                             {displayInitials || "U"}
                         </Avatar>
-                        <IconButton
-                            size="small"
-                            sx={{
-                                position: "absolute",
-                                bottom: 0,
-                                right: 0,
-                                bgcolor: "white",
-                                border: "2px solid #e0e0e0",
-                                width: 32,
-                                height: 32,
-                                "&:hover": {
-                                    bgcolor: "#f5f5f5"
-                                }
-                            }}
-                        >
-                            <CameraIcon sx={{ fontSize: 16, color: "#666" }} />
-                        </IconButton>
                     </Box>
 
                     {/* Name and Info */}
@@ -86,7 +69,28 @@ function ProfileHeader({ name, subtitle, initials, tags, studentData }) {
                         </Box>
                     </Box>
 
-                    {/* Edit Profile Button */}
+
+                    {/* Actions */}
+                    <Box sx={{ alignSelf: 'center' }}>
+                        {onChangePassword && (
+                            <Button
+                                onClick={onChangePassword}
+                                variant="contained"
+                                startIcon={<LockIcon />}
+                                size="small"
+                                sx={{
+                                    bgcolor: '#2e7d32',
+                                    color: 'white',
+                                    '&:hover': {
+                                        bgcolor: '#1b5e20',
+                                    },
+                                    boxShadow: 2
+                                }}
+                            >
+                                Cambiar Contraseña
+                            </Button>
+                        )}
+                    </Box>
 
                 </Box>
             </CardContent>

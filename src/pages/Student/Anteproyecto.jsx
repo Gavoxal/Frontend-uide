@@ -28,7 +28,7 @@ function StudentAnteproyecto() {
             return;
         }
         // Mock submission
-        console.log("Enviando propuesta:", formData);
+
         setSubmitted(true);
     };
 

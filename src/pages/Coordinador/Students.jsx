@@ -127,7 +127,7 @@ function CoordinadorStudents() {
                                             startIcon={<VisibilityIcon />}
                                             onClick={() => {
                                                 // TODO: Navegar a detalle del estudiante si se implementa esa vista
-                                                console.log("Ver detalle estudiante", student.id);
+
                                             }}
                                         >
                                             Detalles

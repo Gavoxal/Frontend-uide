@@ -2,12 +2,12 @@
 // para mejor compatibilidad y confiabilidad
 
 export const setUserData = (data) => {
-    console.log('Guardando datos de usuario:', data);
+
     sessionStorage.setItem("sessionUser", JSON.stringify(data));
-    console.log('Datos guardados en sessionStorage nativo');
+
     // Verificar que se guardó
     const verificar = sessionStorage.getItem("sessionUser");
-    console.log('Verificación de datos guardados:', verificar);
+
 }
 
 export const rmDataUser = () => {

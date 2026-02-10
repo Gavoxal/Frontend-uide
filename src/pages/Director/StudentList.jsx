@@ -9,6 +9,7 @@ import TextMui from '../../components/text.mui.component';
 import InputMui from '../../components/input.mui.component';
 import ButtonMui from '../../components/button.mui.component';
 import StudentCard from '../../components/Director/StudentCard.mui';
+import usuarioService from '../../services/usuario.service';
 
 function DirectorStudentList() {
     const navigate = useNavigate();
@@ -22,34 +23,23 @@ function DirectorStudentList() {
 
     const loadStudents = async () => {
         try {
-            // Asumimos que hay un servicio para obtener estudiantes
-            // Si no existe, debemos crearlo o usar uno existente
-            // Revisando servicios... UserService.getAll() podría servir si filtra por rol
-            // O crear un endpoint específico.
-            // Por ahora, intentemos usar la API de usuarios con filtro
-            // Importar UserService al inicio del archivo
-            const response = await fetch('/api/v1/usuarios?rol=ESTUDIANTE', {
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-            });
-            if (response.ok) {
-                const data = await response.json();
-                // Mapear datos al formato de la tarjeta
-                const mapped = data.map(u => ({
-                    id: u.id,
-                    cedula: u.cedula,
-                    name: `${u.nombres} ${u.apellidos}`,
-                    sex: 'No especificado', // No está en modelo Usuario simple
-                    status: u.activo ? 'Activo' : 'Inactivo',
-                    campus: 'UIDE - Loja', // Hardcoded o de perfil
-                    school: u.estudiantePerfil?.escuela || 'Sin Carrera',
-                    malla: u.estudiantePerfil?.malla || 'Sin Malla',
-                    period: 'Periodo Actual',
-                    email: u.email,
-                    location: 'Loja, Ecuador',
-                    photoUrl: ""
-                }));
-                setStudents(mapped);
-            }
+            const data = await usuarioService.getEstudiantes();
+            // Mapear datos al formato de la tarjeta
+            const mapped = data.map(u => ({
+                id: u.id,
+                cedula: u.cedula,
+                name: `${u.nombres} ${u.apellidos}`,
+                sex: 'No especificado',
+                status: u.activo ? 'Activo' : 'Inactivo',
+                campus: 'UIDE - Loja',
+                school: u.estudiantePerfil?.escuela || 'Sin Carrera',
+                malla: u.estudiantePerfil?.malla || 'Sin Malla',
+                period: 'Periodo Actual',
+                email: u.email,
+                location: 'Loja, Ecuador',
+                photoUrl: ""
+            }));
+            setStudents(mapped);
         } catch (error) {
             console.error("Error loading students:", error);
         } finally {

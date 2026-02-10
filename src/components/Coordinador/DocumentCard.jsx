@@ -102,7 +102,7 @@ function DocumentCard({ document }) {
                         onClick={() => {
                             // TODO: API - Abrir/descargar documento
                             // fetch(`/api/documents/${document.id}/download`)
-                            console.log('Ver documento:', document.fileName);
+
                         }}
                     >
                         <VisibilityIcon />

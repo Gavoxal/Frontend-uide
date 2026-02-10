@@ -21,9 +21,6 @@ import {
 } from '@mui/material';
 import { useLocation } from 'react-router-dom';
 import ActivityForm from '../../components/activityform.mui.component';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import PendingIcon from '@mui/icons-material/Pending';
@@ -197,11 +194,6 @@ function ActivityPlanning() {
         }
     };
 
-    const handleDraft = (data) => {
-        console.log('Borrador guardado:', data);
-        setAlertState({ open: true, message: 'Borrador guardado localmente (simulado)', severity: 'info' });
-        setView('history');
-    };
 
     const getStatusIcon = (status) => {
         const icons = {
@@ -293,7 +285,7 @@ function ActivityPlanning() {
             <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Box>
                     <Typography variant="h4" fontWeight="bold" gutterBottom>
-                        Planificación de Actividades 
+                        Planificación de Actividades
                     </Typography>
                     <Typography variant="body1" color="text.secondary">
                         {view === 'history'
@@ -411,7 +403,6 @@ function ActivityPlanning() {
                                             <TableCell><strong>Semana</strong></TableCell>
                                             <TableCell><strong>Límite</strong></TableCell>
                                             <TableCell><strong>Estado</strong></TableCell>
-                                            <TableCell align="center"><strong>Acciones</strong></TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
@@ -438,29 +429,6 @@ function ActivityPlanning() {
                                                 </TableCell>
                                                 <TableCell>{item.deadline}</TableCell>
                                                 <TableCell>{getStatusChip(item.status)}</TableCell>
-                                                <TableCell align="center">
-                                                    <IconButton
-                                                        size="small"
-                                                        color="primary"
-                                                        onClick={() => handleView(item)}
-                                                    >
-                                                        <VisibilityIcon fontSize="small" />
-                                                    </IconButton>
-                                                    <IconButton
-                                                        size="small"
-                                                        color="primary"
-                                                        onClick={() => handleEdit(item)}
-                                                    >
-                                                        <EditIcon fontSize="small" />
-                                                    </IconButton>
-                                                    <IconButton
-                                                        size="small"
-                                                        color="error"
-                                                        onClick={() => handleDelete(item.id)}
-                                                    >
-                                                        <DeleteIcon fontSize="small" />
-                                                    </IconButton>
-                                                </TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
@@ -470,77 +438,6 @@ function ActivityPlanning() {
                     </Card>
                 )
             }
-            {/* Dialog de Visualización */}
-            <Dialog open={!!viewingActivity} onClose={() => setViewingActivity(null)} maxWidth="md" fullWidth>
-                <DialogTitle sx={{ backgroundColor: '#f5f5f5', pb: 2 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography variant="h6" fontWeight="bold">
-                            Detalle de Actividad
-                        </Typography>
-                        {viewingActivity && getStatusChip(viewingActivity.status)}
-                    </Box>
-                </DialogTitle>
-                <DialogContent sx={{ pt: 3 }}>
-                    {viewingActivity && (
-                        <Grid container spacing={3} sx={{ mt: 0 }}>
-                            {/* Header Section */}
-                            <Grid item xs={12}>
-                                <Typography variant="h5" fontWeight="bold" color="primary" gutterBottom>
-                                    {viewingActivity.activity}
-                                </Typography>
-                                <Typography variant="subtitle1" color="text.secondary">
-                                    Asignado a: <strong>{viewingActivity.studentName}</strong>
-                                </Typography>
-                            </Grid>
-
-                            {/* Dates Section */}
-                            <Grid item xs={12} md={6}>
-                                <Box sx={{ p: 2, bgcolor: '#f8f9fa', borderRadius: 2, border: '1px solid #e0e0e0' }}>
-                                    <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-                                        FECHA DE ASIGNACIÓN
-                                    </Typography>
-                                    <Typography variant="body1" fontWeight="500">
-                                        {viewingActivity.assignedDate}
-                                    </Typography>
-                                </Box>
-                            </Grid>
-                            <Grid item xs={12} md={6}>
-                                <Box sx={{ p: 2, bgcolor: '#f8f9fa', borderRadius: 2, border: '1px solid #e0e0e0' }}>
-                                    <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-                                        FECHA LÍMITE
-                                    </Typography>
-                                    <Typography variant="body1" fontWeight="500" color={new Date(viewingActivity.deadline) < new Date() ? 'error' : 'text.primary'}>
-                                        {viewingActivity.deadline}
-                                    </Typography>
-                                </Box>
-                            </Grid>
-
-                            {/* Description Section */}
-                            <Grid item xs={12}>
-                                <Typography variant="subtitle2" color="text.secondary" gutterBottom sx={{ mt: 1 }}>
-                                    DESCRIPCIÓN DE LA ACTIVIDAD
-                                </Typography>
-                                <Box sx={{
-                                    p: 3,
-                                    bgcolor: '#ffffff',
-                                    borderRadius: 2,
-                                    border: '1px solid #e0e0e0',
-                                    minHeight: '100px'
-                                }}>
-                                    <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
-                                        {viewingActivity.description}
-                                    </Typography>
-                                </Box>
-                            </Grid>
-                        </Grid>
-                    )}
-                </DialogContent>
-                <DialogActions sx={{ p: 3 }}>
-                    <Button onClick={() => setViewingActivity(null)} variant="outlined" color="primary">
-                        Cerrar
-                    </Button>
-                </DialogActions>
-            </Dialog>
         </Box >
     );
 }

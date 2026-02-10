@@ -60,13 +60,13 @@ function StudentDashboard() {
                 }
             }
 
-            console.log("Fetching proposals...");
+
             const proposals = await ProposalService.getAll();
-            console.log("Proposals found:", proposals);
+
 
             if (proposals && proposals.length > 0) {
                 const activeProposal = proposals[0];
-                console.log("Active proposal details:", activeProposal);
+
 
                 // EXTRAER TUTOR (Logic from Avances.jsx)
                 let tutorName = "Por asignar";
@@ -79,7 +79,7 @@ function StudentDashboard() {
 
                 // Fetch activities for this proposal
                 const fetchedActivities = await ActivityService.getByPropuesta(activeProposal.id);
-                console.log("Activities fetched:", fetchedActivities);
+
                 setActivities(fetchedActivities);
 
                 // Calculate progress

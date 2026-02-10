@@ -87,6 +87,7 @@ const MENU_BY_ROLE = {
         { icon: GradeIcon, label: "Notas", path: "/tutor/grades" },
         { icon: EventNoteIcon, label: "Reuniones", path: "/tutor/meetings" },
         { icon: GavelIcon, label: "Defensas", path: "/tutor/defenses" },
+
     ],
     coordinador: [
         { icon: DashboardIcon, label: "Dashboard", path: "/director/dashboard" },

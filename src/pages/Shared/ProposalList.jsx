@@ -40,7 +40,7 @@ function SharedProposalList() {
             // Map backend data to frontend structure
             // Map backend data to frontend structure
             const mappedProposals = data.map(p => {
-                console.log("Proposal:", p.id, "Student:", p.estudiante); // Debug log
+                 // Debug log
 
                 // Try to find career in proposal, then in profile (escuela), then N/A
                 const career = p.carrera || p.estudiante?.estudiantePerfil?.escuela || "N/A";

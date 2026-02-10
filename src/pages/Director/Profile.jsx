@@ -126,7 +126,7 @@ function TutorProfile() {
     const handleChangePassword = () => setOpenPasswordDialog(true);
     const handlePasswordSubmit = (passwordData) => {
         // TODO: Implement API call
-        console.log("Cambiar contraseña:", passwordData);
+
         showAlert("Info", "Cambio de contraseña no implementado en esta demo", "info");
     };
 
@@ -147,7 +147,7 @@ function TutorProfile() {
             <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Box>
                     <Typography variant="h4" fontWeight="bold" gutterBottom>
-                        Perfil del Tutor
+                        Perfil del Director
                     </Typography>
                     <Typography variant="body1" color="text.secondary">
                         Gestiona tu información profesional y configuración

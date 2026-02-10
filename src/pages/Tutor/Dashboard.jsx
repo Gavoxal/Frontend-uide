@@ -7,9 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { TutorService } from '../../services/tutor.service';
 import LinearProgress from '@mui/material/LinearProgress';
-
-
-import { UserService } from '../../services/user.service';
+import { usuarioService } from '../../services/usuario.service';
 
 function TutorDashboard() {
     const user = getDataUser();
@@ -26,7 +24,7 @@ function TutorDashboard() {
         const fetchUserData = async () => {
             if (user?.id) {
                 try {
-                    const freshData = await UserService.getById(user.id);
+                    const freshData = await usuarioService.getById(user.id);
                     if (freshData) {
                         const newName = freshData.nombres || freshData.nombre;
                         const newLast = freshData.apellidos || freshData.apellido;
@@ -67,7 +65,7 @@ function TutorDashboard() {
                             date: s.propuesta?.fechaPublicacion ? new Date(s.propuesta.fechaPublicacion).toLocaleDateString() : 'N/A',
                             title: 'Última propuesta enviada'
                         },
-                        weekNumber: s.semanaActual || 0,
+                        weekNumber: s.actividadResumen?.totalActividadesTutoria || 0,
                         hasProposal: !!s.propuesta
                     };
                 });
@@ -91,7 +89,7 @@ function TutorDashboard() {
     const totalProposals = students.filter(s => s.hasProposal).length;
 
     const handleViewStudent = (student) => {
-        console.log('Ver detalles de:', student.name);
+
         setSelectedStudent(student);
         setOpenDialog(true);
     };
@@ -115,7 +113,7 @@ function TutorDashboard() {
             {/* Encabezado */}
             <Box sx={{ mb: 4 }}>
                 <Typography variant="h4" fontWeight="bold" gutterBottom>
-                    ¡Hola, {tutorName}! 
+                    ¡Hola, {tutorName}!
                 </Typography>
                 <Typography variant="body1" color="text.secondary">
                     Panel de control de tus estudiantes de titulación

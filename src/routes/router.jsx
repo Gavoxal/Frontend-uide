@@ -8,6 +8,7 @@ import AuthAdmin from "./AuthAdmin";
 import DashboardLayout from "../layouts/dashboard.layout";
 import { UserProgressProvider } from "../contexts/UserProgressContext";
 
+
 // Director pages
 import DirectorDashboard from "../pages/Director/Dashboard";
 import DirectorPrerequisites from "../pages/Director/PrerequisitesViewDirector";
@@ -27,10 +28,8 @@ import SharedMeetingHistory from "../pages/Shared/MeetingHistory";
 // Student pages
 import StudentDashboard from "../pages/Student/Dashboard";
 import StudentPrerequisites from "../pages/Student/Prerequisites";
-
 import StudentAnteproyecto from "../pages/Student/Anteproyecto";
 import StudentActivities from "../pages/Student/Activities";
-
 import StudentProyecto from "../pages/Student/Proyecto";
 import StudentProfile from "../pages/Student/Profile";
 import ThesisProposal from "../pages/Student/Proposal";
@@ -73,10 +72,7 @@ import CoordinadorThesisDefense from "../pages/Coordinador/ThesisDefense";
 import CoordinadorTutorList from "../pages/Coordinador/TutorList";
 import CoordinadorProfile from "../pages/Coordinador/Profile";
 
-// Old admin pages (temporarily keeping for transition)
-import OldDashboardPage from "../pages/Admin/dashboard.page";
-import RegisterHotelPage from "../pages/Admin/components/register.hotel";
-import ListHotelsPage from "../pages/Admin/components/list.hotel";
+
 
 function RouterPages() {
     return (
@@ -129,20 +125,22 @@ function RouterPages() {
 
                 {/* Rutas protegidas - Tutor */}
                 <Route path="/tutor" element={<AuthAdmin />}>
-                    <Route element={<DashboardLayout />}>
-                        <Route index element={<TutorDashboard />} />
-                        <Route path="dashboard" element={<TutorDashboard />} />
-                        <Route path="grades" element={<TutorGrades />} />
-                        <Route path="defenses" element={<TutorDefensas />} />
-                        <Route path="students" element={<TutorStudents />} />
-                        <Route path="planning" element={<ActivityPlanning />} />
-                        <Route path="review" element={<ReviewFeedback />} />
-                        <Route path="proposals" element={<SharedProposalList />} />
-                        <Route path="proposals/review/:id" element={<SharedProposalReview />} />
-                        <Route path="meetings" element={<MeetingLog />} />
-                        <Route path="profile" element={<TutorProfile />} />
+                        <Route element={<DashboardLayout />}>
+                            <Route index element={<TutorDashboard />} />
+                            <Route path="dashboard" element={<TutorDashboard />} />
+                            <Route path="students" element={<TutorStudents />} />
+                            <Route path="planning" element={<ActivityPlanning />} />
+                            <Route path="review" element={<ReviewFeedback />} />
+                            <Route path="proposals" element={<SharedProposalList />} />
+                            <Route path="proposals/review/:id" element={<SharedProposalReview />} />
+                            <Route path="meetings" element={<MeetingLog />} />
+                            <Route path="defenses" element={<SharedDefenseEvaluation />} />
+                            <Route path="profile" element={<TutorProfile />} />
+                            <Route path="defensas" element={<TutorDefensas />} />
+                            <Route path="defensas/public" element={<PublicDefense />} />
+                            <Route path="grades" element={<TutorGrades />} />
+                        </Route>
                     </Route>
-                </Route>
 
                 {/* Rutas protegidas - Docente Integración */}
                 <Route path="/docente-integracion" element={<AuthAdmin />}>
@@ -189,14 +187,7 @@ function RouterPages() {
                     </Route>
                 </Route>
 
-                {/* Rutas antiguas (temporales para compatibilidad) */}
-                <Route path="/tablero" element={<AuthAdmin />}>
-                    <Route element={<DashboardLayout />}>
-                        <Route index element={<OldDashboardPage />} />
-                        <Route path="registrohotel" element={<RegisterHotelPage />} />
-                        <Route path="gestionhoteles" element={<ListHotelsPage />} />
-                    </Route>
-                </Route>
+
 
                 {/* 404 */}
                 <Route path="*" element={<NotFound />} />

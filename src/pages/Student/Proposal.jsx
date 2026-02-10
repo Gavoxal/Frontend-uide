@@ -54,8 +54,8 @@ function ThesisProposal() {
             ]);
 
 
-            console.log("Fetched PROPOSALS from API:", proposalsData);
-            console.log("Fetched AREAS from API:", areasData);
+
+
 
             setKnowledgeAreas(areasData);
 

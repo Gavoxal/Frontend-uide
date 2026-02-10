@@ -126,7 +126,7 @@ function TutorProfile() {
     const handleChangePassword = () => setOpenPasswordDialog(true);
     const handlePasswordSubmit = (passwordData) => {
         // TODO: Implement API call
-        console.log("Cambiar contraseña:", passwordData);
+
         showAlert("Info", "Cambio de contraseña no implementado en esta demo", "info");
     };
 

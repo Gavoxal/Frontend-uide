@@ -1,5 +1,5 @@
 import { Box, Typography, Card, CardContent, Avatar, Chip, IconButton, Button } from "@mui/material";
-import { CameraAlt as CameraIcon, Lock as LockIcon } from "@mui/icons-material";
+import { Lock as LockIcon } from "@mui/icons-material";
 
 function ProfileHeader({ studentData, onEditProfile, onEditCover, onChangePassword }) {
     const { name, subtitle, initials, tags } = {
@@ -43,23 +43,6 @@ function ProfileHeader({ studentData, onEditProfile, onEditCover, onChangePasswo
                         >
                             {initials || "U"}
                         </Avatar>
-                        <IconButton
-                            size="small"
-                            sx={{
-                                position: "absolute",
-                                bottom: 0,
-                                right: 0,
-                                bgcolor: "white",
-                                border: "2px solid #e0e0e0",
-                                width: 32,
-                                height: 32,
-                                "&:hover": {
-                                    bgcolor: "#f5f5f5"
-                                }
-                            }}
-                        >
-                            <CameraIcon sx={{ fontSize: 16, color: "#666" }} />
-                        </IconButton>
                     </Box>
 
                     {/* Name and Info */}

@@ -24,7 +24,7 @@ import { EntregableService } from '../../services/entregable.service';
 import { downloadFile } from '../../services/api';
 
 function StudentProyecto() {
-    console.log("Rendering StudentProyecto with Unlock Logic");
+
 
     const [alertState, setAlertState] = useState({
         open: false,

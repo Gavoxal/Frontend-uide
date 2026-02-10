@@ -9,6 +9,7 @@ import TableMui from '../../components/table.mui.component';
 import TextMui from '../../components/text.mui.component';
 import AlertMui from '../../components/alert.mui.component';
 import NotificationMui from '../../components/notification.mui.component';
+import { API_BASE_URL } from '../../utils/constants';
 
 function StudentLoad() {
     const [file, setFile] = useState(null);
@@ -25,35 +26,6 @@ function StudentLoad() {
             // Headers actualizados según requerimiento
             setHeaders([
                 'Cédula', 'Nombre Completo', 'Email UIDE', 'Malla', 'Período Lectivo', 'Estado'
-            ]);
-            // Mock Data basada en la solicitud
-            // Nota: Se muestran columnas clave para la vista previa para no saturar la tabla, 
-            // pero internamente se procesaría todo.
-            setPreviewData([
-                {
-                    cedula: '1150077467',
-                    name: 'Abad Montesdeoca Nicole Belen',
-                    email: 'niabadmo@uide.edu.ec',
-                    malla: 'ITIL_MALLA 2019',
-                    period: 'SEM LOJA OCT 2025 – FEB 2026',
-                    status: 'Activo'
-                },
-                {
-                    cedula: '1900714773',
-                    name: 'Acacho Yangari Daddy Abel',
-                    email: 'daacachoya@uide.edu.ec',
-                    malla: 'ITIL_MALLA 2019',
-                    period: 'SEM LOJA OCT 2025 – FEB 2026',
-                    status: 'Activo'
-                },
-                {
-                    cedula: '1050195104',
-                    name: 'Ajila Armijos Cristian Xavier',
-                    email: 'crajilaar@uide.edu.ec',
-                    malla: 'SINL_MALLA 2023',
-                    period: 'SEM LOJA OCT 2025 – FEB 2026',
-                    status: 'Activo'
-                }
             ]);
         }
     };
@@ -74,7 +46,12 @@ function StudentLoad() {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:3000/api/v1/estudiantes/importar-excel', {
+            if (!token) {
+                alert('No se encontró un token de sesión válido. Por favor, cierre sesión y vuelva a entrar.');
+                return;
+            }
+
+            const response = await fetch(`${API_BASE_URL}/estudiantes/importar-excel`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -92,7 +69,7 @@ function StudentLoad() {
                     skipped: result.omitidos?.length || 0,
                     failed: result.fallidos?.length || 0
                 });
-                console.log('Resultados Carga:', result);
+
             } else {
                 console.error('Error al subir:', result);
                 alert('Error al procesar el archivo: ' + (result.message || 'Error desconocido'));

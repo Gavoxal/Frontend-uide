@@ -178,11 +178,11 @@ function MeetingHistory() {
     };
 
     const handleViewMeeting = (meeting) => {
-        console.log('Ver detalles:', meeting);
+
     };
 
     const handleExportPdf = (meeting) => {
-        console.log('Exportar PDF:', meeting);
+
         alert('Generando PDF de la reunión...');
     };
 

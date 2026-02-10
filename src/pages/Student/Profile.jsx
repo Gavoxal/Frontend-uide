@@ -47,12 +47,12 @@ function StudentProfile() {
                 try {
                     const freshData = await UserService.getById(user.id);
                     if (freshData) {
-                        console.log("Full User Data:", freshData);
+
 
                         // Intentar obtener datos del perfil (si vienen anidados o planos)
                         // Ajustado basado en logs: estudiantePerfil (camelCase, singular)
                         const profile = freshData.estudiantePerfil || freshData.estudiantesperfil || freshData.estudiantesPerfil || freshData;
-                        console.log("Profile Data extracted:", profile);
+
 
                         const firstName = freshData.nombres || freshData.nombre || user.nombres || user.name || "";
                         const lastName = freshData.apellidos || freshData.apellido || user.apellidos || user.lastName || "";
@@ -94,7 +94,7 @@ function StudentProfile() {
             try {
                 // Usar getByStudent que ya tiene el mapeo dinámico y robusto
                 const data = await PrerequisiteService.getByStudent(user.id);
-                console.log("Prerequisites Profile Load:", data);
+
 
                 const apiPrerequisites = {
                     english: { completed: false, verified: false },

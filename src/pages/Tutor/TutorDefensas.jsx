@@ -49,7 +49,7 @@ const TutorDefensas = () => {
 
     const handleSelectDefense = (defense) => {
         // Future implementation: View details or grade defense
-        console.log("Selected defense:", defense);
+
         // Navigate or open dialog here
         setSnackbar({
             open: true,

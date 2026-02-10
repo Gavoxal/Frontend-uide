@@ -1,38 +1,95 @@
+import axios from 'axios';
+import { API_BASE_URL } from '../utils/constants';
+
 /**
- * Wrapper para fetch que maneja la autenticación y errores comunes.
- * Automáticamente añade el token de autorización si existe.
+ * Cliente Axios centralizado con interceptores para autenticación.
  */
-export const apiFetch = async (endpoint, options = {}) => {
-    // Obtener token del storage
+const apiClient = axios.create({
+    baseURL: API_BASE_URL,
+    headers: {
+        'Content-Type': 'application/json'
+    }
+});
+
+// Interceptor para añadir el token a cada petición y normalizar URL
+apiClient.interceptors.request.use((config) => {
     const token = localStorage.getItem('token');
 
-    // Configurar headers por defecto
+    // Solo añadir si el token existe y es válido (no es la cadena "null")
+    if (token && token !== 'null' && token !== 'undefined') {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    // Normalizar URL para evitar doble prefijo /api/v1
+    // Si la URL empieza con /api/v1 o api/v1, quitarlo ya que baseURL ya lo incluye
+    if (config.url) {
+        if (config.url.startsWith('/api/v1')) {
+            config.url = config.url.replace('/api/v1', '');
+        } else if (config.url.startsWith('api/v1')) {
+            config.url = config.url.replace('api/v1', '');
+        }
+    }
+
+    return config;
+}, (error) => {
+    return Promise.reject(error);
+});
+
+// Interceptor para manejar errores globales (ej: 401)
+apiClient.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            console.warn('Sesión expirada o inválida detectada por apiClient');
+            // Opcional: limpiar sesión si el error es de token malformado o expirado
+            if (error.response.data?.code === 'FST_JWT_AUTHORIZATION_TOKEN_INVALID') {
+                // localStorage.removeItem('token');
+            }
+        }
+        return Promise.reject(error);
+    }
+);
+
+/**
+ * Wrapper para fetch que maneja la autenticación y errores comunes.
+ * Mantenido por compatibilidad con código existente.
+ */
+export const apiFetch = async (endpoint, options = {}) => {
+    const token = localStorage.getItem('token');
+
+    // Normalizar endpoint para evitar duplicados de /api/v1
+    let cleanEndpoint = endpoint;
+    if (cleanEndpoint.startsWith('/api/v1')) {
+        cleanEndpoint = cleanEndpoint.replace('/api/v1', '');
+    } else if (cleanEndpoint.startsWith('api/v1')) {
+        cleanEndpoint = cleanEndpoint.replace('api/v1', '');
+    }
+
+    // Construir URL completa
+    const url = cleanEndpoint.startsWith('http') ? cleanEndpoint :
+        (cleanEndpoint.startsWith('/') ? `${API_BASE_URL}${cleanEndpoint}` : `${API_BASE_URL}/${cleanEndpoint}`);
+
     const defaultHeaders = {
         'Content-Type': 'application/json',
-        // Añadir token si existe ('Bearer' es el estándar más común, ajustar si es necesario)
-        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
     };
 
-    // Combinar headers
-    const headers = {
-        ...defaultHeaders,
-        ...options.headers
-    };
+    if (token && token !== 'null' && token !== 'undefined') {
+        defaultHeaders['Authorization'] = `Bearer ${token}`;
+    }
 
     const config = {
         ...options,
-        headers
+        headers: {
+            ...defaultHeaders,
+            ...options.headers
+        }
     };
 
     try {
-        const response = await fetch(endpoint, config);
+        const response = await fetch(url, config);
 
-        // Manejar expiración de token (401)
         if (response.status === 401) {
-            console.warn('Sesión expirada o inválida');
-            // Opcional: Redirigir al login o limpiar token
-            // localStorage.removeItem('token');
-            // window.location.href = '/login';
+            console.warn('Sesión expirada o inválida detectada por apiFetch');
         }
 
         return response;
@@ -44,8 +101,6 @@ export const apiFetch = async (endpoint, options = {}) => {
 
 /**
  * Descarga un archivo desde una URL protegida por autenticación.
- * @param {string} url - URL del archivo a descargar
- * @param {string} filename - Nombre con el que se guardará el archivo
  */
 export const downloadFile = async (url, filename) => {
     try {
@@ -66,3 +121,5 @@ export const downloadFile = async (url, filename) => {
         alert("Error al descargar el archivo. Por favor intente nuevamente.");
     }
 };
+
+export default apiClient;

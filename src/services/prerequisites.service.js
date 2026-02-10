@@ -10,7 +10,7 @@ export const PrerequisiteService = {
             if (!response.ok) return [];
 
             const data = await response.json();
-            console.log("PrerequisiteService.getByStudent raw data:", data);
+
 
             return data.map(item => {
                 let frontendKey = 'other';
@@ -76,7 +76,7 @@ export const PrerequisiteService = {
             const formData = new FormData();
             formData.append('file', file);
 
-            console.log("Subiendo archivo físico...");
+
             const uploadResponse = await fetch('/api/v1/prerequisitos/upload', {
                 method: 'POST',
                 headers: {
@@ -93,10 +93,10 @@ export const PrerequisiteService = {
             const uploadData = await uploadResponse.json();
             const archivoUrl = uploadData.url;
 
-            console.log("Archivo subido con éxito, URL:", archivoUrl);
+
 
             // --- PASO 2: Registrar la relación en la base de datos ---
-            console.log("Registrando prerequisito en base de datos...");
+
             const registerResponse = await fetch('/api/v1/prerequisitos/', {
                 method: 'POST',
                 headers: {

@@ -6,8 +6,11 @@ import SaveIcon from '@mui/icons-material/Save';
 import DescriptionIcon from '@mui/icons-material/Description';
 import PersonIcon from '@mui/icons-material/Person';
 import SendIcon from '@mui/icons-material/Send';
+import LoadingScreen from '../../components/load.mui.component.jsx';
 import { getDataUser } from '../../storage/user.model';
-import { ProposalService } from '../../services/proposal.service';
+import { ProposalService } from '../../services/proposal.service.js';
+import { BASE_URL } from '../../utils/constants.js';
+import uideLogo from '../../assets/uide3.svg';
 
 function ProposalReview() {
     const { id } = useParams();
@@ -32,7 +35,7 @@ function ProposalReview() {
                 // Fix PDF URL
                 let pdfUrl = data.archivoUrl || data.archivo_url || "";
                 if (pdfUrl && !pdfUrl.startsWith('http')) {
-                    pdfUrl = `http://localhost:3000${pdfUrl.startsWith('/') ? '' : '/'}${pdfUrl}`;
+                    pdfUrl = `${BASE_URL}${pdfUrl.startsWith('/') ? '' : '/'}${pdfUrl}`;
                 }
 
                 setProposal({

@@ -1,3 +1,5 @@
+import { API_BASE_URL } from '../utils/constants';
+
 export const AuthService = {
     /**
      * Inicia sesión llamando al backend.
@@ -7,9 +9,13 @@ export const AuthService = {
      * @returns {Promise<Object>} Datos del usuario o lanza error.
      */
     async login(correo, clave) {
+        // Limpiar cualquier sesión anterior antes de intentar una nueva
+        localStorage.removeItem('token');
+        localStorage.removeItem('userEmail');
+
         try {
             // Intento de conexión al backend
-            const response = await fetch('/api/v1/auth/login', {
+            const response = await fetch(`${API_BASE_URL}/auth/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -64,12 +70,18 @@ export const AuthService = {
                 throw new Error('Credenciales inválidas');
             } else {
                 // Si el backend responde error (500, etc) o 404
-                console.warn("Backend API error or not found, falling back to mock.");
-                return this.mockLogin(correo, clave);
+                const errorData = await response.json().catch(() => ({}));
+                console.error("Backend API error:", errorData);
+                throw new Error(errorData.message || `Error del servidor (${response.status})`);
             }
         } catch (error) {
-            console.warn("API Connection failed, falling back to mock login:", error);
-            return this.mockLogin(correo, clave);
+            console.error("API Connection failed:", error);
+            // Solo usar mock si es un entorno local o falla la red
+            if (correo.includes('@example.com') || correo === 'admin' || correo === 'director') {
+                console.warn("Falling back to mock login for test user.");
+                return this.mockLogin(correo, clave);
+            }
+            throw error;
         }
     },
 
@@ -152,9 +164,9 @@ export const AuthService = {
      */
     async changePassword(currentPassword, newPassword) {
         const token = localStorage.getItem('token');
-        if (!token) throw new Error('No hay sesión activa');
+        if (!token) throw new Error('No hay sesión activa (token no encontrado)');
 
-        const response = await fetch('/api/v1/usuarios/cambiar-clave', {
+        const response = await fetch(`${API_BASE_URL}/usuarios/cambiar-clave`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

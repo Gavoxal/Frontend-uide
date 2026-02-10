@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../../utils/constants';
 import {
     Box,
     Grid,
@@ -51,8 +52,8 @@ function ProposalDetail() {
             const data = await ProposalService.getByStudent(id);
             if (data.length > 0) {
                 const student = data[0].estudiante;
-                console.log("[DEBUG] ProposalDetail student:", student);
-                console.log("[DEBUG] ProposalDetail profile:", student?.estudiantePerfil);
+
+
 
                 setStudentInfo({
                     name: student ? `${student.nombres} ${student.apellidos}` : 'N/A',
@@ -164,8 +165,7 @@ function ProposalDetail() {
 
     const handleDownload = async (fileUrl, fileName = 'propuesta.pdf') => {
         if (!fileUrl) return;
-        const baseUrl = window.location.origin.includes('localhost') ? 'http://localhost:3000' : '';
-        const fullUrl = `${baseUrl}${fileUrl}`;
+        const fullUrl = fileUrl.startsWith('http') ? fileUrl : `${API_BASE_URL.replace('/api/v1', '')}${fileUrl}`;
         const token = localStorage.getItem('token');
 
         try {

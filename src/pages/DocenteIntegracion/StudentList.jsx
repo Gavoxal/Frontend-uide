@@ -44,7 +44,7 @@ function DocenteStudents() {
     }, []);
 
     const handleViewStudent = (student) => {
-        console.log('Ver detalles de:', student.name);
+
     };
 
     const handlePlanActivity = (student) => {

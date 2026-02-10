@@ -111,7 +111,7 @@ const CoordinadorDashboard = () => {
     const handleApprove = (student) => {
         // TODO: API - Aprobar prerrequisitos del estudiante
         // await fetch(`/api/coordinador/students/${student.id}/approve-prerequisites`, { method: 'POST' })
-        console.log('Aprobar prerrequisitos:', student);
+
     };
 
     const handleReviewStudent = (student) => {

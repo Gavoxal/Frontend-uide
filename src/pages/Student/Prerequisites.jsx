@@ -71,7 +71,7 @@ function StudentPrerequisites() {
         try {
             // Usar getByStudent que devuelve la lista con mapeo (english, internship, community)
             const data = await PrerequisiteService.getByStudent(user.id);
-            console.log("Prerequisites Data:", data);
+
 
             // Mapear respuesta del API al estado local
             const newState = {

@@ -5,7 +5,7 @@ import AssignmentIcon from '@mui/icons-material/Assignment';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 
-function StudentCard({ student, onView, onPlan, onReview }) {
+function StudentCard({ student, onPlan, onReview }) {
     // Determinar color del semáforo
     const getStatusColor = (status) => {
         const colors = {
@@ -109,7 +109,7 @@ function StudentCard({ student, onView, onPlan, onReview }) {
                 {/* Semana actual */}
                 <Box sx={{ mb: 3 }}>
                     <Chip
-                        label={`Semana ${student.weekNumber || 0}/15`}
+                        label={`Semana ${student.weekNumber || 0}/16`}
                         size="small"
                         sx={{
                             backgroundColor: '#667eea',
@@ -121,15 +121,6 @@ function StudentCard({ student, onView, onPlan, onReview }) {
 
                 {/* Botones de acción */}
                 <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Button
-                        variant="outlined"
-                        size="small"
-                        startIcon={<VisibilityIcon />}
-                        onClick={() => onView?.(student)}
-                        sx={{ flex: 1 }}
-                    >
-                        Ver
-                    </Button>
                     <Button
                         variant="outlined"
                         size="small"

@@ -1,5 +1,6 @@
 // API Base URL - Cambiar según el entorno
-export const API_BASE_URL = 'http://localhost:3000/api/v1';
+export const BASE_URL = 'http://localhost:3000';
+export const API_BASE_URL = `${BASE_URL}/api/v1`;
 
 // Roles de usuario
 export const USER_ROLES = {

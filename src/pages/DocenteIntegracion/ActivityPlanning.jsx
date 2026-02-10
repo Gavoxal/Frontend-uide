@@ -124,19 +124,19 @@ function DocenteActivityPlanning() {
 
     useEffect(() => {
         const loadInitialData = async () => {
-            console.log("DEBUG: loadInitialData started");
+
             setLoading(true);
             try {
                 // 1. Cargar lista de estudiantes (para Docente Integración)
                 const docenteStudents = await DocenteService.getAssignedStudents();
-                console.log("DEBUG: docenteStudents response:", docenteStudents);
+
                 const mappedStudents = docenteStudents.map(s => ({
                     id: s.id,
                     name: `${s.nombres} ${s.apellidos}`,
                     thesis: s.propuesta?.titulo || 'Sin propuesta',
                     propuestaId: s.propuesta?.id || s.propuestaId
                 }));
-                console.log("DEBUG: mappedStudents:", mappedStudents);
+
                 setStudents(mappedStudents);
 
                 // 2. Cargar historial
@@ -158,13 +158,13 @@ function DocenteActivityPlanning() {
     }, [preselectedStudent]);
 
     const handleSubmit = async (formData) => {
-        console.log("DEBUG: handleSubmit formData:", formData);
-        console.log("DEBUG: current students list:", students);
+
+
         setLoading(true);
         try {
             // Encontrar el estudiante para obtener el propuestaId (usar == para comparar string/number)
             const student = students.find(s => String(s.id) === String(formData.studentId));
-            console.log("DEBUG: found student:", student);
+
 
             if (!student?.propuestaId) {
                 console.error("DEBUG: Student without proposal id:", student);
@@ -180,7 +180,7 @@ function DocenteActivityPlanning() {
                 fechaEntrega: formData.deadline // Agregamos la fecha de entrega
             };
 
-            console.log("DEBUG FRONTEND: Sending activityData:", activityData);
+
 
             if (editingActivity) {
                 await ActivityService.update(editingActivity.id, activityData);
@@ -214,7 +214,7 @@ function DocenteActivityPlanning() {
     };
 
     const handleDraft = (data) => {
-        console.log('Borrador guardado:', data);
+
         setAlertState({ open: true, message: 'Borrador guardado localmente (simulado)', severity: 'info' });
         setView('history');
     };

@@ -50,12 +50,11 @@ function DocenteIntegracionProfile() {
     // Handlers
     const handleChangePassword = () => setOpenPasswordDialog(true);
     const handlePasswordSubmit = (passwordData) => {
-        console.log("Cambiar contraseña:", passwordData);
+
         // TODO: Implement API call to change password
         alert("Contraseña cambiada exitosamente");
     };
-    const handleEditPersonalInfo = () => console.log("Editar información personal");
-
+    const handleEditPersonalInfo = () => alert("Editar perfil no implementado en esta demo");
     return (
         <Box sx={{ width: "100%" }}>
             {/* Header */}
@@ -97,7 +96,7 @@ function DocenteIntegracionProfile() {
                             { icon: <SchoolIcon color="secondary" />, label: "Facultad", value: "Ciencias de la Ingeniería" },
                             { icon: <AssignmentIcon color="secondary" />, label: "Extensión", value: docenteData.extension }
                         ]}
-                        onEdit={() => console.log("Editar detalles")}
+                        onEdit={() => alert("Editar detalles no implementado en esta demo")}
                     />
                 </Grid>
             </Grid>

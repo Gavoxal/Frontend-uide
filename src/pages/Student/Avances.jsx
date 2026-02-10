@@ -92,7 +92,7 @@ function StudentAvances() {
 
             // 2. Obtener actividades de esa propuesta
             const activities = await ActivityService.getByPropuesta(activeProposal.id);
-            console.log("DEBUG FRONTEND: Raw activities from backend:", activities);
+
 
             // 3. Mapear a la estructura del frontend
             const mapped = activities.map((act, index) => {
