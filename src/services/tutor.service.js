@@ -43,5 +43,16 @@ export const TutorService = {
             console.error("TutorService.updateProfile error:", error);
             throw error;
         }
+    },
+
+    async getAssignedStudentsGrades() {
+        try {
+            const response = await apiFetch('/api/v1/tutor/mis-estudiantes-notas');
+            if (!response.ok) throw new Error('Error al obtener notas de estudiantes');
+            return await response.json();
+        } catch (error) {
+            console.error("TutorService.getAssignedStudentsGrades error:", error);
+            return [];
+        }
     }
 };

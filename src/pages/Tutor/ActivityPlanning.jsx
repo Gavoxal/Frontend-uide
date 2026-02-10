@@ -54,11 +54,14 @@ function ActivityPlanning() {
             let allActivities = [];
             if (preselected?.propuesta?.id) {
                 const activities = await ActivityService.getByPropuesta(preselected.propuesta.id);
-                allActivities = activities.map(a => ({
-                    ...a,
-                    studentName: preselected.name,
-                    studentId: preselected.id
-                }));
+                // Filtrar solo las actividades de tipo TUTORIA
+                allActivities = activities
+                    .filter(a => a.tipo === 'TUTORIA')
+                    .map(a => ({
+                        ...a,
+                        studentName: preselected.name,
+                        studentId: preselected.id
+                    }));
             } else {
                 // Fetch activities for all students who have a proposal
                 const historyPromises = studentList
@@ -66,11 +69,14 @@ function ActivityPlanning() {
                     .map(async (s) => {
                         try {
                             const activities = await ActivityService.getByPropuesta(s.propuestaId);
-                            return activities.map(a => ({
-                                ...a,
-                                studentName: s.name,
-                                studentId: s.id
-                            }));
+                            // Filtrar solo las actividades de tipo TUTORIA
+                            return activities
+                                .filter(a => a.tipo === 'TUTORIA')
+                                .map(a => ({
+                                    ...a,
+                                    studentName: s.name,
+                                    studentId: s.id
+                                }));
                         } catch (e) {
                             return [];
                         }
@@ -107,6 +113,7 @@ function ActivityPlanning() {
                     status: (a.evidencias && a.evidencias.length > 0 && (a.estado === 'NO_ENTREGADO' || !a.estado))
                         ? 'entregado'
                         : (a.estado?.toLowerCase() || 'pendiente'),
+                    semana: a.semana || '?',
                     priority: 'media'
                 };
             }));
@@ -144,8 +151,8 @@ function ActivityPlanning() {
     const handleSubmit = async (formData) => {
         setLoading(true);
         try {
-            // Encontrar el estudiante para obtener el propuestaId
-            const student = students.find(s => s.id === formData.studentId);
+            // Encontrar el estudiante para obtener el propuestaId (usar String() para evitar fallos de tipo)
+            const student = students.find(s => String(s.id) === String(formData.studentId));
             if (!student?.propuestaId) {
                 throw new Error("El estudiante seleccionado no tiene una propuesta activa vinculada.");
             }
@@ -154,7 +161,8 @@ function ActivityPlanning() {
                 nombre: formData.title,
                 descripcion: formData.description,
                 propuestaId: student.propuestaId,
-                tipo: 'DOCENCIA',
+                tipo: 'TUTORIA',
+                semana: Number(formData.semana),
                 fechaEntrega: formData.deadline // Agregamos la fecha de entrega
             };
 
@@ -240,6 +248,7 @@ function ActivityPlanning() {
             studentId: activity.studentId,
             title: activity.activity,
             description: activity.description,
+            semana: activity.semana,
             deadline: activity.deadline === 'Sin fecha' ? new Date() : new Date(activity.deadline), // Simple parse, might need adjustment
             resources: []
         });
@@ -399,6 +408,7 @@ function ActivityPlanning() {
                                             <TableCell><strong>Fecha</strong></TableCell>
                                             <TableCell><strong>Estudiante</strong></TableCell>
                                             <TableCell><strong>Actividad</strong></TableCell>
+                                            <TableCell><strong>Semana</strong></TableCell>
                                             <TableCell><strong>Límite</strong></TableCell>
                                             <TableCell><strong>Estado</strong></TableCell>
                                             <TableCell align="center"><strong>Acciones</strong></TableCell>
@@ -417,6 +427,14 @@ function ActivityPlanning() {
                                                     <Typography variant="body2">
                                                         {item.activity}
                                                     </Typography>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Chip
+                                                        label={item.semana === '?' ? 'N/A' : `Sem. ${item.semana}`}
+                                                        size="small"
+                                                        variant="outlined"
+                                                        color={item.semana === '?' ? 'default' : 'primary'}
+                                                    />
                                                 </TableCell>
                                                 <TableCell>{item.deadline}</TableCell>
                                                 <TableCell>{getStatusChip(item.status)}</TableCell>

@@ -46,14 +46,17 @@ import TutorStudents from "../pages/Tutor/Students";
 import SharedProposalList from "../pages/Shared/ProposalList";
 import SharedProposalReview from "../pages/Shared/ProposalReview";
 import PublicDefense from "../pages/Tutor/PublicDefense";
+import TutorGrades from "../pages/Tutor/Grades";
 
 
 // Docente Integración pages
 import DocenteDashboard from "../pages/DocenteIntegracion/Dashboard";
-import DocenteAdvances from "../pages/DocenteIntegracion/WeeklyAdvances";
+import DocenteReviewFeedback from "../pages/DocenteIntegracion/ReviewFeedback"; // Cambio a vista unificada
 import ReviewAdvance from "../pages/DocenteIntegracion/ReviewAdvance";
 import DocenteActivityPlanning from "../pages/DocenteIntegracion/ActivityPlanning";
+import DocenteGrades from "../pages/DocenteIntegracion/Grades";
 import DocenteProfile from "../pages/DocenteIntegracion/Profile";
+import DocenteStudents from "../pages/DocenteIntegracion/StudentList.jsx";
 
 // Coordinador pages
 import CoordinadorDashboard from "../pages/Coordinador/Dashboard";
@@ -134,6 +137,7 @@ function RouterPages() {
                         <Route path="proposals" element={<SharedProposalList />} />
                         <Route path="proposals/review/:id" element={<SharedProposalReview />} />
                         <Route path="meetings" element={<MeetingLog />} />
+                        <Route path="grades" element={<TutorGrades />} />
                         <Route path="profile" element={<TutorProfile />} />
                     </Route>
                 </Route>
@@ -143,8 +147,10 @@ function RouterPages() {
                     <Route element={<DashboardLayout />}>
                         <Route index element={<DocenteDashboard />} />
                         <Route path="dashboard" element={<DocenteDashboard />} />
-                        <Route path="advances" element={<DocenteAdvances />} />
+                        <Route path="students" element={<DocenteStudents />} />
+                        <Route path="advances" element={<DocenteReviewFeedback />} />
                         <Route path="planning" element={<DocenteActivityPlanning />} />
+                        <Route path="grades" element={<DocenteGrades />} />
                         <Route path="review/:weekId/:studentId" element={<ReviewAdvance />} />
                         <Route path="proposals" element={<SharedProposalList />} />
                         <Route path="proposals/review/:id" element={<SharedProposalReview />} />

@@ -24,10 +24,25 @@ function ActivityForm({ students = [], onSubmit, onDraft, initialData = null }) 
         studentId: initialData?.studentId || '',
         title: initialData?.title || '',
         description: initialData?.description || '',
+        semana: initialData?.semana || '',
         deadline: initialData?.deadline || new Date(),
-
         resources: initialData?.resources || []
     });
+
+    // Sincronizar estado cuando initialData cambia (importante para pre-selección)
+    React.useEffect(() => {
+        if (initialData) {
+            setFormData(prev => ({
+                ...prev,
+                studentId: initialData.studentId || prev.studentId,
+                title: initialData.title || prev.title,
+                description: initialData.description || prev.description,
+                semana: initialData.semana || prev.semana,
+                deadline: initialData.deadline || prev.deadline,
+                resources: initialData.resources || prev.resources
+            }));
+        }
+    }, [initialData]);
 
     const handleChange = (field, value) => {
         setFormData(prev => ({
@@ -46,18 +61,36 @@ function ActivityForm({ students = [], onSubmit, onDraft, initialData = null }) 
 
 
 
+    const startOptions = [
+        <MenuItem key="none" value="">
+            <em>Seleccione un estudiante</em>
+        </MenuItem>
+    ];
+
+    // Asegurar tipos consistentes para el matching de MUI Select
+    const normalizedValue = formData.studentId ? String(formData.studentId) : '';
+
+    const allOptions = students.map(s => ({
+        id: String(s.id),
+        name: s.name
+    }));
+
+    if (normalizedValue && !allOptions.find(o => o.id === normalizedValue)) {
+        allOptions.push({ id: normalizedValue, name: initialData?.studentName || "Estudiante Seleccionado" });
+    }
+
     return (
         <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                {/* Selección de estudiante */}
                 <FormControl fullWidth>
                     <InputLabel>Estudiante</InputLabel>
                     <Select
-                        value={formData.studentId}
+                        value={normalizedValue}
                         label="Estudiante"
                         onChange={(e) => handleChange('studentId', e.target.value)}
                     >
-                        {students.map((student) => (
+                        {startOptions}
+                        {allOptions.map((student) => (
                             <MenuItem key={student.id} value={student.id}>
                                 {student.name}
                             </MenuItem>
@@ -65,14 +98,30 @@ function ActivityForm({ students = [], onSubmit, onDraft, initialData = null }) 
                     </Select>
                 </FormControl>
 
-                {/* Título */}
-                <TextField
-                    fullWidth
-                    label="Título de la Actividad"
-                    placeholder="Ej: Implementación de Login con JWT"
-                    value={formData.title}
-                    onChange={(e) => handleChange('title', e.target.value)}
-                />
+                {/* Semana y Título */}
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                    <FormControl sx={{ minWidth: 120 }}>
+                        <InputLabel>Semana</InputLabel>
+                        <Select
+                            value={formData.semana}
+                            label="Semana"
+                            onChange={(e) => handleChange('semana', e.target.value)}
+                        >
+                            {[...Array(16)].map((_, i) => (
+                                <MenuItem key={i + 1} value={i + 1}>
+                                    Semana {i + 1}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                    <TextField
+                        fullWidth
+                        label="Título de la Actividad"
+                        placeholder="Ej: Implementación de Login con JWT"
+                        value={formData.title}
+                        onChange={(e) => handleChange('title', e.target.value)}
+                    />
+                </Box>
 
                 {/* Descripción */}
                 <TextField
@@ -109,7 +158,7 @@ function ActivityForm({ students = [], onSubmit, onDraft, initialData = null }) 
                     <Button
                         variant="contained"
                         onClick={() => handleSubmit(false)}
-                        disabled={!formData.studentId || !formData.title || !formData.description}
+                        disabled={!formData.studentId || !formData.title || !formData.description || !formData.semana}
                         sx={{
                             backgroundColor: '#667eea',
                             '&:hover': {

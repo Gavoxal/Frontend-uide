@@ -12,9 +12,17 @@ import {
 import DownloadIcon from '@mui/icons-material/Download';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
-function FeedbackPanel({ submission, onSubmit, onCancel, hideRating = false, sectionTitle = "Avance del Estudiante", statusOptions = [] }) {
+function FeedbackPanel({
+    submission,
+    onSubmit,
+    onCancel,
+    hideRating = false,
+    sectionTitle = "Avance del Estudiante",
+    feedbackTitle = "Feedback del Tutor",
+    statusOptions = []
+}) {
     const [feedback, setFeedback] = useState({
-        observations: submission?.tutorComments || '',
+        observations: submission?.tutorComments || submission?.feedback || '',
         rating: submission?.grade || '',
         status: submission?.status || (statusOptions.length > 0 ? statusOptions[0].value : '')
     });

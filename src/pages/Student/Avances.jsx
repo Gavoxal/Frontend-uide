@@ -69,7 +69,19 @@ function StudentAvances() {
                 setLoading(false);
                 return;
             }
-            let activeProposal = proposals[0]; // Tomamos la primera/activa
+
+            // Buscar la propuesta activa con la misma lógica que el Docente
+            // (APROBADA > PENDIENTE > otras, y por ID más reciente)
+            const sorted = [...proposals].sort((a, b) => {
+                const statusOrder = { 'APROBADA': 3, 'PENDIENTE': 2, 'RECHAZADA': 1 };
+                const orderA = statusOrder[a.estado] || 0;
+                const orderB = statusOrder[b.estado] || 0;
+
+                if (orderA !== orderB) return orderB - orderA; // el de mayor orden primero
+                return Number(b.id) - Number(a.id); // el de ID mayor primero
+            });
+
+            const activeProposal = sorted[0];
 
             // Extraer tutor de la relación trabajosTitulacion si existe
             if (!activeProposal.tutor && activeProposal.trabajosTitulacion?.length > 0) {
@@ -80,6 +92,7 @@ function StudentAvances() {
 
             // 2. Obtener actividades de esa propuesta
             const activities = await ActivityService.getByPropuesta(activeProposal.id);
+            console.log("DEBUG FRONTEND: Raw activities from backend:", activities);
 
             // 3. Mapear a la estructura del frontend
             const mapped = activities.map((act, index) => {
@@ -101,18 +114,31 @@ function StudentAvances() {
                 const submissionDate = evidence?.fechaEntrega || evidence?.fecha_entrega || evidence?.createdAt;
                 const gradingDate = evidence?.fechaCalificacionTutor || evidence?.fecha_calificacion_tutor || evidence?.updatedAt;
 
-                // EXTRAER TUTOR (Relación anidada en actividad o del estado global de la propuesta)
+                // EXTRAER TUTOR O DOCENTE
                 let tutorName = "Tutor Asignado";
-                if (act.propuesta?.trabajosTitulacion?.[0]?.tutor) {
-                    const t = act.propuesta.trabajosTitulacion[0].tutor;
-                    tutorName = `${t.nombres} ${t.apellidos}`;
-                } else if (activeProposal.tutor) {
-                    tutorName = `${activeProposal.tutor.nombres} ${activeProposal.tutor.apellidos}`;
+                if (act.tipo === 'DOCENCIA') {
+                    tutorName = "Docente de Integración";
+                } else if (act.tipo === 'TUTORIA') {
+                    if (act.propuesta?.trabajosTitulacion?.[0]?.tutor) {
+                        const t = act.propuesta.trabajosTitulacion[0].tutor;
+                        tutorName = `${t.nombres} ${t.apellidos}`;
+                    } else if (activeProposal.tutor) {
+                        tutorName = `${activeProposal.tutor.nombres} ${activeProposal.tutor.apellidos}`;
+                    } else {
+                        tutorName = "Tutor (Académico)";
+                    }
                 }
 
                 return {
                     id: act.id,
-                    weekNumber: act.semana || evidence?.semana || (index + 1),
+                    // Prioridad Estricta: 
+                    // 1. Campo 'semana' directo de la actividad
+                    // 2. Campo 'semana' de la evidencia
+                    // 3. Fallback: Orden natural (index + 1)
+                    weekNumber: (act.semana && Number(act.semana) > 0)
+                        ? Number(act.semana)
+                        : (evidence?.semana ? Number(evidence.semana) : (index + 1)),
+                    rawSemana: act.semana, // Para depuración
                     title: act.nombre,
                     assignmentDate: createDate ? new Date(createDate) : null,
                     dueDate: dueDate ? (function (d) {
@@ -140,10 +166,14 @@ function StudentAvances() {
                     } : null,
 
                     grading: evidence && (evidence.calificacionTutor !== null || evidence.calificacionDocente !== null) ? {
-                        score: evidence.calificacionTutor || evidence.calificacionDocente,
+                        score: act.tipo === 'DOCENCIA'
+                            ? (evidence.calificacionDocente !== null ? evidence.calificacionDocente : evidence.calificacionTutor)
+                            : (evidence.calificacionTutor !== null ? evidence.calificacionTutor : evidence.calificacionDocente),
                         gradedBy: tutorName,
                         gradedDate: gradingDate ? new Date(gradingDate) : null,
-                        feedback: evidence.feedbackTutor || evidence.feedbackDocente || "Sin observaciones",
+                        feedback: act.tipo === 'DOCENCIA'
+                            ? (evidence.feedbackDocente || evidence.feedbackTutor || "Sin observaciones")
+                            : (evidence.feedbackTutor || evidence.feedbackDocente || "Sin observaciones"),
                         status: (Number(evidence.calificacionTutor) >= 7 || Number(evidence.calificacionDocente) >= 7) ? "approved" : "rejected"
                     } : null,
 
@@ -160,8 +190,23 @@ function StudentAvances() {
                 // No bloqueamos la carga principal si fallan las reuniones
             }
 
-            // Ordenar por fecha o ID si es necesario
-            setWeeklyProgress(mapped);
+            // 5. Agrupar por semana (1-16)
+            const weeks = Array.from({ length: 16 }, (_, i) => ({
+                weekNumber: i + 1,
+                activities: []
+            }));
+
+            mapped.forEach(act => {
+                const w = Number(act.weekNumber);
+                // Asegurar que esté en rango 1-16
+                if (w >= 1 && w <= 16) {
+                    weeks[w - 1].activities.push(act);
+                } else {
+                    console.warn("Actividad con semana fuera de rango (1-16):", act);
+                }
+            });
+
+            setWeeklyProgress(weeks);
         } catch (error) {
             console.error("Error fetching progress data:", error);
             setAlertState({
@@ -228,14 +273,38 @@ function StudentAvances() {
         }
     };
 
+    const allActivities = weeklyProgress.flatMap(w => w.activities || []);
+
+    // Cálculos basados en el nuevo formato de semanas
+    const isWeekCompleted = (week) => {
+        // Una semana se considera completada si no tiene actividades O si todas están calificadas
+        if (!week.activities || week.activities.length === 0) return true;
+        return week.activities.every(a => a.currentState === 'graded');
+    };
+
+    // Calcular cuántas semanas consecutivas se han completado desde la 1
+    let consecutiveCompleted = 0;
+    for (let i = 0; i < weeklyProgress.length; i++) {
+        if (isWeekCompleted(weeklyProgress[i])) {
+            // Solo contamos como "completada" si REALMENTE tiene actividades. 
+            // Si está vacía es un "paso libre" pero no suma al contador de completadas para el texto "6/16"
+            // a menos que el usuario prefiera que cuente. 
+            // Según el prompt: "deberian ser 11/16... el se encuentra en la semana 6" 
+            // -> implica que las semanas vacías previas cuentan como completadas o el contador es el índice de la semana actual.
+            consecutiveCompleted++;
+        } else {
+            break;
+        }
+    }
+
     const progressData = {
-        completedWeeks: weeklyProgress.filter(p => p.currentState === 'graded').length,
+        completedWeeks: consecutiveCompleted,
         totalWeeks: 16,
-        currentWeek: Math.min(weeklyProgress.filter(p => p.studentSubmission).length + 1, 16)
+        currentWeek: Math.min(consecutiveCompleted + 1, 16)
     };
 
     // Convertir avances a eventos del calendario
-    const calendarEvents = weeklyProgress
+    const calendarEvents = allActivities
         .filter(progress => progress.tutorAssignment)
         .map(progress => {
             let color = '#9e9e9e';
@@ -276,7 +345,10 @@ function StudentAvances() {
 
     const allCalendarEvents = [...calendarEvents, ...meetingEvents];
 
-    const getStateConfig = (state) => {
+    const getStateConfig = (state, isLocked = false) => {
+        if (isLocked) {
+            return { label: 'Bloqueado', color: '#9e9e9e', icon: RadioButtonUnchecked };
+        }
         switch (state) {
             case 'graded':
                 return { label: 'Calificado', color: '#4caf50', icon: CheckCircle };
@@ -421,107 +493,132 @@ function StudentAvances() {
                     </CardContent>
                 </Card>
 
-                {/* Lista de Avances con Timeline */}
+                {/* Lista de Avances Semanales */}
                 <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
                     <CardContent sx={{ p: 4 }}>
                         <Typography variant="h6" fontWeight="700" gutterBottom sx={{ mb: 3 }}>
                             Avances Semanales
                         </Typography>
 
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                            {weeklyProgress.map((progress) => {
-                                const stateConfig = getStateConfig(progress.currentState);
-                                const StateIcon = stateConfig.icon;
 
-                                return (
-                                    <Card
-                                        key={progress.id}
-                                        sx={{
-                                            borderRadius: 2,
-                                            border: '1px solid #e0e0e0',
-                                            '&:hover': {
-                                                boxShadow: 3,
-                                                borderColor: '#000A9B'
-                                            },
-                                            transition: 'all 0.2s'
-                                        }}
-                                    >
-                                        <CardContent sx={{ p: 3 }}>
-                                            {/* Header del avance */}
-                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                                                <Box>
-                                                    <Typography variant="h6" fontWeight="600">
-                                                        Semana {progress.weekNumber}: {progress.title || 'Sin asignar'}
-                                                    </Typography>
-                                                    {progress.dueDate && (
-                                                        <Typography variant="caption" color="text.secondary">
-                                                            Fecha límite: {progress.dueDate.toLocaleDateString('es-ES', {
-                                                                day: 'numeric',
-                                                                month: 'long',
-                                                                year: 'numeric'
-                                                            })}
-                                                        </Typography>
-                                                    )}
-                                                </Box>
-                                                <Chip
-                                                    icon={<StateIcon />}
-                                                    label={stateConfig.label}
-                                                    sx={{
-                                                        backgroundColor: stateConfig.color,
-                                                        color: 'white',
-                                                        fontWeight: 600
-                                                    }}
-                                                />
-                                            </Box>
 
-                                            {/* Timeline horizontal */}
-                                            {progress.tutorAssignment && (
-                                                <Box sx={{ mb: 2 }}>
-                                                    <Stepper activeStep={
-                                                        progress.currentState === 'graded' ? 3 :
-                                                            progress.currentState === 'pending_tutor_review' ? 2 :
-                                                                progress.currentState === 'pending_upload' ? 1 : 0
-                                                    } alternativeLabel>
-                                                        <Step completed={!!progress.tutorAssignment}>
-                                                            <StepLabel>Asignado</StepLabel>
-                                                        </Step>
-                                                        <Step completed={!!progress.studentSubmission}>
-                                                            <StepLabel>Entregado</StepLabel>
-                                                        </Step>
-                                                        <Step completed={!!progress.grading}>
-                                                            <StepLabel>Calificado</StepLabel>
-                                                        </Step>
-                                                    </Stepper>
-                                                </Box>
-                                            )}
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                            {weeklyProgress.map((week) => (
+                                <Box key={week.weekNumber}>
+                                    {/* Cabecera de Semana */}
+                                    <Box sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        mb: 2,
+                                        pb: 1,
+                                        borderBottom: '2px solid #f0f0f0'
+                                    }}>
+                                        <Typography variant="h6" fontWeight="700" color={week.activities.length > 0 ? 'text.primary' : 'text.disabled'}>
+                                            Semana {week.weekNumber}
+                                        </Typography>
+                                    </Box>
 
-                                            {/* Botón de acción */}
-                                            <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                                {progress.tutorAssignment ? (
-                                                    <Button
-                                                        variant="contained"
-                                                        onClick={() => openDetailModal(progress)}
-                                                        sx={{
-                                                            backgroundColor: '#000A9B',
-                                                            textTransform: 'none',
-                                                            fontWeight: 600,
-                                                            '&:hover': {
-                                                                backgroundColor: '#0011cc'
-                                                            }
-                                                        }}
-                                                    >
-                                                        {!progress.studentSubmission ? 'Subir Entrega' : 'Ver Detalles'}
-                                                    </Button>
-                                                ) : (
-                                                    <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                                                        El tutor aún no ha asignado esta semana
-                                                    </Typography>
-                                                )}
-                                            </Box>
-                                        </CardContent>
-                                    </Card>
-                                );
-                            })}
+                                    {/* Lista de actividades de esta semana */}
+                                    <Grid container spacing={2}>
+                                        {week.activities.length > 0 ? (
+                                            week.activities.map((progress) => {
+                                                const isLocked = week.weekNumber > progressData.currentWeek;
+                                                const stateConfig = getStateConfig(progress.currentState, isLocked);
+                                                const StateIcon = stateConfig.icon;
+
+                                                return (
+                                                    <Grid item xs={12} md={week.activities.length > 1 ? 6 : 12} key={progress.id}>
+                                                        <Card
+                                                            sx={{
+                                                                borderRadius: 2,
+                                                                border: '1px solid #e0e0e0',
+                                                                opacity: isLocked ? 0.6 : 1,
+                                                                filter: isLocked ? 'grayscale(1)' : 'none',
+                                                                '&:hover': {
+                                                                    boxShadow: isLocked ? 1 : 3,
+                                                                    borderColor: isLocked ? '#e0e0e0' : '#000A9B'
+                                                                },
+                                                                transition: 'all 0.2s',
+                                                                cursor: isLocked ? 'not-allowed' : 'default'
+                                                            }}
+                                                        >
+                                                            <CardContent sx={{ p: 3 }}>
+                                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                                                                    <Box>
+                                                                        <Typography variant="subtitle1" fontWeight="600">
+                                                                            {progress.title}
+                                                                        </Typography>
+                                                                        <Box sx={{ mt: 0.5, display: 'flex', gap: 1 }}>
+                                                                            {progress.tutorAssignment?.assignedBy === "Docente de Integración" ? (
+                                                                                <Chip label="Docencia" size="small" color="secondary" variant="outlined" />
+                                                                            ) : (
+                                                                                <Chip label="Tutoría" size="small" color="primary" variant="outlined" />
+                                                                            )}
+                                                                        </Box>
+                                                                    </Box>
+                                                                    <Chip
+                                                                        icon={<StateIcon />}
+                                                                        label={stateConfig.label}
+                                                                        size="small"
+                                                                        sx={{ backgroundColor: stateConfig.color, color: 'white', fontWeight: 600 }}
+                                                                    />
+                                                                </Box>
+
+                                                                {progress.dueDate && (
+                                                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
+                                                                        Fecha límite: {progress.dueDate.toLocaleDateString()}
+                                                                    </Typography>
+                                                                )}
+
+                                                                <Stepper
+                                                                    activeStep={
+                                                                        progress.currentState === 'graded' ? 3 :
+                                                                            progress.currentState === 'pending_tutor_review' ? 2 :
+                                                                                progress.currentState === 'pending_upload' ? 1 : 0
+                                                                    }
+                                                                    alternativeLabel
+                                                                    sx={{ mb: 2 }}
+                                                                >
+                                                                    <Step completed={!!progress.tutorAssignment}>
+                                                                        <StepLabel>Asignado</StepLabel>
+                                                                    </Step>
+                                                                    <Step completed={!!progress.studentSubmission}>
+                                                                        <StepLabel>Entregado</StepLabel>
+                                                                    </Step>
+                                                                    <Step completed={!!progress.grading}>
+                                                                        <StepLabel>Calificado</StepLabel>
+                                                                    </Step>
+                                                                </Stepper>
+
+                                                                <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                                                    <Button
+                                                                        variant="contained"
+                                                                        disabled={isLocked}
+                                                                        onClick={() => openDetailModal(progress)}
+                                                                        sx={{
+                                                                            backgroundColor: isLocked ? '#bdbdbd' : '#000A9B',
+                                                                            textTransform: 'none',
+                                                                            '&:hover': { backgroundColor: isLocked ? '#bdbdbd' : '#0011cc' }
+                                                                        }}
+                                                                    >
+                                                                        {isLocked ? 'Bloqueado' : (!progress.studentSubmission ? 'Subir Entrega' : 'Ver Detalles')}
+                                                                    </Button>
+                                                                </Box>
+                                                            </CardContent>
+                                                        </Card>
+                                                    </Grid>
+                                                );
+                                            })
+                                        ) : (
+                                            <Grid item xs={12}>
+                                                <Typography variant="body2" color="text.disabled" sx={{ fontStyle: 'italic', ml: 2 }}>
+                                                    Sin actividades asignadas en esta semana
+                                                </Typography>
+                                            </Grid>
+                                        )}
+                                    </Grid>
+                                </Box>
+                            ))}
                         </Box>
                     </CardContent>
                 </Card>
@@ -551,12 +648,10 @@ function StudentAvances() {
                         </DialogTitle>
                         <DialogContent sx={{ pt: 3 }}>
                             <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-
                                 <Box>
                                     <Typography variant="subtitle2" color="text.secondary">Motivo</Typography>
                                     <Typography variant="h6">{selectedMeeting.motivo}</Typography>
                                 </Box>
-
                                 <Box sx={{ display: 'flex', gap: 4 }}>
                                     <Box>
                                         <Typography variant="subtitle2" color="text.secondary">Fecha</Typography>
@@ -572,26 +667,17 @@ function StudentAvances() {
                                         </Typography>
                                     </Box>
                                 </Box>
-
                                 <Box>
                                     <Typography variant="subtitle2" color="text.secondary">Modalidad</Typography>
-                                    <Chip
-                                        label={selectedMeeting.modalidad}
-                                        color="primary"
-                                        variant="outlined"
-                                        size="small"
-                                    />
+                                    <Chip label={selectedMeeting.modalidad} color="primary" variant="outlined" size="small" />
                                 </Box>
-
                                 <Divider />
-
                                 <Box>
                                     <Typography variant="subtitle2" color="text.secondary">Resumen / Observaciones</Typography>
                                     <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>
                                         {selectedMeeting.resumen || "Sin resumen registrado"}
                                     </Typography>
                                 </Box>
-
                                 {selectedMeeting.compromisos && Array.isArray(selectedMeeting.compromisos) && selectedMeeting.compromisos.length > 0 && (
                                     <>
                                         <Divider />
@@ -600,29 +686,17 @@ function StudentAvances() {
                                             <List dense>
                                                 {selectedMeeting.compromisos.map((c, i) => (
                                                     <ListItem key={i}>
-                                                        <ListItemText
-                                                            primary={typeof c === 'string' ? c : c.descripcion || JSON.stringify(c)}
-                                                        />
+                                                        <ListItemText primary={typeof c === 'string' ? c : c.description || "Compromiso"} />
                                                     </ListItem>
                                                 ))}
                                             </List>
                                         </Box>
                                     </>
                                 )}
-
-                                <Box sx={{ mt: 1, p: 2, backgroundColor: '#f5f5f5', borderRadius: 2 }}>
-                                    <Typography variant="subtitle2" color="text.secondary">Tutor</Typography>
-                                    <Typography variant="body2">
-                                        {selectedMeeting.tutor ? `${selectedMeeting.tutor.nombres} ${selectedMeeting.tutor.apellidos}` : 'No especificado'}
-                                    </Typography>
-                                </Box>
-
                             </Box>
                         </DialogContent>
                         <DialogActions>
-                            <Button onClick={() => setMeetingModalOpen(false)} variant="contained">
-                                Cerrar
-                            </Button>
+                            <Button onClick={() => setMeetingModalOpen(false)}>Cerrar</Button>
                         </DialogActions>
                     </>
                 )}

@@ -68,30 +68,53 @@ export const PrerequisiteService = {
             }
 
             if (!prerequisitoId) throw new Error("No se pudo identificar el ID para el requisito.");
-
-            const formData = new FormData();
-            formData.append('prerequisitoId', prerequisitoId);
-            if (file) {
-                formData.append('file', file);
-            }
+            if (!file) throw new Error("No se proporcionó ningún archivo para subir.");
 
             const token = localStorage.getItem('token');
-            // Usamos fetch directo para Multipart ya que apiFetch añade JSON Content-Type por defecto
-            const response = await fetch('/api/v1/prerequisitos/', {
+
+            // --- PASO 1: Subir el archivo físico ---
+            const formData = new FormData();
+            formData.append('file', file);
+
+            console.log("Subiendo archivo físico...");
+            const uploadResponse = await fetch('/api/v1/prerequisitos/upload', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`
-                    // NO añadir Content-Type, fetch lo hará con el boundary correcto
                 },
                 body: formData
             });
 
-            if (!response.ok) {
-                const err = await response.json().catch(() => ({}));
-                throw new Error(err.message || 'Error al procesar el prerrequisito');
+            if (!uploadResponse.ok) {
+                const uploadErr = await uploadResponse.json().catch(() => ({}));
+                throw new Error(uploadErr.message || 'Error al subir el archivo físico');
             }
 
-            return await response.json();
+            const uploadData = await uploadResponse.json();
+            const archivoUrl = uploadData.url;
+
+            console.log("Archivo subido con éxito, URL:", archivoUrl);
+
+            // --- PASO 2: Registrar la relación en la base de datos ---
+            console.log("Registrando prerequisito en base de datos...");
+            const registerResponse = await fetch('/api/v1/prerequisitos/', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    prerequisitoId: Number(prerequisitoId),
+                    archivoUrl: archivoUrl
+                })
+            });
+
+            if (!registerResponse.ok) {
+                const regErr = await registerResponse.json().catch(() => ({}));
+                throw new Error(regErr.message || 'Error al registrar el cumplimiento en la plataforma');
+            }
+
+            return await registerResponse.json();
         } catch (error) {
             console.error("PrerequisiteService.upload error:", error);
             throw error;
@@ -162,7 +185,8 @@ export const PrerequisiteService = {
     async grantAccess(studentId) {
         try {
             const response = await apiFetch(`/api/v1/prerequisitos/${studentId}/enable-access`, {
-                method: 'POST'
+                method: 'POST',
+                body: JSON.stringify({})
             });
             if (!response.ok) {
                 const err = await response.json().catch(() => ({}));
