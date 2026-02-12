@@ -283,6 +283,10 @@ function StudentPrerequisites() {
                     </Alert>
                 )}
 
+                <Alert severity="info" sx={{ mb: 3, border: '1px solid #bae6fd', backgroundColor: '#f0f9ff' }}>
+                    <strong>Nota Importante:</strong> Los archivos deben ser en formato <strong>PDF</strong> y no exceder los <strong>5MB</strong> de peso.
+                </Alert>
+
                 {/* Formulario de Prerrequisitos */}
                 <Card>
                     <CardContent>

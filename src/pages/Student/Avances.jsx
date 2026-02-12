@@ -167,14 +167,14 @@ function StudentAvances() {
 
                     grading: evidence && (evidence.calificacionTutor !== null || evidence.calificacionDocente !== null) ? {
                         score: act.tipo === 'DOCENCIA'
-                            ? (evidence.calificacionDocente !== null ? evidence.calificacionDocente : evidence.calificacionTutor)
-                            : (evidence.calificacionTutor !== null ? evidence.calificacionTutor : evidence.calificacionDocente),
+                            ? evidence.calificacionDocente
+                            : evidence.calificacionTutor,
                         gradedBy: tutorName,
                         gradedDate: gradingDate ? new Date(gradingDate) : null,
                         feedback: act.tipo === 'DOCENCIA'
-                            ? (evidence.feedbackDocente || evidence.feedbackTutor || "Sin observaciones")
-                            : (evidence.feedbackTutor || evidence.feedbackDocente || "Sin observaciones"),
-                        status: (Number(evidence.calificacionTutor) >= 7 || Number(evidence.calificacionDocente) >= 7) ? "approved" : "rejected"
+                            ? (evidence.feedbackDocente || "Sin observaciones")
+                            : (evidence.feedbackTutor || "Sin observaciones"),
+                        status: (act.tipo === 'DOCENCIA' ? Number(evidence.calificacionDocente) : Number(evidence.calificacionTutor)) >= 7 ? "approved" : "rejected"
                     } : null,
 
                     currentState: currentState

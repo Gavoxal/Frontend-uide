@@ -188,6 +188,22 @@ export const usuarioService = {
             console.error('Error en carga masiva:', error);
             throw error;
         }
+    },
+
+    /**
+     * Cambia la contraseña del usuario actual
+     * @param {string} claveActual - Contraseña actual
+     * @param {string} nuevaClave - Nueva contraseña
+     * @returns {Promise<object>} Mensaje de éxito
+     */
+    changePassword: async (claveActual, nuevaClave) => {
+        try {
+            const response = await apiClient.post('/usuarios/cambiar-clave', { claveActual, nuevaClave });
+            return response.data;
+        } catch (error) {
+            console.error('Error al cambiar contraseña:', error);
+            throw error.response?.data || error;
+        }
     }
 };
 

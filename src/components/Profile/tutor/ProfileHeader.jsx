@@ -1,7 +1,7 @@
 import { Box, Typography, Card, CardContent, Avatar, Chip, IconButton, Button } from "@mui/material";
-import { Lock as LockIcon } from "@mui/icons-material";
+import { Lock as LockIcon, Edit as EditIcon } from "@mui/icons-material";
 
-function ProfileHeader({ name, subtitle, initials, tags, studentData, onChangePassword }) {
+function ProfileHeader({ name, subtitle, initials, tags, studentData, onChangePassword, onEditProfile }) {
     // Si se pasan props individuales, usarlas. Si no, intentar sacar de studentData (compatibilidad hacia atrás por si se reutiliza)
     const displayName = name || studentData?.name;
     const displaySubtitle = subtitle || (studentData ? `Estudiante de ${studentData?.carrera || 'Carrera no definida'}` : '');
@@ -71,7 +71,26 @@ function ProfileHeader({ name, subtitle, initials, tags, studentData, onChangePa
 
 
                     {/* Actions */}
-                    <Box sx={{ alignSelf: 'center' }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                        {onEditProfile && (
+                            <Button
+                                onClick={onEditProfile}
+                                variant="contained"
+                                startIcon={<EditIcon />}
+                                size="small"
+                                sx={{
+                                    bgcolor: '#000A9B',
+                                    color: 'white',
+                                    '&:hover': {
+                                        bgcolor: '#00087a',
+                                    },
+                                    boxShadow: 2
+                                }}
+                            >
+                                Editar Perfil
+                            </Button>
+                        )}
+
                         {onChangePassword && (
                             <Button
                                 onClick={onChangePassword}

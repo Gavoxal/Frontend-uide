@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     Box,
     Card,
@@ -6,6 +6,7 @@ import {
     Alert,
     Grid,
     Tooltip,
+    CircularProgress,
 } from "@mui/material";
 import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -15,48 +16,55 @@ import TableRequisitosMui from "../../components/Director/Table.requisitos.mui";
 import AlertMui from "../../components/alert.mui.component";
 import TextMui from "../../components/text.mui.component";
 import InputMui from "../../components/input.mui.component";
+import { prerequisitoService } from "../../services/prerequisito.service";
 
 function DirectorPrerequisites() {
-    // Datos de ejemplo - en producción vendrían de una API
-    const [students, setStudents] = useState([
-        {
-            id: 2,
-            name: "Gabriel Serrango",
-            cedula: "0987654321",
-            cycle: 7,
-            english: { completed: true, verified: false },
-            internship: { completed: true, verified: false },
-            community: { completed: true, verified: true },
-            accessGranted: false,
-        },
-        {
-            id: 3,
-            name: "Ana García",
-            cedula: "5566778899",
-            cycle: 8,
-            english: { completed: true, verified: true },
-            internship: { completed: true, verified: true },
-            community: { completed: true, verified: true },
-            accessGranted: true,
-        },
-        {
-            id: 4,
-            name: "Eduardo Pardo",
-            cedula: "1234567890",
-            cycle: 7,
-            english: { completed: true, verified: true },
-            internship: { completed: true, verified: true },
-            community: { completed: true, verified: true },
-            accessGranted: false,
-        },
-    ]);
-
+    const [students, setStudents] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [filterStatus, setFilterStatus] = useState("all");
     const [openDialog, setOpenDialog] = useState(false);
     const [selectedStudent, setSelectedStudent] = useState(null);
 
-    const handleVerify = (studentId, prerequisite) => {
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            const data = await prerequisitoService.getDashboard();
+            // Transformar el formato del backend al que espera la tabla
+            const mappedStudents = data.map(s => ({
+                id: s.id,
+                name: `${s.nombres} ${s.apellidos}`,
+                cedula: s.cedula,
+                cycle: 8, // Este dato podría venir del perfil si se expande el backend
+                english: {
+                    completed: s.prerequisitos?.find(p => p.prerequisito?.nombre?.toLowerCase().includes('inglés'))?.cumplido || false,
+                    verified: s.prerequisitos?.find(p => p.prerequisito?.nombre?.toLowerCase().includes('inglés'))?.cumplido || false
+                },
+                internship: {
+                    completed: s.prerequisitos?.find(p => p.prerequisito?.nombre?.toLowerCase().includes('pasantías'))?.cumplido || false,
+                    verified: s.prerequisitos?.find(p => p.prerequisito?.nombre?.toLowerCase().includes('pasantías'))?.cumplido || false
+                },
+                community: {
+                    completed: s.prerequisitos?.find(p => p.prerequisito?.nombre?.toLowerCase().includes('comunitario'))?.cumplido || false,
+                    verified: s.prerequisitos?.find(p => p.prerequisito?.nombre?.toLowerCase().includes('comunitario'))?.cumplido || false
+                },
+                accessGranted: s.aprobadoParaPropuesta || false,
+            }));
+            setStudents(mappedStudents);
+        } catch (error) {
+            console.error("Error fetching prerequisites:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    const handleVerify = async (studentId, prerequisite) => {
+        // En un escenario real, llamaríamos a prerequisitoService.verificar
+        // Por ahora lo simulamos en el estado local para mantener la interactividad
         setStudents((prev) =>
             prev.map((student) =>
                 student.id === studentId
@@ -77,8 +85,9 @@ function DirectorPrerequisites() {
         setOpenDialog(true);
     };
 
-    const confirmGrantAccess = () => {
+    const confirmGrantAccess = async () => {
         if (selectedStudent) {
+            // Simulación de actualización en el estado local
             setStudents((prev) =>
                 prev.map((s) =>
                     s.id === selectedStudent.id ? { ...s, accessGranted: true } : s
@@ -124,6 +133,8 @@ function DirectorPrerequisites() {
                 variant="caption" />
         </span>
     );
+
+    if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}><CircularProgress /></Box>;
 
     return (
         <Box>

@@ -154,7 +154,47 @@ function ThesisProposal() {
     const handleSubmit = async () => {
         const currentProposal = proposals[currentTab];
 
-        // Validaciones básicas
+        // Validaciones de palabras para el título
+        const palabrasTitulo = currentProposal.titulo.trim().split(/\s+/).filter(word => word.length > 0).length;
+        if (palabrasTitulo > 20) {
+            setAlertState({
+                open: true,
+                title: 'Título Demasiado Largo',
+                message: 'El tema de tesis no debe exceder las 20 palabras.',
+                status: 'warning'
+            });
+            return;
+        }
+
+        // Validaciones de caracteres para campos descriptivos
+        const validateFields = [
+            { name: 'Objetivo', value: currentProposal.objetivo },
+            { name: 'Problemática', value: currentProposal.problematica },
+            { name: 'Alcance', value: currentProposal.alcance }
+        ];
+
+        for (const field of validateFields) {
+            if (field.value.length < 200 && field.value.length > 0) {
+                setAlertState({
+                    open: true,
+                    title: 'Contenido Insuficiente',
+                    message: `El campo "${field.name}" debe tener al menos 200 caracteres para ser válido.`,
+                    status: 'warning'
+                });
+                return;
+            }
+            if (field.value.length > 2000) {
+                setAlertState({
+                    open: true,
+                    title: 'Contenido Excesivo',
+                    message: `El campo "${field.name}" no debe exceder los 2000 caracteres.`,
+                    status: 'warning'
+                });
+                return;
+            }
+        }
+
+        // Validaciones básicas de obligatoriedad
         if (!currentProposal.titulo || !currentProposal.areaConocimientoId || !currentProposal.objetivo) {
             setAlertState({
                 open: true,
@@ -167,7 +207,14 @@ function ThesisProposal() {
 
         setLoading(true);
         try {
-            const result = await ProposalService.create(currentProposal);
+            let result;
+            if (currentProposal.id) {
+                // Actualizar propuesta existente
+                result = await ProposalService.update(currentProposal.id, currentProposal);
+            } else {
+                // Crear nueva propuesta
+                result = await ProposalService.create(currentProposal);
+            }
 
             setProposals((prev) => {
                 const updated = [...prev];
@@ -197,14 +244,16 @@ function ThesisProposal() {
 
             setAlertState({
                 open: true,
-                title: '¡Propuesta Enviada!',
-                message: 'Tu propuesta ha sido enviada correctamente. El comité académico la revisará pronto y recibirás comentarios.',
+                title: currentProposal.id ? '¡Propuesta Actualizada!' : '¡Propuesta Enviada!',
+                message: currentProposal.id
+                    ? 'Tu propuesta ha sido actualizada correctamente.'
+                    : 'Tu propuesta ha sido enviada correctamente. El comité académico la revisará pronto.',
                 status: 'success'
             });
         } catch (error) {
             setAlertState({
                 open: true,
-                title: 'Error al enviar',
+                title: 'Error al procesar',
                 message: error.message || 'Ocurrió un error al procesar tu propuesta. Por favor intenta de nuevo.',
                 status: 'error'
             });
@@ -227,6 +276,9 @@ function ThesisProposal() {
     const currentProposal = proposals[currentTab];
     const caracteresObjetivo = currentProposal.objetivo.length;
     const palabrasObjetivo = currentProposal.objetivo.trim().split(/\s+/).filter(word => word.length > 0).length;
+    const palabrasTitulo = currentProposal.titulo.trim().split(/\s+/).filter(word => word.length > 0).length;
+    const caracteresProblematica = currentProposal.problematica.length;
+    const caracteresAlcance = currentProposal.alcance.length;
 
     const getStatusColor = (status) => {
         switch (status) {
@@ -352,9 +404,18 @@ function ThesisProposal() {
                                                 value={currentProposal.titulo}
                                                 onChange={(e) => handleInputChange('titulo', e.target.value)}
                                                 sx={{ '& .MuiOutlinedInput-root': { backgroundColor: '#F9FAFB' } }}
+                                                error={palabrasTitulo > 20}
                                             />
-                                            <Typography variant="caption" sx={{ color: 'text.secondary', mt: 0.5, display: 'block' }}>
-                                                Máximo 200 palabras
+                                            <Typography
+                                                variant="caption"
+                                                sx={{
+                                                    color: palabrasTitulo > 20 ? '#EF4444' : 'text.secondary',
+                                                    mt: 0.5,
+                                                    display: 'block',
+                                                    fontWeight: palabrasTitulo > 20 ? 600 : 400
+                                                }}
+                                            >
+                                                Límite: 20 palabras | Actual: {palabrasTitulo} palabras
                                             </Typography>
                                         </Box>
 
@@ -393,9 +454,18 @@ function ThesisProposal() {
                                             value={currentProposal.objetivo}
                                             onChange={(e) => handleInputChange('objetivo', e.target.value)}
                                             sx={{ '& .MuiOutlinedInput-root': { backgroundColor: '#F9FAFB' } }}
+                                            error={caracteresObjetivo > 2000 || (caracteresObjetivo > 0 && caracteresObjetivo < 200)}
                                         />
-                                        <Typography variant="caption" sx={{ color: 'text.secondary', mt: 0.5, display: 'block' }}>
-                                            Mínimo 200 palabras | {palabrasObjetivo} palabras | {caracteresObjetivo} caracteres
+                                        <Typography
+                                            variant="caption"
+                                            sx={{
+                                                color: (caracteresObjetivo > 2000 || (caracteresObjetivo > 0 && caracteresObjetivo < 200)) ? '#EF4444' : 'text.secondary',
+                                                mt: 0.5,
+                                                display: 'block',
+                                                fontWeight: (caracteresObjetivo > 2000 || (caracteresObjetivo > 0 && caracteresObjetivo < 200)) ? 600 : 400
+                                            }}
+                                        >
+                                            Mínimo 200, Máximo 2000 caracteres | Actual: {caracteresObjetivo} caracteres
                                         </Typography>
                                     </Box>
 
@@ -413,7 +483,19 @@ function ThesisProposal() {
                                                 value={currentProposal.problematica}
                                                 onChange={(e) => handleInputChange('problematica', e.target.value)}
                                                 sx={{ '& .MuiOutlinedInput-root': { backgroundColor: '#F9FAFB' } }}
+                                                error={caracteresProblematica > 2000 || (caracteresProblematica > 0 && caracteresProblematica < 200)}
                                             />
+                                            <Typography
+                                                variant="caption"
+                                                sx={{
+                                                    color: (caracteresProblematica > 2000 || (caracteresProblematica > 0 && caracteresProblematica < 200)) ? '#EF4444' : 'text.secondary',
+                                                    mt: 0.5,
+                                                    display: 'block',
+                                                    fontWeight: (caracteresProblematica > 2000 || (caracteresProblematica > 0 && caracteresProblematica < 200)) ? 600 : 400
+                                                }}
+                                            >
+                                                Min 200, Max 2000 | Actual: {caracteresProblematica}
+                                            </Typography>
                                         </Box>
 
                                         <Box>
@@ -428,7 +510,19 @@ function ThesisProposal() {
                                                 value={currentProposal.alcance}
                                                 onChange={(e) => handleInputChange('alcance', e.target.value)}
                                                 sx={{ '& .MuiOutlinedInput-root': { backgroundColor: '#F9FAFB' } }}
+                                                error={caracteresAlcance > 2000 || (caracteresAlcance > 0 && caracteresAlcance < 200)}
                                             />
+                                            <Typography
+                                                variant="caption"
+                                                sx={{
+                                                    color: (caracteresAlcance > 2000 || (caracteresAlcance > 0 && caracteresAlcance < 200)) ? '#EF4444' : 'text.secondary',
+                                                    mt: 0.5,
+                                                    display: 'block',
+                                                    fontWeight: (caracteresAlcance > 2000 || (caracteresAlcance > 0 && caracteresAlcance < 200)) ? 600 : 400
+                                                }}
+                                            >
+                                                Min 200, Max 2000 | Actual: {caracteresAlcance}
+                                            </Typography>
                                         </Box>
                                     </Box>
 
@@ -476,7 +570,7 @@ function ThesisProposal() {
                                                 '&:hover': { backgroundColor: '#5568d3' },
                                             }}
                                         >
-                                            Enviar Propuesta
+                                            {currentProposal.id ? 'Actualizar Propuesta' : 'Enviar Propuesta'}
                                         </Button>
                                     </Box>
                                 </CardContent>

@@ -1,198 +1,237 @@
-import { useState } from "react";
-import { Box, Typography, Button, Alert } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { useNavigate } from "react-router-dom";
-import StudentSideList from "../../components/Coordinador/StudentSideList";
-import DocumentCard from "../../components/Coordinador/DocumentCard";
+import { useState, useEffect } from "react";
+import {
+    Box,
+    Card,
+    CardContent,
+    Alert,
+    Grid,
+} from "@mui/material";
+import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import StatsCard from "../../components/common/StatsCard";
+import TableRequisitosMui from "../../components/Director/Table.requisitos.mui";
+import AlertMui from "../../components/alert.mui.component";
+import TooltipMui from '../../components/tooltip.mui.component';
+import { PrerequisiteService } from "../../services/prerequisites.service";
+import SearchBar from '../../components/SearchBar.component';
+import TextMui from "../../components/text.mui.component";
 
-const CoordinadorPrerequisites = () => {
-    const navigate = useNavigate();
+function CoordinatorPrerequisites() {
+    // Estado para datos reales
+    const [students, setStudents] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    // TODO: API - Obtener lista de estudiantes con prerrequisitos
-    // const { data: students } = await fetch('/api/coordinador/students/prerequisites')
-    const [students] = useState([
-        {
-            id: 1150373791,
-            name: "Eduardo Pardo",
-            email: "edupardo@uide.edu.ec",
-            timeAgo: "2h ago",
-            allApproved: false,
-            prerequisites: {
-                english: {
-                    title: "B2 - Certificado de inglés",
-                    status: "approved",
-                    fileName: "Certificado_2025.pdf",
-                    uploadedAt: "15 Ene 2025"
-                },
-                internship: {
-                    title: "Prácticas Pre-Profesionales",
-                    status: "uploaded",
-                    fileName: "Certificado_2025.pdf",
-                    uploadedAt: "15 Ene 2025"
-                },
-                community: {
-                    title: "Certificado de vinculación",
-                    status: "pending_review",
-                    fileName: null,
-                    uploadedAt: null
-                }
-            }
-        },
-        {
-            id: 1150373791,
-            name: "Gabriel Sarango",
-            email: "gsarango@uide.edu.ec",
-            timeAgo: "2h ago",
-            allApproved: false,
-            prerequisites: {
-                english: {
-                    title: "B2 - Certificado de inglés",
-                    status: "uploaded",
-                    fileName: "English_Certificate.pdf",
-                    uploadedAt: "14 Ene 2025"
-                },
-                internship: {
-                    title: "Prácticas Pre-Profesionales",
-                    status: "uploaded",
-                    fileName: "Practicas_2025.pdf",
-                    uploadedAt: "14 Ene 2025"
-                },
-                community: {
-                    title: "Certificado de vinculación",
-                    status: "uploaded",
-                    fileName: "Vinculacion.pdf",
-                    uploadedAt: "14 Ene 2025"
-                }
-            }
-        },
-        {
-            id: 1150373791,
-            name: "Fernando Castillo",
-            email: "fcastillo@uide.edu.ec",
-            timeAgo: "2h ago",
-            allApproved: true,
-            prerequisites: {
-                english: {
-                    title: "B2 - Certificado de inglés",
-                    status: "approved",
-                    fileName: "B2_Certificate.pdf",
-                    uploadedAt: "10 Ene 2025"
-                },
-                internship: {
-                    title: "Prácticas Pre-Profesionales",
-                    status: "approved",
-                    fileName: "Internship_Certificate.pdf",
-                    uploadedAt: "10 Ene 2025"
-                },
-                community: {
-                    title: "Certificado de vinculación",
-                    status: "approved",
-                    fileName: "Community_Service.pdf",
-                    uploadedAt: "10 Ene 2025"
-                }
-            }
-        },
-    ]);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [filterStatus, setFilterStatus] = useState("all");
+    const [openDialog, setOpenDialog] = useState(false);
+    const [selectedStudent, setSelectedStudent] = useState(null);
 
-    const [selectedStudent, setSelectedStudent] = useState(students[0]);
+    // Cargar datos al montar
+    useEffect(() => {
+        loadDashboard();
+    }, []);
 
-    const handleSelectStudent = (student) => {
+    const loadDashboard = async () => {
+        setLoading(true);
+        try {
+            const data = await PrerequisiteService.getDashboard();
+            setStudents(data);
+        } catch (error) {
+            console.error("Error loading dashboard:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleVerify = async (studentId, prerequisiteKey) => {
+        // Encontrar el estudiante y el requisito
+        const student = students.find(s => s.id === studentId);
+        if (!student) return;
+
+        const prereq = student[prerequisiteKey];
+        // Solo permitir verificar si existe un registro (studentPrereqId)
+        if (!prereq || !prereq.studentPrereqId) {
+            console.warn("No hay registro para verificar");
+            return;
+        }
+
+        const newStatus = !prereq.verified;
+
+        // Actualización optimista en UI
+        setStudents((prev) =>
+            prev.map((s) =>
+                s.id === studentId
+                    ? {
+                        ...s,
+                        [prerequisiteKey]: {
+                            ...s[prerequisiteKey],
+                            verified: newStatus,
+                        },
+                    }
+                    : s
+            )
+        );
+
+        try {
+            // Llamada al backend
+            await PrerequisiteService.validate(prereq.studentPrereqId, newStatus);
+        } catch (error) {
+            console.error("Error validating prerequisite:", error);
+            loadDashboard(); // Recargar para volver al estado real
+        }
+    };
+
+    const handleGrantAccessClick = (student) => {
         setSelectedStudent(student);
+        setOpenDialog(true);
     };
 
-    const handleDeny = () => {
-        // TODO: API - Denegar solicitud de prerrequisitos
-        // await fetch(`/api/coordinador/students/${selectedStudent.id}/prerequisites/deny`, { method: 'POST' })
-
-        alert(`Solicitud denegada para ${selectedStudent.name}`);
+    const confirmGrantAccess = async () => {
+        if (selectedStudent) {
+            try {
+                await PrerequisiteService.grantAccess(selectedStudent.id);
+                // Actualizar UI
+                setStudents((prev) =>
+                    prev.map((s) =>
+                        s.id === selectedStudent.id ? { ...s, accessGranted: true } : s
+                    )
+                );
+                alert("Acceso habilitado correctamente para " + selectedStudent.name);
+            } catch (error) {
+                console.error("Error habilitando acceso:", error);
+                alert("Error: " + error.message);
+            }
+        }
+        handleCloseDialog();
     };
 
-    const handleApprove = () => {
-        // TODO: API - Aprobar solicitud de prerrequisitos
-        // await fetch(`/api/coordinador/students/${selectedStudent.id}/prerequisites/approve`, { method: 'POST' })
-
-        alert(`Solicitud aprobada para ${selectedStudent.name}`);
+    const handleCloseDialog = () => {
+        setOpenDialog(false);
+        setSelectedStudent(null);
     };
+
+    const filteredStudents = students.filter((student) => {
+        const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            student.cedula.includes(searchTerm);
+
+        const englishVerified = student.english?.verified || false;
+        const internshipVerified = student.internship?.verified || false;
+        const communityVerified = student.community?.verified || false;
+
+        const allVerified = englishVerified && internshipVerified && communityVerified;
+
+        if (filterStatus === "pending") return matchesSearch && !allVerified;
+        if (filterStatus === "approved") return matchesSearch && allVerified;
+        return matchesSearch;
+    });
+
+    const stats = {
+        pending: students.filter(
+            (s) => !(s.english?.verified && s.internship?.verified && s.community?.verified)
+        ).length,
+        approved: students.filter(
+            (s) => s.english?.verified && s.internship?.verified && s.community?.verified
+        ).length,
+    };
+
+    const alertMessage = (
+        <span>
+            Está a punto de habilitar a <strong>{selectedStudent?.name}</strong> para iniciar su proceso del Anteproyecto.
+            <br /><br />
+            <TextMui
+                value="Esta acción es irreversible y permitirá al estudiante acceder a la plataforma."
+                variant="caption" />
+        </span>
+    );
 
     return (
-        <Box sx={{ display: 'flex', height: 'calc(100vh - 100px)' }}>
-            {/* Panel Lateral - Lista de Estudiantes */}
-            <StudentSideList
-                students={students}
-                selectedStudentId={selectedStudent?.id}
-                onSelectStudent={handleSelectStudent}
-            />
+        <Box>
+            {/* Encabezado */}
+            <Box sx={{ mb: 4 }}>
+                <Alert severity="info" sx={{ mb: 3 }}>
+                    Los estudiantes deben tener todos los prerrequisitos aprobados antes de iniciar el proceso del Anteproyecto.
+                </Alert>
 
-            {/* Panel Principal - Detalle del Estudiante */}
-            <Box sx={{ flex: 1, p: 4, overflow: 'auto' }}>
-                {/* Botón de regreso */}
-                <Button
-                    startIcon={<ArrowBackIcon />}
-                    onClick={() => navigate('/coordinador/dashboard')}
-                    sx={{ mb: 3 }}
-                >
-                    TABLERO
-                </Button>
+                <TextMui value="Verificación de Prerrequisitos" variant="h4" />
+                <TextMui value="Revisa y aprueba los prerrequisitos" variant="body1" />
 
-                {/* Título */}
-                <Typography variant="h5" fontWeight="bold" gutterBottom>
-                    Revisión de Prerrequisitos
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
-                    Revisa y aprueba la información del estudiante
-                </Typography>
-
-                {selectedStudent && (
-                    <>
-                        {/* Información del Estudiante */}
-                        <Box sx={{ mb: 4, p: 3, bgcolor: '#F5F5F5', borderRadius: 2 }}>
-                            <Typography variant="h6" fontWeight="bold">
-                                {selectedStudent.name}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                ID: {selectedStudent.id}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                {selectedStudent.email}
-                            </Typography>
-                        </Box>
-
-                        {/* Alerta informativa */}
-                        <Alert severity="info" sx={{ mb: 3 }}>
-                            Revisa cada documento cargado por el estudiante. Puedes aprobar o denegar la solicitud.
-                        </Alert>
-
-                        {/* Documentos de Prerrequisitos */}
-                        <DocumentCard document={selectedStudent.prerequisites.english} />
-                        <DocumentCard document={selectedStudent.prerequisites.internship} />
-                        <DocumentCard document={selectedStudent.prerequisites.community} />
-
-                        {/* Botones de Acción */}
-                        <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
-                            <Button
-                                variant="outlined"
-                                color="error"
-                                size="large"
-                                fullWidth
-                                onClick={handleDeny}
-                            >
-                                Denegar Solicitud
-                            </Button>
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                size="large"
-                                fullWidth
-                                onClick={handleApprove}
-                            >
-                                Aprobar Solicitud
-                            </Button>
-                        </Box>
-                    </>
-                )}
             </Box>
+
+            {/* Estadísticas */}
+            <Grid container spacing={3} sx={{ mb: 4 }}>
+                <Grid item xs={12} sm={6}>
+                    <TooltipMui title="Filtrar pendientes" placement="top">
+                        <Box
+                            onClick={() => setFilterStatus(filterStatus === 'pending' ? 'all' : 'pending')}
+                            sx={{
+                                cursor: 'pointer',
+                                opacity: filterStatus === 'approved' ? 0.5 : 1,
+                                transition: '0.3s',
+                                transform: filterStatus === 'pending' ? 'scale(1.02)' : 'scale(1)',
+                            }}
+                        >
+                            <StatsCard
+                                title="Pendientes de Verificación"
+                                value={stats.pending}
+                                icon={<HourglassEmptyIcon fontSize="large" />}
+                                color="warning"
+                            />
+                        </Box>
+                    </TooltipMui>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    <TooltipMui title="Filtrar aprobados" placement="top">
+                        <Box
+                            onClick={() => setFilterStatus(filterStatus === 'approved' ? 'all' : 'approved')}
+                            sx={{
+                                cursor: 'pointer',
+                                opacity: filterStatus === 'pending' ? 0.5 : 1,
+                                transition: '0.3s',
+                                transform: filterStatus === 'approved' ? 'scale(1.02)' : 'scale(1)',
+                            }}
+                        >
+                            <StatsCard
+                                title="Aprobados Completamente"
+                                value={stats.approved}
+                                icon={<CheckCircleIcon fontSize="large" />}
+                                color="success"
+                            />
+                        </Box>
+                    </TooltipMui>
+                </Grid>
+            </Grid>
+
+            <SearchBar
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Buscar por estudiante, cédula..."
+                title="Buscar Estudiantes"
+            />
+            <Card sx={{ mt: 3 }}>
+                <CardContent>
+                    <TableRequisitosMui
+                        students={filteredStudents}
+                        onVerify={handleVerify}
+                        onGrantAccess={handleGrantAccessClick}
+                    />
+                </CardContent>
+            </Card>
+
+            <AlertMui
+                open={openDialog}
+                handleClose={handleCloseDialog}
+                title="¿Confirmar acceso a propuesta de tesis?"
+                message={alertMessage}
+                status="warning"
+                showBtnL={true}
+                btnNameL="Confirmar"
+                actionBtnL={confirmGrantAccess}
+                showBtnR={true}
+                btnNameR="Cancelar"
+                actionBtnR={handleCloseDialog}
+            />
         </Box>
     );
-};
+}
 
-export default CoordinadorPrerequisites;
+export default CoordinatorPrerequisites;

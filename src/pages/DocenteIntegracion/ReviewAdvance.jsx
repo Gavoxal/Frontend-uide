@@ -47,30 +47,30 @@ function DocenteReviewAdvance() {
 
                 const activities = await ActivityService.getByPropuesta(propId);
 
-                // Mapear a estructura de UI, filtrando o priorizando lo del docente si se desea
-                // Pero mostramos todo para contexto completo
-                const mappedAdvances = activities.map((act, index) => {
-                    // Buscar la evidencia más reciente
-                    const evidence = act.evidencias && act.evidencias.length > 0
-                        ? act.evidencias[act.evidencias.length - 1]
-                        : null;
+                const mappedAdvances = activities
+                    .filter(act => act.tipo === 'DOCENCIA') // Solo mostramos actividades de docencia
+                    .map((act, index) => {
+                        // Buscar la evidencia más reciente
+                        const evidence = act.evidencias && act.evidencias.length > 0
+                            ? act.evidencias[act.evidencias.length - 1]
+                            : null;
 
-                    if (!evidence) return null; // Solo mostrar si hay evidencia para revisar
+                        if (!evidence) return null; // Solo mostrar si hay evidencia para revisar
 
-                    return {
-                        id: evidence.id,
-                        activityId: act.id,
-                        title: `Semana ${evidence.semana || index + 1}: ${act.nombre}`,
-                        date: new Date(evidence.fechaEntrega || evidence.createdAt).toLocaleDateString(),
-                        status: evidence.calificacionDocente ? 'calificado' : 'pendiente',
-                        file: evidence.archivoUrl,
-                        description: evidence.contenido, // Comentario del estudiante
-                        grade: evidence.calificacionDocente,
-                        feedback: evidence.feedbackDocente,
-                        tutorGrade: evidence.calificacionTutor,
-                        type: act.tipo // DOCENCIA o TUTORIA
-                    };
-                }).filter(item => item !== null);
+                        return {
+                            id: evidence.id,
+                            activityId: act.id,
+                            title: `Semana ${evidence.semana || index + 1}: ${act.nombre}`,
+                            date: new Date(evidence.fechaEntrega || evidence.createdAt).toLocaleDateString(),
+                            status: evidence.calificacionDocente ? 'calificado' : 'pendiente',
+                            file: evidence.archivoUrl,
+                            description: evidence.contenido, // Comentario del estudiante
+                            grade: evidence.calificacionDocente,
+                            feedback: evidence.feedbackDocente,
+                            tutorGrade: evidence.calificacionTutor,
+                            type: act.tipo // DOCENCIA o TUTORIA
+                        };
+                    }).filter(item => item !== null);
 
                 setAdvances(mappedAdvances);
 

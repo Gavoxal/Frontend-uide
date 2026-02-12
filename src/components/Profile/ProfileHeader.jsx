@@ -1,7 +1,7 @@
-import { Box, Typography, Card, CardContent, Avatar, Chip, IconButton, Button } from "@mui/material";
+import { Box, Typography, Card, CardContent, Avatar, Chip, Button } from "@mui/material";
 import { Lock as LockIcon } from "@mui/icons-material";
 
-function ProfileHeader({ studentData, onEditProfile, onEditCover, onChangePassword }) {
+function ProfileHeader({ studentData, onChangePassword }) {
     const { name, subtitle, initials, tags } = {
         name: studentData?.name,
         subtitle: `Estudiante de ${studentData?.carrera || 'Carrera no definida'}`,
@@ -70,12 +70,8 @@ function ProfileHeader({ studentData, onEditProfile, onEditCover, onChangePasswo
                         </Box>
                     </Box>
 
-                    {/* Edit Profile Button & Change Password */}
+                    {/* Actions */}
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                        <IconButton onClick={onEditProfile} title="Editar Perfil">
-                            {/* Existing logic or icon if any */}
-                        </IconButton>
-
                         {onChangePassword && (
                             <Button
                                 onClick={onChangePassword}

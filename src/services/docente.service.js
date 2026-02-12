@@ -99,5 +99,30 @@ export const DocenteService = {
             console.error("DocenteService.getAssignedStudentsGrades error:", error);
             return [];
         }
+    },
+
+    async getProfile() {
+        try {
+            const response = await apiFetch('/api/v1/docente/perfil');
+            if (!response.ok) throw new Error('Error al obtener perfil del docente');
+            return await response.json();
+        } catch (error) {
+            console.error("DocenteService.getProfile error:", error);
+            throw error;
+        }
+    },
+
+    async updateProfile(data) {
+        try {
+            const response = await apiFetch('/api/v1/docente/perfil', {
+                method: 'PUT',
+                body: JSON.stringify(data)
+            });
+            if (!response.ok) throw new Error('Error al actualizar perfil del docente');
+            return await response.json();
+        } catch (error) {
+            console.error("DocenteService.updateProfile error:", error);
+            throw error;
+        }
     }
 };

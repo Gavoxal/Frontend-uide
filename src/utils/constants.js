@@ -1,5 +1,8 @@
 // API Base URL - Cambiar según el entorno
-export const BASE_URL = 'http://localhost:3000';
+export const BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? '' // En local, dejar vacío para que Vite Proxy actúe
+    : window.location.origin;
+
 export const API_BASE_URL = `${BASE_URL}/api/v1`;
 
 // Roles de usuario

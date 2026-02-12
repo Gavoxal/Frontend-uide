@@ -21,14 +21,15 @@ import {
 } from '@mui/material';
 import { useLocation } from 'react-router-dom';
 import ActivityForm from '../../components/activityform.mui.component';
-import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import PendingIcon from '@mui/icons-material/Pending';
 import AddIcon from '@mui/icons-material/Add';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import SearchIcon from '@mui/icons-material/Search';
+import InputAdornment from '@mui/material/InputAdornment';
+import TextField from '@mui/material/TextField';
 import { useEffect } from 'react';
 import { ActivityService } from '../../services/activity.service';
 import { DocenteService } from '../../services/docente.service';
@@ -48,6 +49,7 @@ function DocenteActivityPlanning() {
     const [alertState, setAlertState] = useState({ open: false, message: '', severity: 'success' });
     const [editingActivity, setEditingActivity] = useState(null);
     const [viewingActivity, setViewingActivity] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
 
     const loadHistory = async (studentList, preselected = null) => {
         try {
@@ -286,6 +288,11 @@ function DocenteActivityPlanning() {
         setViewingActivity(activity);
     };
 
+    const filteredHistory = history.filter(item =>
+        item.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.activity.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     return (
         <Box sx={{ maxWidth: 1400, mx: 'auto' }}>
             {loading && <LinearProgress sx={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999 }} />}
@@ -381,6 +388,23 @@ function DocenteActivityPlanning() {
                                         Registro de actividades de docencia y cumplimiento
                                     </Typography>
                                 </Box>
+
+                                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                                    <TextField
+                                        size="small"
+                                        placeholder="Buscar estudiante..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    <SearchIcon fontSize="small" />
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                        sx={{ width: 250 }}
+                                    />
+                                </Box>
                                 <Box sx={{ display: 'flex', gap: 2 }}>
                                     {/* Stats chips similar to Tutor */}
                                 </Box>
@@ -401,7 +425,7 @@ function DocenteActivityPlanning() {
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
-                                        {history.map((item, idx) => (
+                                        {filteredHistory.map((item, idx) => (
                                             <TableRow key={item.id || `act-${idx}`} hover>
                                                 <TableCell>{item.assignedDate}</TableCell>
                                                 <TableCell>
@@ -431,14 +455,8 @@ function DocenteActivityPlanning() {
                                                 <TableCell>{item.deadline}</TableCell>
                                                 <TableCell>{getStatusChip(item.status)}</TableCell>
                                                 <TableCell align="center">
-                                                    <IconButton size="small" color="primary" onClick={() => handleView(item)}>
-                                                        <VisibilityIcon fontSize="small" />
-                                                    </IconButton>
                                                     <IconButton size="small" color="primary" onClick={() => handleEdit(item)}>
                                                         <EditIcon fontSize="small" />
-                                                    </IconButton>
-                                                    <IconButton size="small" color="error" onClick={() => handleDelete(item.id)}>
-                                                        <DeleteIcon fontSize="small" />
                                                     </IconButton>
                                                 </TableCell>
                                             </TableRow>

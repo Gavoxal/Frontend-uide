@@ -43,7 +43,7 @@ const roleToRoute = {
     student: 'student',
     tutor: 'tutor',
     reviewer: 'reviewer',
-    coordinador: 'director',
+    coordinador: 'coordinador',
     docente_integracion: 'docente-integracion'
 };
 
@@ -90,15 +90,14 @@ const MENU_BY_ROLE = {
 
     ],
     coordinador: [
-        { icon: DashboardIcon, label: "Dashboard", path: "/director/dashboard" },
-        { icon: PeopleIcon, label: "Estudiantes", path: "/director/students" },
-        { icon: ChecklistIcon, label: "Prerrequisitos", path: "/director/prerequisites" },
-        { icon: AssignmentIcon, label: "Propuestas", path: "/director/proposals" },
-        { icon: SchoolIcon, label: "Tutores", path: "/director/tutors" },
-        { icon: AssignmentIndIcon, label: "Asignar Tutor", path: "/director/tutors/assign" },
-        { icon: GroupsIcon, label: "Comité", path: "/director/committee" },
-        { icon: GavelIcon, label: "Defensas", path: "/director/defenses" },
-        { icon: RateReviewIcon, label: "Calificación", path: "/director/defense-grading" },
+        { icon: DashboardIcon, label: "Dashboard", path: "/coordinador/dashboard" },
+        { icon: PeopleIcon, label: "Estudiantes", path: "/coordinador/students" },
+        { icon: ChecklistIcon, label: "Prerrequisitos", path: "/coordinador/prerequisites" },
+        { icon: AssignmentIcon, label: "Propuestas", path: "/coordinador/proposals" },
+        { icon: SchoolIcon, label: "Tutores", path: "/coordinador/tutors" },
+        { icon: AssignmentIndIcon, label: "Asignar Tutor", path: "/coordinador/tutors/assign" },
+        { icon: GavelIcon, label: "Defensa", path: "/coordinador/defense" },
+        { icon: RateReviewIcon, label: "Calificación", path: "/coordinador/defenses" },
     ],
     reviewer: [
         { icon: DashboardIcon, label: "Dashboard", path: "/reviewer/dashboard" },

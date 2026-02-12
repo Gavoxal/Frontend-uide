@@ -4,7 +4,8 @@ import {
     Phone as PhoneIcon,
     LocationOn as LocationIcon,
     School as SchoolIcon,
-    Assignment as AssignmentIcon
+    Assignment as AssignmentIcon,
+    Lock as LockIcon
 } from "@mui/icons-material";
 import { useState, useEffect } from "react";
 import { getDataUser } from "../../storage/user.model.jsx";
@@ -152,6 +153,7 @@ function StudentProfile() {
     };
 
 
+
     const handleChangePassword = () => setOpenPasswordDialog(true);
     const handlePasswordSubmit = async (passwordData) => {
         try {
@@ -199,6 +201,7 @@ function StudentProfile() {
                     />
                 </Grid>
             </Grid>
+
 
             {/* Password Change Dialog */}
             <ChangePasswordDialog

@@ -22,7 +22,6 @@ import DirectorProfile from "../pages/Director/Profile";
 import DirectorThesisDefense from "../pages/Director/ThesisDefense";
 import DirectorCommitteeManagement from "../pages/Director/CommitteeManagement";
 import DirectorDefenseGradingTable from "../pages/Director/DirectorDefenseGradingTable";
-import SharedMeetingHistory from "../pages/Shared/MeetingHistory";
 
 
 // Student pages
@@ -100,7 +99,6 @@ function RouterPages() {
                         <Route path="defense-grading" element={<DirectorDefenseGradingTable />} />
                         <Route path="committee" element={<DirectorCommitteeManagement />} />
                         <Route path="prerequisites" element={<DirectorPrerequisites />} />
-                        <Route path="meetings" element={<SharedMeetingHistory />} />
                         <Route path="profile" element={<DirectorProfile />} />
                     </Route>
                 </Route>
@@ -125,22 +123,22 @@ function RouterPages() {
 
                 {/* Rutas protegidas - Tutor */}
                 <Route path="/tutor" element={<AuthAdmin />}>
-                        <Route element={<DashboardLayout />}>
-                            <Route index element={<TutorDashboard />} />
-                            <Route path="dashboard" element={<TutorDashboard />} />
-                            <Route path="students" element={<TutorStudents />} />
-                            <Route path="planning" element={<ActivityPlanning />} />
-                            <Route path="review" element={<ReviewFeedback />} />
-                            <Route path="proposals" element={<SharedProposalList />} />
-                            <Route path="proposals/review/:id" element={<SharedProposalReview />} />
-                            <Route path="meetings" element={<MeetingLog />} />
-                            <Route path="defenses" element={<SharedDefenseEvaluation />} />
-                            <Route path="profile" element={<TutorProfile />} />
-                            <Route path="defensas" element={<TutorDefensas />} />
-                            <Route path="defensas/public" element={<PublicDefense />} />
-                            <Route path="grades" element={<TutorGrades />} />
-                        </Route>
+                    <Route element={<DashboardLayout />}>
+                        <Route index element={<TutorDashboard />} />
+                        <Route path="dashboard" element={<TutorDashboard />} />
+                        <Route path="students" element={<TutorStudents />} />
+                        <Route path="planning" element={<ActivityPlanning />} />
+                        <Route path="review" element={<ReviewFeedback />} />
+                        <Route path="proposals" element={<SharedProposalList />} />
+                        <Route path="proposals/review/:id" element={<SharedProposalReview />} />
+                        <Route path="meetings" element={<MeetingLog />} />
+                        <Route path="defenses" element={<SharedDefenseEvaluation />} />
+                        <Route path="profile" element={<TutorProfile />} />
+                        <Route path="defensas" element={<TutorDefensas />} />
+                        <Route path="defensas/public" element={<PublicDefense />} />
+                        <Route path="grades" element={<TutorGrades />} />
                     </Route>
+                </Route>
 
                 {/* Rutas protegidas - Docente Integración */}
                 <Route path="/docente-integracion" element={<AuthAdmin />}>
@@ -177,12 +175,11 @@ function RouterPages() {
                         <Route path="students" element={<CoordinadorStudents />} />
                         <Route path="prerequisites" element={<CoordinadorPrerequisites />} />
                         <Route path="proposals" element={<CoordinadorProposals />} />
-                        <Route path="proposals/detail/:id" element={<SharedProposalReview />} />
+                        <Route path="proposals/detail/:id" element={<CoordinadorProposalDetail />} />
                         <Route path="tutors" element={<CoordinadorTutorList />} />
                         <Route path="tutors/assign" element={<CoordinadorAssignTutor />} />
                         <Route path="defense" element={<CoordinadorThesisDefense />} />
                         <Route path="defenses" element={<SharedDefenseEvaluation />} />
-                        <Route path="meetings" element={<SharedMeetingHistory />} />
                         <Route path="profile" element={<CoordinadorProfile />} />
                     </Route>
                 </Route>

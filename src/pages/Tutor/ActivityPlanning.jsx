@@ -26,6 +26,10 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import PendingIcon from '@mui/icons-material/Pending';
 import AddIcon from '@mui/icons-material/Add';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import EditIcon from '@mui/icons-material/Edit';
+import SearchIcon from '@mui/icons-material/Search';
+import InputAdornment from '@mui/material/InputAdornment';
+import TextField from '@mui/material/TextField';
 import { useEffect } from 'react';
 import { ActivityService } from '../../services/activity.service';
 import { TutorService } from '../../services/tutor.service';
@@ -45,6 +49,7 @@ function ActivityPlanning() {
     const [alertState, setAlertState] = useState({ open: false, message: '', severity: 'success' });
     const [editingActivity, setEditingActivity] = useState(null);
     const [viewingActivity, setViewingActivity] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
 
     const loadHistory = async (studentList, preselected = null) => {
         try {
@@ -266,6 +271,11 @@ function ActivityPlanning() {
         setViewingActivity(activity);
     };
 
+    const filteredHistory = history.filter(item =>
+        item.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.activity.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
 
 
     return (
@@ -353,7 +363,6 @@ function ActivityPlanning() {
                             <ActivityForm
                                 students={students}
                                 onSubmit={handleSubmit}
-                                onDraft={handleDraft}
                                 initialData={editingActivity || (preselectedStudent ? { studentId: preselectedStudent.id } : null)}
                             />
                         </CardContent>
@@ -374,6 +383,23 @@ function ActivityPlanning() {
                                     <Typography variant="body2" color="text.secondary">
                                         Registro de actividades y su estado de cumplimiento
                                     </Typography>
+                                </Box>
+
+                                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                                    <TextField
+                                        size="small"
+                                        placeholder="Buscar estudiante..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    <SearchIcon fontSize="small" />
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                        sx={{ width: 250 }}
+                                    />
                                 </Box>
 
                                 {/* Estadísticas rápidas */}
@@ -403,10 +429,11 @@ function ActivityPlanning() {
                                             <TableCell><strong>Semana</strong></TableCell>
                                             <TableCell><strong>Límite</strong></TableCell>
                                             <TableCell><strong>Estado</strong></TableCell>
+                                            <TableCell align="center"><strong>Acciones</strong></TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
-                                        {history.map((item, idx) => (
+                                        {filteredHistory.map((item, idx) => (
                                             <TableRow key={item.id || `act-${idx}`} hover>
                                                 <TableCell>{item.assignedDate}</TableCell>
                                                 <TableCell>
@@ -429,6 +456,11 @@ function ActivityPlanning() {
                                                 </TableCell>
                                                 <TableCell>{item.deadline}</TableCell>
                                                 <TableCell>{getStatusChip(item.status)}</TableCell>
+                                                <TableCell align="center">
+                                                    <IconButton size="small" color="primary" onClick={() => handleEdit(item)}>
+                                                        <EditIcon fontSize="small" />
+                                                    </IconButton>
+                                                </TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
@@ -438,6 +470,44 @@ function ActivityPlanning() {
                     </Card>
                 )
             }
+
+            {/* Dialog de Visualización */}
+            <Dialog open={!!viewingActivity} onClose={() => setViewingActivity(null)} maxWidth="md" fullWidth>
+                <DialogTitle sx={{ backgroundColor: '#f5f5f5', pb: 2 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Typography variant="h6" fontWeight="bold">
+                            Detalle de Actividad
+                        </Typography>
+                        {viewingActivity && getStatusChip(viewingActivity.status)}
+                    </Box>
+                </DialogTitle>
+                <DialogContent sx={{ pt: 3 }}>
+                    {viewingActivity && (
+                        <Grid container spacing={3} sx={{ mt: 0 }}>
+                            <Grid item xs={12}>
+                                <Typography variant="h5" fontWeight="bold" color="primary" gutterBottom>
+                                    {viewingActivity.activity}
+                                </Typography>
+                                <Box sx={{ display: 'flex', gap: 2, mb: 1 }}>
+                                    <Chip label="Tutoría" color="primary" variant="outlined" size="small" />
+                                    <Typography variant="subtitle1" color="text.secondary">
+                                        Asignado a: <strong>{viewingActivity.studentName}</strong>
+                                    </Typography>
+                                </Box>
+                            </Grid>
+
+                            <Grid item xs={12}>
+                                <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
+                                    {viewingActivity.description}
+                                </Typography>
+                            </Grid>
+                        </Grid>
+                    )}
+                </DialogContent>
+                <DialogActions sx={{ p: 3 }}>
+                    <Button onClick={() => setViewingActivity(null)} variant="outlined">Cerrar</Button>
+                </DialogActions>
+            </Dialog>
         </Box >
     );
 }

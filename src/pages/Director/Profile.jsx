@@ -79,11 +79,11 @@ function TutorProfile() {
     const handleEditClick = () => {
         setEditFormData({
             titulo: tutorData.titulo === "Docente" ? "" : tutorData.titulo,
-            telefono: tutorData.telefono === "No registrado" ? "" : tutorData.telefono,
             celular: tutorData.celular === "No registrado" ? "" : tutorData.celular,
             sede: tutorData.sede === "No registrado" ? "" : tutorData.sede,
             departamento: tutorData.departamento === "No registrado" ? "" : tutorData.departamento,
-            especialidad: tutorData.especialidad === "Docente Titulación" ? "" : tutorData.especialidad
+            especialidad: tutorData.especialidad === "Docente Titulación" ? "" : tutorData.especialidad,
+            cedula: tutorData.cedula || ""
         });
         setEditDialogOpen(true);
     };
@@ -124,10 +124,14 @@ function TutorProfile() {
 
     // Handlers
     const handleChangePassword = () => setOpenPasswordDialog(true);
-    const handlePasswordSubmit = (passwordData) => {
-        // TODO: Implement API call
-
-        showAlert("Info", "Cambio de contraseña no implementado en esta demo", "info");
+    const handlePasswordSubmit = async (passwordData) => {
+        try {
+            await usuarioService.changePassword(passwordData.currentPassword, passwordData.newPassword);
+            showAlert("Éxito", "Contraseña cambiada correctamente", "success");
+            setOpenPasswordDialog(false);
+        } catch (error) {
+            showAlert("Error", error.message || "No se pudo cambiar la contraseña", "error");
+        }
     };
 
     return (
@@ -153,7 +157,7 @@ function TutorProfile() {
                         Gestiona tu información profesional y configuración
                     </Typography>
                 </Box>
-                
+
             </Box>
 
             {/* Profile Header Card */}
@@ -163,6 +167,7 @@ function TutorProfile() {
                 initials={tutorData.initials}
                 tags={[tutorData.departamento, tutorData.status]}
                 onChangePassword={handleChangePassword}
+                onEditProfile={handleEditClick}
             />
 
             {/* Main Content Grid */}
@@ -182,6 +187,13 @@ function TutorProfile() {
                 <DialogTitle>Editar Información Profesional</DialogTitle>
                 <DialogContent>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+                        <TextField
+                            label="Número de Cédula"
+                            name="cedula"
+                            value={editFormData.cedula || ''}
+                            onChange={handleEditChange}
+                            fullWidth
+                        />
                         <TextField
                             label="Título Profesional"
                             name="titulo"

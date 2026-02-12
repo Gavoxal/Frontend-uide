@@ -1,5 +1,4 @@
 import { API_BASE_URL } from '../utils/constants';
-
 export const AuthService = {
     /**
      * Inicia sesión llamando al backend.
@@ -8,11 +7,11 @@ export const AuthService = {
      * @param {string} clave - Contraseña del usuario
      * @returns {Promise<Object>} Datos del usuario o lanza error.
      */
+
     async login(correo, clave) {
         // Limpiar cualquier sesión anterior antes de intentar una nueva
         localStorage.removeItem('token');
         localStorage.removeItem('userEmail');
-
         try {
             // Intento de conexión al backend
             const response = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -22,7 +21,6 @@ export const AuthService = {
                 },
                 body: JSON.stringify({ correo, clave })
             });
-
             if (response.ok) {
                 const data = await response.json();
 
@@ -76,78 +74,8 @@ export const AuthService = {
             }
         } catch (error) {
             console.error("API Connection failed:", error);
-            // Solo usar mock si es un entorno local o falla la red
-            if (correo.includes('@example.com') || correo === 'admin' || correo === 'director') {
-                console.warn("Falling back to mock login for test user.");
-                return this.mockLogin(correo, clave);
-            }
             throw error;
         }
-    },
-
-    /**
-     * Lógica mock original (sincrona) envuelta para uso interno.
-     */
-    mockLogin(user, passwd) {
-        // Primero revisamos si hay un registro temporal
-        const tempUserStr = sessionStorage.getItem('tempUser');
-        const tempUser = tempUserStr ? JSON.parse(tempUserStr) : null;
-
-        if (tempUser && user === tempUser.user && passwd === tempUser.passwd) {
-            localStorage.setItem('userEmail', user);
-            return {
-                name: tempUser.name,
-                lastName: tempUser.lastname,
-                role: tempUser.role,
-                image: "",
-            };
-        }
-
-        // Usuario admin predefinido
-        if (user === "admin" && passwd === "admin123") {
-            localStorage.setItem('userEmail', user);
-            return { name: "Administrador", lastName: "Main", role: "admin", image: "" };
-        }
-
-        // Usuario tutor predefinido
-        if (user === "tutor" && passwd === "tutor123") {
-            localStorage.setItem('userEmail', user);
-            return { name: "Tutor", lastName: "Main", role: "tutor", image: "" };
-        }
-
-        // === USUARIOS DE PRUEBA PARA SISTEMA DE ACCESO ===
-        if (user === "estudiante_nuevo@uide.edu.ec" && passwd === "123456") {
-            localStorage.setItem('userEmail', user);
-            return { name: "Juan", lastName: "Pérez", role: "student", image: "" };
-        }
-        if (user === "estudiante_completo@uide.edu.ec" && passwd === "123456") {
-            localStorage.setItem('userEmail', user);
-            return { name: "María", lastName: "García", role: "student", image: "" };
-        }
-        if (user === "estudiante_avanzado@uide.edu.ec" && passwd === "123456") {
-            localStorage.setItem('userEmail', user);
-            return { name: "Carlos", lastName: "López", role: "student", image: "" };
-        }
-        if (user === "estudiante" && passwd === "estudiante123") {
-            localStorage.setItem('userEmail', "estudiante_completo@uide.edu.ec");
-            return { name: "Abel", lastName: "Main", role: "student", image: "" };
-        }
-
-        if (user === "revisor" && passwd === "revisor123") {
-            localStorage.setItem('userEmail', user);
-            return { name: "Revisor", lastName: "Main", role: "reviewer", image: "" };
-        }
-        if (user === "director" && passwd === "director123") {
-            return { name: "Director", lastName: "Carrera", role: "director" };
-        }
-        if (user === "docente" && passwd === "docente123") {
-            return { name: "Docente", lastName: "Integración", role: "docente_integracion", image: "" };
-        }
-        if (user === "coordinador" && passwd === "coordinador123") {
-            return { name: "Darío", lastName: "Valarezo", role: "coordinador" };
-        }
-
-        return null; // Login fallido
     },
 
     logout() {

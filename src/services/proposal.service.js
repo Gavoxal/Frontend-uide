@@ -128,5 +128,47 @@ export const ProposalService = {
             console.error("ProposalService.updateStatus error:", error);
             throw error;
         }
+    },
+
+    /**
+     * Actualiza una propuesta existente
+     * @param {number|string} id - ID de la propuesta
+     * @param {Object} data - Datos de la propuesta incluyendo el archivo opcional
+     * @returns {Promise<Object>}
+     */
+    async update(id, data) {
+        try {
+            const formData = new FormData();
+            formData.append('titulo', data.titulo);
+            formData.append('areaConocimientoId', data.areaConocimientoId);
+            formData.append('objetivos', data.objetivo);
+            formData.append('problematica', data.problematica || '');
+            formData.append('alcance', data.alcance || '');
+
+            if (data.file && data.file.raw) {
+                formData.append('file', data.file.raw);
+            }
+
+            const token = localStorage.getItem('token');
+            const headers = {};
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
+            const response = await fetch(`/api/v1/propuestas/${id}`, {
+                method: 'PUT',
+                body: formData,
+                headers: headers
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `Error al actualizar propuesta: ${response.statusText}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error("ProposalService.update error:", error);
+            throw error;
+        }
     }
 };

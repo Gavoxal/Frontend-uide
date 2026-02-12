@@ -1,156 +1,98 @@
-import { useState } from "react";
-import {
-    Box,
-    Card,
-    CardContent,
-    Typography,
-    Divider,
-    Button,
-    Grid,
-    Avatar,
-    Chip
-} from "@mui/material";
-import { useNavigate } from "react-router-dom";
-import InputMui from "../../components/input.mui.component";
-import SearchIcon from "@mui/icons-material/Search";
-import VisibilityIcon from "@mui/icons-material/Visibility";
+import React, { useState, useEffect } from 'react';
+import { Box, Card, CardContent, Grid } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
 
-function CoordinadorStudents() {
+import SearchBar from '../../components/SearchBar.component';
+import TextMui from '../../components/text.mui.component';
+import ButtonMui from '../../components/button.mui.component';
+import StudentCard from '../../components/Director/StudentCard.mui';
+import usuarioService from '../../services/usuario.service';
+
+function CoordinatorStudents() {
     const navigate = useNavigate();
-    const [searchTerm, setSearchTerm] = useState("");
 
-    // TODO: API - Obtener lista de todos los estudiantes asignados al coordinador o globales
-    // const { data: students } = await fetch('/api/coordinador/students')
-    const [students] = useState([
-        {
-            id: 1184523,
-            name: "Jhandry Becerra",
-            email: "jbecerra@uide.edu.ec",
-            career: "Tecnologías de la Información",
-            status: "active",
-            thesisStatus: "Pendiente"
-        },
-        {
-            id: 1150373,
-            name: "Eduardo Pardo",
-            email: "edupardo@uide.edu.ec",
-            career: "Tecnologías de la Información",
-            status: "active",
-            thesisStatus: "En Desarrollo"
-        },
-        {
-            id: 1122334,
-            name: "Gabriel Sarango",
-            email: "gsarango@uide.edu.ec",
-            career: "Tecnologías de la Información",
-            status: "inactive",
-            thesisStatus: "No Iniciado"
+    const [students, setStudents] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        loadStudents();
+    }, []);
+
+    const loadStudents = async () => {
+        try {
+            const data = await usuarioService.getEstudiantes();
+            // Mapear datos al formato de la tarjeta
+            const mapped = data.map(u => ({
+                id: u.id,
+                cedula: u.cedula,
+                name: `${u.nombres} ${u.apellidos}`,
+                sex: 'No especificado',
+                status: u.activo ? 'Activo' : 'Inactivo',
+                campus: 'UIDE - Loja',
+                school: u.estudiantePerfil?.escuela || 'Sin Carrera',
+                malla: u.estudiantePerfil?.malla || 'Sin Malla',
+                period: 'Periodo Actual',
+                email: u.email,
+                location: 'Loja, Ecuador',
+                photoUrl: ""
+            }));
+            setStudents(mapped);
+        } catch (error) {
+            console.error("Error loading students:", error);
+        } finally {
+            setLoading(false);
         }
-    ]);
+    };
+
+    const [searchTerm, setSearchTerm] = useState("");
 
     const filteredStudents = students.filter(student =>
         student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.id.toString().includes(searchTerm)
+        student.cedula.includes(searchTerm)
     );
 
     return (
         <Box>
-            {/* Header */}
-            <Box sx={{ mb: 4 }}>
-                <Typography variant="h4" fontWeight="bold" gutterBottom>
-                    Gestión de Estudiantes
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                    Listado general de estudiantes y su estado de titulación
-                </Typography>
+            <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box>
+                    <TextMui value="Listado de Estudiantes Registrados" variant="h4" />
+                    <TextMui value="Visualización de perfiles estudiantiles" variant="body1" />
+                </Box>
+                <Box sx={{ width: '200px' }}>
+                    <ButtonMui
+                        name="Carga Masiva"
+                        onClick={() => navigate('/coordinador/student-load')}
+                        startIcon={<PersonAddIcon />}
+                        backgroundColor="#1976d2"
+                    />
+                </Box>
             </Box>
 
-            <Card>
-                <CardContent>
-                    {/* Barra de búsqueda */}
-                    <Box sx={{ mb: 3, display: 'flex', gap: 2 }}>
-                        <Box sx={{ flex: 1 }}>
-                            <InputMui
-                                placeholder="Buscar estudiante por nombre o ID..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                startIcon={<SearchIcon color="action" />}
-                            />
+            <SearchBar
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Buscar por nombre, cédula..."
+                title="Buscar Estudiantes"
+            />
+
+            <Grid container spacing={3}>
+                {filteredStudents.length > 0 ? (
+                    filteredStudents.map((student) => (
+                        <Grid item xs={12} sm={6} md={4} lg={3} key={student.cedula}>
+                            <StudentCard student={student} />
+                        </Grid>
+                    ))
+                ) : (
+                    <Grid item xs={12}>
+                        <Box sx={{ textAlign: 'center', mt: 4 }}>
+                            <TextMui value="No se encontraron estudiantes" variant="h6" color="text.secondary" />
                         </Box>
-                        {/* Aquí se podrían agregar más filtros si fuera necesario */}
-                    </Box>
-
-                    <Divider sx={{ mb: 2 }} />
-
-                    {/* Lista de Estudiantes (Grid) */}
-                    <Grid container spacing={2}>
-                        {filteredStudents.map((student) => (
-                            <Grid item xs={12} key={student.id}>
-                                <Card variant="outlined" sx={{
-                                    p: 2,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    '&:hover': { bgcolor: '#FAFAFA' }
-                                }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                        <Avatar sx={{ bgcolor: '#000A9B', width: 50, height: 50 }}>
-                                            {student.name.charAt(0)}
-                                        </Avatar>
-                                        <Box>
-                                            <Typography variant="subtitle1" fontWeight="bold">
-                                                {student.name}
-                                            </Typography>
-                                            <Typography variant="body2" color="text.secondary">
-                                                ID: {student.id} | {student.email}
-                                            </Typography>
-                                            <Typography variant="caption" color="primary">
-                                                {student.career}
-                                            </Typography>
-                                        </Box>
-                                    </Box>
-
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                                        <Box sx={{ textAlign: 'right' }}>
-                                            <Typography variant="caption" display="block" color="text.secondary">
-                                                Estado Tesis
-                                            </Typography>
-                                            <Chip
-                                                label={student.thesisStatus}
-                                                size="small"
-                                                color={student.thesisStatus === 'En Desarrollo' ? 'success' : 'default'}
-                                            />
-                                        </Box>
-
-                                        <Button
-                                            variant="outlined"
-                                            startIcon={<VisibilityIcon />}
-                                            onClick={() => {
-                                                // TODO: Navegar a detalle del estudiante si se implementa esa vista
-
-                                            }}
-                                        >
-                                            Detalles
-                                        </Button>
-                                    </Box>
-                                </Card>
-                            </Grid>
-                        ))}
-
-                        {filteredStudents.length === 0 && (
-                            <Grid item xs={12}>
-                                <Box sx={{ textAlign: 'center', py: 5 }}>
-                                    <Typography color="text.secondary">
-                                        No se encontraron estudiantes con ese criterio.
-                                    </Typography>
-                                </Box>
-                            </Grid>
-                        )}
                     </Grid>
-                </CardContent>
-            </Card>
-        </Box>
+                )}
+            </Grid>
+        </Box >
     );
 }
 
-export default CoordinadorStudents;
+export default CoordinatorStudents;

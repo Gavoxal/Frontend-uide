@@ -57,17 +57,20 @@ function DirectorAssignTutor() {
             const mappedProjects = proposalsData
                 .filter(p => p.estado === 'APROBADA' || p.estado === 'APROBADA_CON_COMENTARIOS' || p.trabajosTitulacion?.length > 0)
                 .map(p => {
-                    const activeAssigment = p.trabajosTitulacion?.find(a => a.estadoAsignacion === 'ACTIVO');
+                    const active = (p.trabajosTitulacion && p.trabajosTitulacion.length > 0)
+                        ? (p.trabajosTitulacion.find(a => a.estadoAsignacion === 'ACTIVO') || p.trabajosTitulacion[0])
+                        : null;
+
                     return {
                         id: p.id,
-                        student: `${p.estudiante?.nombres} ${p.estudiante?.apellidos}`,
+                        student: p.estudiante ? `${p.estudiante.nombres} ${p.estudiante.apellidos}` : 'Estudiante Desconocido',
                         cedula: p.estudiante?.cedula || 'N/A',
                         email: p.estudiante?.correoInstitucional || 'N/A',
                         topic: p.titulo,
                         area: p.areaConocimiento?.nombre || 'General',
-                        status: activeAssigment ? 'Tutor Asignado' : 'Aprobado',
-                        tutor: activeAssigment ? `${activeAssigment.tutor?.nombres} ${activeAssigment.tutor?.apellidos}` : null,
-                        career: p.estudiante?.estudiantePerfil?.escuela || 'Ingeniería',
+                        status: active ? 'Tutor Asignado' : 'Aprobado',
+                        tutor: active?.tutor ? `${active.tutor.nombres} ${active.tutor.apellidos}` : null,
+                        career: p.estudiante?.estudiantePerfil?.escuela || 'N/A',
                         malla: p.estudiante?.estudiantePerfil?.malla || 'N/A'
                     };
                 });
