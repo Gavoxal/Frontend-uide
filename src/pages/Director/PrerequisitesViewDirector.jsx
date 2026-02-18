@@ -17,6 +17,7 @@ import { PrerequisiteService } from "../../services/prerequisites.service";
 import SearchBar from '../../components/SearchBar.component';
 import TextMui from "../../components/text.mui.component";
 import InputMui from "../../components/input.mui.component";
+import { apiFetch } from "../../services/api";
 
 function DirectorPrerequisites() {
     // Estado para datos reales
@@ -27,6 +28,7 @@ function DirectorPrerequisites() {
     const [filterStatus, setFilterStatus] = useState("all");
     const [openDialog, setOpenDialog] = useState(false);
     const [selectedStudent, setSelectedStudent] = useState(null);
+    const [errorMsg, setErrorMsg] = useState("");
 
     // Cargar datos al montar
     useEffect(() => {
@@ -111,6 +113,15 @@ function DirectorPrerequisites() {
         handleCloseDialog();
     };
 
+    const handleDownload = (urlArchivo, label) => {
+        if (!urlArchivo) {
+            setErrorMsg("No hay un archivo disponible para descargar.");
+            return;
+        }
+        // Abrir el archivo directamente en una nueva pestaña
+        window.open(urlArchivo, '_blank');
+    };
+
     const handleCloseDialog = () => {
         setOpenDialog(false);
         setSelectedStudent(null);
@@ -168,7 +179,7 @@ function DirectorPrerequisites() {
 
             {/* Estadísticas */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
 
                     <TooltipMui title="Filtrar pendientes" placement="top">
                         <Box
@@ -189,7 +200,7 @@ function DirectorPrerequisites() {
                         </Box>
                     </TooltipMui>
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                     <TooltipMui title="Filtrar aprobados" placement="top">
                         <Box
                             onClick={() => setFilterStatus(filterStatus === 'approved' ? 'all' : 'approved')}
@@ -224,6 +235,7 @@ function DirectorPrerequisites() {
                         students={filteredStudents}
                         onVerify={handleVerify}
                         onGrantAccess={handleGrantAccessClick}
+                        onDownload={handleDownload}
                     />
                 </CardContent>
             </Card>
@@ -242,6 +254,17 @@ function DirectorPrerequisites() {
                 showBtnR={true}
                 btnNameR="Cancelar"
                 actionBtnR={handleCloseDialog}
+            />
+
+            <AlertMui
+                open={!!errorMsg}
+                handleClose={() => setErrorMsg("")}
+                title="Error de Archivo"
+                message={errorMsg}
+                status="error"
+                showBtnL={true}
+                btnNameL="Aceptar"
+                actionBtnL={() => setErrorMsg("")}
             />
         </Box>
     );

@@ -35,7 +35,7 @@ function DirectorStudentList() {
                 school: u.estudiantePerfil?.escuela || 'Sin Carrera',
                 malla: u.estudiantePerfil?.malla || 'Sin Malla',
                 period: 'Periodo Actual',
-                email: u.email,
+                email: u.correoInstitucional || u.correo || 'Sin correo',
                 location: 'Loja, Ecuador',
                 photoUrl: ""
             }));
@@ -83,12 +83,12 @@ function DirectorStudentList() {
             <Grid container spacing={3}>
                 {filteredStudents.length > 0 ? (
                     filteredStudents.map((student) => (
-                        <Grid item xs={12} sm={6} md={4} lg={3} key={student.cedula}>
+                        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={student.cedula}>
                             <StudentCard student={student} />
                         </Grid>
                     ))
                 ) : (
-                    <Grid item xs={12}>
+                    <Grid size={{ xs: 12 }}>
                         <Box sx={{ textAlign: 'center', mt: 4 }}>
                             <TextMui value="No se encontraron estudiantes" variant="h6" color="text.secondary" />
                         </Box>

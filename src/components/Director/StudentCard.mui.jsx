@@ -28,12 +28,6 @@ function StudentCard({ student }) {
                         <EmailIcon fontSize="small" />
                         <TextMui value={student.email} variant="caption" />
                     </Box>
-                    <Chip
-                        label={student.status}
-                        color={student.status === 'Activo' ? 'success' : 'default'}
-                        size="small"
-                        sx={{ mt: 1 }}
-                    />
                 </Box>
 
                 <Divider sx={{ mb: 2 }} />

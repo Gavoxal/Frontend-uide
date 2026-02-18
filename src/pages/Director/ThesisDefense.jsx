@@ -141,10 +141,18 @@ function ThesisDefense() {
     };
 
     const handleDownload = async (urlArchivo, fileName) => {
+        if (!urlArchivo) {
+            setErrorMsg("No hay un archivo disponible para descargar.");
+            return;
+        }
+
         try {
             const fileNameFromUrl = urlArchivo.split('/').pop();
             const res = await apiFetch(`/api/v1/entregables/file/${fileNameFromUrl}`);
-            if (!res.ok) throw new Error('Error al descargar archivo');
+            if (!res.ok) {
+                if (res.status === 404) throw new Error('Archivo no encontrado físicamente en el servidor');
+                throw new Error('Error al descargar archivo');
+            }
 
             const blob = await res.blob();
             const url = window.URL.createObjectURL(blob);
@@ -157,7 +165,9 @@ function ThesisDefense() {
             document.body.removeChild(a);
         } catch (error) {
             console.error("Error downloading file:", error);
-            setErrorMsg("No se pudo descargar el archivo. Por favor intente más tarde.");
+            setErrorMsg(error.message === 'Archivo no encontrado físicamente en el servidor'
+                ? "Lo sentimos, el archivo solicitado no se encuentra disponible en el servidor."
+                : "No se pudo descargar el archivo. Por favor intente más tarde.");
         }
     };
 
@@ -353,17 +363,17 @@ function ThesisDefense() {
                                 DEFENSA PROGRAMADA:
                             </Typography>
                             <Grid container spacing={0.5}>
-                                <Grid item xs={6}>
+                                <Grid size={{ xs: 6 }}>
                                     <Typography variant="caption" sx={{ fontWeight: 600, color: '#1565c0' }}>
                                         📅 {defenseData.date}
                                     </Typography>
                                 </Grid>
-                                <Grid item xs={6}>
+                                <Grid size={{ xs: 6 }}>
                                     <Typography variant="caption" sx={{ fontWeight: 600, color: '#1565c0' }}>
                                         🕒 {defenseData.time}
                                     </Typography>
                                 </Grid>
-                                <Grid item xs={12}>
+                                <Grid size={{ xs: 12 }}>
                                     <Typography variant="caption" sx={{ fontWeight: 600, color: '#1565c0', display: 'block' }}>
                                         🏫 {defenseData.classroom}
                                     </Typography>
@@ -449,7 +459,7 @@ function ThesisDefense() {
                                 { icon: <DescriptionIcon />, label: 'Manual', doc: docs.userManual, key: 'manual' },
                                 { icon: <SchoolIcon />, label: 'Artíc.', doc: docs.scientificArticle, key: 'articulo' }
                             ].map((item, idx) => (
-                                <Grid item xs={4} key={idx}>
+                                <Grid size={{ xs: 4 }} key={idx}>
                                     <Tooltip title={item.doc ? `Ver ${item.label}` : `${item.label} no disponible`}>
                                         <Box
                                             onClick={(e) => {
@@ -591,7 +601,7 @@ function ThesisDefense() {
             {/* Estadísticas / Filtros */}
             {/* Estadísticas / Filtros */}
             <Grid container spacing={3} sx={{ mb: 5 }}>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                     <Box sx={{
                         p: 3, borderRadius: '20px', bgcolor: 'white', boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
                         border: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 3
@@ -607,7 +617,7 @@ function ThesisDefense() {
                         </Box>
                     </Box>
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                     <Box sx={{
                         p: 3, borderRadius: '20px', bgcolor: 'white', boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
                         border: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 3
@@ -640,11 +650,11 @@ function ThesisDefense() {
             </Box>
 
             <Grid container spacing={3}>
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                     <Grid container spacing={2}>
                         {filteredStudents.length > 0 ? (
                             filteredStudents.map((student) => (
-                                <Grid item xs={12} sm={6} md={4} lg={3} key={student.id}>
+                                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={student.id}>
                                     <ThesisDefenseCard
                                         student={student}
                                         isSelected={selectedStudent?.id === student.id}
@@ -653,7 +663,7 @@ function ThesisDefense() {
                                 </Grid>
                             ))
                         ) : (
-                            <Grid item xs={12}>
+                            <Grid size={{ xs: 12 }}>
                                 <Box sx={{ textAlign: 'center', py: 4 }}>
                                     <Typography color="text.secondary">
                                         {tabValue === 0

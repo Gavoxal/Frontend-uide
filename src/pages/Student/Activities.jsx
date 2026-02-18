@@ -32,9 +32,9 @@ function StudentActivities() {
             const mappedWeeks = activities.map((act, index) => ({
                 id: act.id,
                 title: act.nombre || `Actividad ${index + 1}`,
-                status: act.evidencias?.length > 0
-                    ? (act.evidencias[0].calificacionTutor ? 'Calificado' : 'Pendiente')
-                    : 'Sin Entregar',
+                status: (act.evidencias?.length > 0 && act.evidencias[0].estado !== 'NO_ENTREGADO')
+                    ? (act.evidencias[0].calificacionTutor !== null ? 'Calificado' : 'Pendiente')
+                    : (act.fechaEntrega && new Date(act.fechaEntrega) < new Date() ? 'No Entregado' : 'Sin Entregar'),
                 score: act.evidencias?.length > 0 ? act.evidencias[0].calificacionTutor : null,
                 feedback: act.evidencias?.length > 0 ? act.evidencias[0].feedbackTutor : '',
                 file: act.evidencias?.length > 0 ? act.evidencias[0].archivoUrl?.split('/').pop() : null
@@ -83,7 +83,7 @@ function StudentActivities() {
             )}
 
             <Grid container spacing={3}>
-                <Grid item xs={12} md={8}>
+                <Grid size={{ xs: 12, md: 8 }}>
                     {weeks.length > 0 ? (
                         weeks.map((week) => (
                             <Accordion key={week.id}>
@@ -95,14 +95,14 @@ function StudentActivities() {
                                         <Chip
                                             label={week.status}
                                             size="small"
-                                            color={week.status === 'Calificado' ? 'success' : week.status === 'Pendiente' ? 'warning' : 'default'}
+                                            color={week.status === 'Calificado' ? 'success' : week.status === 'Pendiente' ? 'warning' : week.status === 'No Entregado' ? 'error' : 'default'}
                                         />
                                     </Box>
                                 </AccordionSummary>
                                 <AccordionDetails>
                                     <Divider sx={{ mb: 2 }} />
                                     <Grid container spacing={2}>
-                                        <Grid item xs={12} sm={6}>
+                                        <Grid size={{ xs: 12, sm: 6 }}>
                                             <Typography variant="subtitle2" gutterBottom>Evidencia Cargada</Typography>
                                             {week.file ? (
                                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1, bgcolor: '#f5f5f5', borderRadius: 1 }}>
@@ -120,7 +120,7 @@ function StudentActivities() {
                                                 </Button>
                                             )}
                                         </Grid>
-                                        <Grid item xs={12} sm={6}>
+                                        <Grid size={{ xs: 12, sm: 6 }}>
                                             <Typography variant="subtitle2" gutterBottom>Retroalimentación</Typography>
                                             {week.feedback ? (
                                                 <Typography variant="body2" color="text.secondary">
@@ -151,7 +151,7 @@ function StudentActivities() {
                     )}
                 </Grid>
 
-                <Grid item xs={12} md={4}>
+                <Grid size={{ xs: 12, md: 4 }}>
                     <Card sx={{ position: 'sticky', top: 20 }}>
                         <CardContent>
                             <Typography variant="h6" fontWeight="bold" gutterBottom>

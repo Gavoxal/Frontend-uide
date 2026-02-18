@@ -186,7 +186,7 @@ function StudentProfile() {
             {/* Main Content Grid */}
             <Grid container spacing={3}>
                 {/* Personal Information */}
-                <Grid item xs={12} sm={6} md={6}>
+                <Grid size={{ xs: 12, sm: 6, md: 6 }}>
                     <InfoCardModern
                         title="Información Personal"
                         items={personalInfoItems}
@@ -194,7 +194,7 @@ function StudentProfile() {
                 </Grid>
 
                 {/* Requirements List */}
-                <Grid item xs={12} sm={6} md={6}>
+                <Grid size={{ xs: 12, sm: 6, md: 6 }}>
                     <RequirementsCardModern
                         requirements={requirements}
                         onAction={handleRequirementAction}

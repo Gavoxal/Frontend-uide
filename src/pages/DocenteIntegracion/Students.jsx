@@ -46,11 +46,11 @@ function DocenteStudents() {
     };
 
     const handlePlanActivity = (student) => {
-        navigate('/docente/planning', { state: { student } });
+        navigate('/docente-integracion/planning', { state: { student } });
     };
 
     const handleReviewStudent = (student) => {
-        navigate('/docente/review', { state: { student } });
+        navigate('/docente-integracion/advances', { state: { student } });
     };
 
     const filteredStudents = students.filter(student =>
@@ -91,7 +91,7 @@ function DocenteStudents() {
             {filteredStudents.length > 0 ? (
                 <Grid container spacing={3}>
                     {filteredStudents.map((student) => (
-                        <Grid item xs={12} md={6} lg={4} key={student.id}>
+                        <Grid size={{ xs: 12, md: 6, lg: 4 }} key={student.id}>
                             <StudentCard
                                 student={student}
                                 onView={handleViewStudent}

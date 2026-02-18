@@ -116,11 +116,11 @@ function PublicDefense() {
 
             <Grid container spacing={3}>
                 {defenses.map((defense) => (
-                    <Grid item xs={12} key={defense.id}>
+                    <Grid size={{ xs: 12 }} key={defense.id}>
                         <Card sx={{ borderRadius: 3, boxShadow: 2, transition: '0.3s', '&:hover': { boxShadow: 4 } }}>
                             <CardContent sx={{ p: 3 }}>
                                 <Grid container spacing={2}>
-                                    <Grid item xs={12} md={8}>
+                                    <Grid size={{ xs: 12, md: 8 }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 2 }}>
                                             <Typography variant="h6" fontWeight="bold">
                                                 {defense.studentName}
@@ -147,7 +147,7 @@ function PublicDefense() {
                                         </Box>
                                     </Grid>
 
-                                    <Grid item xs={12} md={4} sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 2, borderLeft: { md: '1px solid #eee' }, pl: { md: 2 } }}>
+                                    <Grid size={{ xs: 12, md: 4 }} sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 2, borderLeft: { md: '1px solid #eee' }, pl: { md: 2 } }}>
                                         <Box>
                                             <Typography variant="subtitle2" fontWeight="bold" gutterBottom>Documentos:</Typography>
                                             {defense.documents.map((doc, idx) => (

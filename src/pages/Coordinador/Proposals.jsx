@@ -134,7 +134,7 @@ function CoordinatorProposals() {
             </Box>
 
             <Grid container spacing={3} sx={{ mb: 4 }}>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                     <TooltipMui title="Filtrar pendientes" placement="top">
                         <Box
                             onClick={() => setFilterStatus(filterStatus === 'pending' ? 'all' : 'pending')}
@@ -154,7 +154,7 @@ function CoordinatorProposals() {
                         </Box>
                     </TooltipMui>
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                     <TooltipMui title="Filtrar revisados" placement="top">
                         <Box
                             onClick={() => setFilterStatus(filterStatus === 'reviewed' ? 'all' : 'reviewed')}

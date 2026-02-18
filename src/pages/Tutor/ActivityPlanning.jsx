@@ -484,7 +484,7 @@ function ActivityPlanning() {
                 <DialogContent sx={{ pt: 3 }}>
                     {viewingActivity && (
                         <Grid container spacing={3} sx={{ mt: 0 }}>
-                            <Grid item xs={12}>
+                            <Grid size={{ xs: 12 }}>
                                 <Typography variant="h5" fontWeight="bold" color="primary" gutterBottom>
                                     {viewingActivity.activity}
                                 </Typography>
@@ -496,7 +496,7 @@ function ActivityPlanning() {
                                 </Box>
                             </Grid>
 
-                            <Grid item xs={12}>
+                            <Grid size={{ xs: 12 }}>
                                 <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
                                     {viewingActivity.description}
                                 </Typography>

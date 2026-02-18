@@ -267,7 +267,7 @@ function ProposalDetail() {
 
             <Grid container spacing={4}>
                 {proposals.map((prop, index) => (
-                    <Grid item xs={12} key={prop.id}>
+                    <Grid size={{ xs: 12 }} key={prop.id}>
                         <Card
                             elevation={3}
                             sx={{
@@ -281,7 +281,7 @@ function ProposalDetail() {
                             <Box sx={{ p: 4 }}>
                                 <Grid container spacing={4}>
                                     {/* Left Column: Proposal Content */}
-                                    <Grid item xs={12}>
+                                    <Grid size={{ xs: 12 }}>
                                         <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
                                             <Chip
                                                 label={`Propuesta ${index + 1}`}
@@ -355,10 +355,10 @@ function ProposalDetail() {
                                     </Grid>
 
                                     {/* Bottom Section: Dictamen & Comments (Side by Side) */}
-                                    <Grid item xs={12}>
+                                    <Grid size={{ xs: 12 }}>
                                         <Grid container spacing={4}>
                                             {/* Column 1: Dictamen */}
-                                            <Grid item xs={12} md={6}>
+                                            <Grid size={{ xs: 12, md: 6 }}>
                                                 <Box sx={{
                                                     p: 3,
                                                     bgcolor: '#f8f9fa',
@@ -426,7 +426,7 @@ function ProposalDetail() {
                                             </Grid>
 
                                             {/* Column 2: Comment Section */}
-                                            <Grid item xs={12} md={6}>
+                                            <Grid size={{ xs: 12, md: 6 }}>
                                                 <Box sx={{
                                                     p: 3,
                                                     bgcolor: '#ffffff',

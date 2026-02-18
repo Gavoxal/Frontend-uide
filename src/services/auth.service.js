@@ -81,6 +81,7 @@ export const AuthService = {
     logout() {
         localStorage.removeItem('token');
         localStorage.removeItem('userEmail');
+        rmDataUser();
         // Limpieza adicional si es necesaria
     },
 
@@ -113,5 +114,33 @@ export const AuthService = {
         }
 
         return data;
+    },
+
+    /**
+     * Solicita una nueva contraseña aleatoria enviada al correo.
+     * @param {string} correo - Correo institucional del usuario
+     * @returns {Promise<Object>} Respuesta del servidor
+     */
+    async forgotPassword(correo) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ correo })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'No se pudo procesar la recuperación de contraseña');
+            }
+
+            return data;
+        } catch (error) {
+            console.error("Forgot password API error:", error);
+            throw error;
+        }
     }
 };

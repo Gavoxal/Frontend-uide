@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import LoginPage from "../pages/Login";
 import RegisterPage from "../pages/Register";
+import RoleSelection from "../pages/Auth/RoleSelection";
 import NotFound from "../pages/NotFound";
 
 import AuthAdmin from "./AuthAdmin";
@@ -70,6 +71,7 @@ import CoordinadorAssignTutor from "../pages/Coordinador/AssignTutor";
 import CoordinadorThesisDefense from "../pages/Coordinador/ThesisDefense";
 import CoordinadorTutorList from "../pages/Coordinador/TutorList";
 import CoordinadorProfile from "../pages/Coordinador/Profile";
+import CoordinadorStudentLoad from "../pages/Coordinador/StudentLoad";
 
 
 
@@ -83,6 +85,7 @@ function RouterPages() {
                 {/* Públicas */}
                 <Route path="/ingreso" element={<LoginPage />} />
                 <Route path="/registro" element={<RegisterPage />} />
+                <Route path="/select-role" element={<RoleSelection />} />
 
                 {/* Rutas protegidas - Director */}
                 <Route path="/director" element={<AuthAdmin />}>
@@ -173,6 +176,7 @@ function RouterPages() {
                         <Route index element={<CoordinadorDashboard />} />
                         <Route path="dashboard" element={<CoordinadorDashboard />} />
                         <Route path="students" element={<CoordinadorStudents />} />
+                        <Route path="student-load" element={<CoordinadorStudentLoad />} />
                         <Route path="prerequisites" element={<CoordinadorPrerequisites />} />
                         <Route path="proposals" element={<CoordinadorProposals />} />
                         <Route path="proposals/detail/:id" element={<CoordinadorProposalDetail />} />

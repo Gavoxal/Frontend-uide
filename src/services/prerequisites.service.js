@@ -70,6 +70,12 @@ export const PrerequisiteService = {
             if (!prerequisitoId) throw new Error("No se pudo identificar el ID para el requisito.");
             if (!file) throw new Error("No se proporcionó ningún archivo para subir.");
 
+            // Validar tamaño del archivo (Máximo 15MB)
+            const MAX_SIZE = 15 * 1024 * 1024; // 15MB
+            if (file.size > MAX_SIZE) {
+                throw new Error(`El archivo seleccionado (${(file.size / (1024 * 1024)).toFixed(2)}MB) excede el tamaño máximo permitido de 15MB. Por favor comprima su archivo o suba uno más ligero.`);
+            }
+
             const token = localStorage.getItem('token');
 
             // --- PASO 1: Subir el archivo físico ---

@@ -28,6 +28,7 @@ import {
     UploadFile,
     CheckCircle,
     Grade,
+    EventBusy,
 } from '@mui/icons-material';
 import CalendarMui from '../../components/calendar.mui.component';
 import DetailsModal from '../../components/details.mui.component';
@@ -102,8 +103,13 @@ function StudentAvances() {
                     : act.evidencia;
 
                 let currentState = "pending_upload";
-                if (evidence) {
+                // Ignorar evidencias que sean por "falta de entrega" (sistema de ceros anterior)
+                const hasRealEvidence = evidence && evidence.estado !== 'NO_ENTREGADO';
+
+                if (hasRealEvidence) {
                     currentState = (evidence.calificacionTutor !== null || evidence.calificacionDocente !== null) ? "graded" : "pending_tutor_review";
+                } else if (act.fechaEntrega && new Date(act.fechaEntrega) < new Date()) {
+                    currentState = "late";
                 }
 
                 // CAMPOS DE FECHA DE LA TABLA 'actividades' (Asignación y Entrega Límite)
@@ -156,7 +162,7 @@ function StudentAvances() {
                         assignedDate: createDate ? new Date(createDate) : null,
                     },
 
-                    studentSubmission: evidence ? {
+                    studentSubmission: hasRealEvidence ? {
                         id: evidence.id,
                         uploadedFile: evidence.archivoUrl?.split('/').pop() || "archivo",
                         submittedDate: submissionDate ? new Date(submissionDate) : null,
@@ -165,7 +171,7 @@ function StudentAvances() {
                         fileUrl: evidence.archivoUrl
                     } : null,
 
-                    grading: evidence && (evidence.calificacionTutor !== null || evidence.calificacionDocente !== null) ? {
+                    grading: hasRealEvidence && (evidence.calificacionTutor !== null || evidence.calificacionDocente !== null) ? {
                         score: act.tipo === 'DOCENCIA'
                             ? evidence.calificacionDocente
                             : evidence.calificacionTutor,
@@ -277,9 +283,9 @@ function StudentAvances() {
 
     // Cálculos basados en el nuevo formato de semanas
     const isWeekCompleted = (week) => {
-        // Una semana se considera completada si no tiene actividades O si todas están calificadas
+        // Una semana se considera completada si no tiene actividades O si todas están entregadas/calificadas
         if (!week.activities || week.activities.length === 0) return true;
-        return week.activities.every(a => a.currentState === 'graded');
+        return week.activities.every(a => a.currentState === 'graded' || a.currentState === 'pending_tutor_review');
     };
 
     // Calcular cuántas semanas consecutivas se han completado desde la 1
@@ -355,7 +361,9 @@ function StudentAvances() {
             case 'pending_tutor_review':
                 return { label: 'En Revisión', color: '#ff9800', icon: PlayCircleOutline };
             case 'pending_upload':
-                return { label: 'Pendiente de Entrega', color: '#f44336', icon: UploadFile };
+                return { label: 'Pendiente de Entrega', color: '#ff9800', icon: UploadFile };
+            case 'late':
+                return { label: 'No Entregado', color: '#f44336', icon: EventBusy };
             default:
                 return { label: 'Desconocido', color: '#9e9e9e', icon: RadioButtonUnchecked };
         }
@@ -363,7 +371,7 @@ function StudentAvances() {
 
     const handleEventClick = (event) => {
         if (event.type === 'activity') {
-            const progress = weeklyProgress.find(p => p.id === event.progressId);
+            const progress = allActivities.find(p => p.id === event.progressId);
             if (progress) {
                 openDetailModal(progress);
             }
@@ -527,7 +535,7 @@ function StudentAvances() {
                                                 const StateIcon = stateConfig.icon;
 
                                                 return (
-                                                    <Grid item xs={12} md={week.activities.length > 1 ? 6 : 12} key={progress.id}>
+                                                    <Grid size={{ xs: 12, md: week.activities.length > 1 ? 6 : 12 }} key={progress.id}>
                                                         <Card
                                                             sx={{
                                                                 borderRadius: 2,
@@ -610,7 +618,7 @@ function StudentAvances() {
                                                 );
                                             })
                                         ) : (
-                                            <Grid item xs={12}>
+                                            <Grid size={{ xs: 12 }}>
                                                 <Typography variant="body2" color="text.disabled" sx={{ fontStyle: 'italic', ml: 2 }}>
                                                     Sin actividades asignadas en esta semana
                                                 </Typography>

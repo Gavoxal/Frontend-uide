@@ -17,6 +17,7 @@ import AlertMui from "../../components/alert.mui.component";
 import TextMui from "../../components/text.mui.component";
 import InputMui from "../../components/input.mui.component";
 import { prerequisitoService } from "../../services/prerequisito.service";
+import { apiFetch } from "../../services/api";
 
 function DirectorPrerequisites() {
     const [students, setStudents] = useState([]);
@@ -25,6 +26,7 @@ function DirectorPrerequisites() {
     const [filterStatus, setFilterStatus] = useState("all");
     const [openDialog, setOpenDialog] = useState(false);
     const [selectedStudent, setSelectedStudent] = useState(null);
+    const [errorMsg, setErrorMsg] = useState("");
 
     const fetchData = async () => {
         setLoading(true);
@@ -37,16 +39,19 @@ function DirectorPrerequisites() {
                 cedula: s.cedula,
                 cycle: 8, // Este dato podría venir del perfil si se expande el backend
                 english: {
-                    completed: s.prerequisitos?.find(p => p.prerequisito?.nombre?.toLowerCase().includes('inglés'))?.cumplido || false,
-                    verified: s.prerequisitos?.find(p => p.prerequisito?.nombre?.toLowerCase().includes('inglés'))?.cumplido || false
+                    completed: !!s.prerequisitos?.find(p => p.prerequisito?.nombre?.toLowerCase().includes('inglés')),
+                    verified: s.prerequisitos?.find(p => p.prerequisito?.nombre?.toLowerCase().includes('inglés'))?.cumplido || false,
+                    file: s.prerequisitos?.find(p => p.prerequisito?.nombre?.toLowerCase().includes('inglés'))?.archivoUrl || null
                 },
                 internship: {
-                    completed: s.prerequisitos?.find(p => p.prerequisito?.nombre?.toLowerCase().includes('pasantías'))?.cumplido || false,
-                    verified: s.prerequisitos?.find(p => p.prerequisito?.nombre?.toLowerCase().includes('pasantías'))?.cumplido || false
+                    completed: !!s.prerequisitos?.find(p => p.prerequisito?.nombre?.toLowerCase().includes('pasantías')),
+                    verified: s.prerequisitos?.find(p => p.prerequisito?.nombre?.toLowerCase().includes('pasantías'))?.cumplido || false,
+                    file: s.prerequisitos?.find(p => p.prerequisito?.nombre?.toLowerCase().includes('pasantías'))?.archivoUrl || null
                 },
                 community: {
-                    completed: s.prerequisitos?.find(p => p.prerequisito?.nombre?.toLowerCase().includes('comunitario'))?.cumplido || false,
-                    verified: s.prerequisitos?.find(p => p.prerequisito?.nombre?.toLowerCase().includes('comunitario'))?.cumplido || false
+                    completed: !!s.prerequisitos?.find(p => p.prerequisito?.nombre?.toLowerCase().includes('comunitario')),
+                    verified: s.prerequisitos?.find(p => p.prerequisito?.nombre?.toLowerCase().includes('comunitario'))?.cumplido || false,
+                    file: s.prerequisitos?.find(p => p.prerequisito?.nombre?.toLowerCase().includes('comunitario'))?.archivoUrl || null
                 },
                 accessGranted: s.aprobadoParaPropuesta || false,
             }));
@@ -102,6 +107,37 @@ function DirectorPrerequisites() {
         setSelectedStudent(null);
     };
 
+    const handleDownload = async (urlArchivo, label) => {
+        if (!urlArchivo) {
+            setErrorMsg("No hay un archivo disponible para descargar.");
+            return;
+        }
+
+        try {
+            const fileNameFromUrl = urlArchivo.split('/').pop();
+            const res = await apiFetch(`/api/v1/prerequisitos/file/${fileNameFromUrl}`);
+            if (!res.ok) {
+                if (res.status === 404) throw new Error('Archivo no encontrado físicamente en el servidor');
+                throw new Error('Error al descargar archivo');
+            }
+
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileNameFromUrl;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        } catch (error) {
+            console.error("Error downloading file:", error);
+            setErrorMsg(error.message === 'Archivo no encontrado físicamente en el servidor'
+                ? "Lo sentimos, el archivo solicitado no se encuentra disponible en el servidor."
+                : "No se pudo descargar el archivo. Por favor intente más tarde.");
+        }
+    };
+
     const filteredStudents = students.filter((student) => {
         const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             student.cedula.includes(searchTerm);
@@ -152,7 +188,7 @@ function DirectorPrerequisites() {
 
             {/* Estadísticas */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
 
                     <Tooltip title="Filtrar pendientes" placement="top">
                         <Box
@@ -173,7 +209,7 @@ function DirectorPrerequisites() {
                         </Box>
                     </Tooltip>
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                     <Tooltip title="Filtrar aprobados" placement="top">
                         <Box
                             onClick={() => setFilterStatus(filterStatus === 'approved' ? 'all' : 'approved')}
@@ -211,6 +247,7 @@ function DirectorPrerequisites() {
                         students={filteredStudents}
                         onVerify={handleVerify}
                         onGrantAccess={handleGrantAccessClick}
+                        onDownload={handleDownload}
                     />
 
                 </CardContent>
@@ -230,6 +267,17 @@ function DirectorPrerequisites() {
                 showBtnR={true}
                 btnNameR="Cancelar"
                 actionBtnR={handleCloseDialog}
+            />
+
+            <AlertMui
+                open={!!errorMsg}
+                handleClose={() => setErrorMsg("")}
+                title="Error de Archivo"
+                message={errorMsg}
+                status="error"
+                showBtnL={true}
+                btnNameL="Aceptar"
+                actionBtnL={() => setErrorMsg("")}
             />
         </Box>
     );

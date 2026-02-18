@@ -82,17 +82,40 @@ function StudentDashboard() {
 
                 setActivities(fetchedActivities);
 
-                // Calculate progress
-                const completedCount = fetchedActivities.filter(a => {
-                    // Check if it has a submission that is graded or at least submitted
-                    const mainEvidence = a.evidencias && a.evidencias.length > 0
-                        ? a.evidencias[a.evidencias.length - 1]
-                        : a.evidencia;
-                    return mainEvidence && (mainEvidence.calificacionTutor !== null || mainEvidence.calificacionDocente !== null);
-                }).length;
+                // --- NEW CALCULATION FOR PROGRESS (Sync with Avances.jsx) ---
+                const weeks = Array.from({ length: 16 }, (_, i) => ({
+                    weekNumber: i + 1,
+                    activities: []
+                }));
 
-                const totalWeeks = 16;
-                const progressPercent = Math.round((completedCount / totalWeeks) * 100);
+                fetchedActivities.forEach(act => {
+                    const w = Number(act.semana);
+                    if (w >= 1 && w <= 16) {
+                        weeks[w - 1].activities.push(act);
+                    }
+                });
+
+                const isWeekCompleted = (week) => {
+                    if (!week.activities || week.activities.length === 0) return true;
+                    return week.activities.every(a => {
+                        const evidence = a.evidencias && a.evidencias.length > 0
+                            ? a.evidencias[a.evidencias.length - 1]
+                            : a.evidencia;
+                        return evidence && (evidence.calificacionTutor !== null || evidence.calificacionDocente !== null);
+                    });
+                };
+
+                let consecutiveCompleted = 0;
+                for (let i = 0; i < weeks.length; i++) {
+                    if (isWeekCompleted(weeks[i])) {
+                        consecutiveCompleted++;
+                    } else {
+                        break;
+                    }
+                }
+
+                const progressPercent = Math.round((consecutiveCompleted / 16) * 100);
+                // ------------------------------------------------------------
 
                 // --- LOGIC FOR DATES & CURRENT ACTIVITY (Mirrors Avances.jsx) ---
                 const now = new Date();
@@ -175,7 +198,7 @@ function StudentDashboard() {
             {/* Encabezado con saludo personalizado */}
             <Box sx={{ mb: 4 }}>
                 <Typography variant="h4" fontWeight="bold" gutterBottom>
-                    ¡Hola, {studentData.name}! 👋
+                    ¡Hola, {studentData.name}!
                 </Typography>
                 <Typography variant="body1" color="text.secondary">
                     Panel de seguimiento de tu trabajo de titulación
@@ -193,12 +216,12 @@ function StudentDashboard() {
             {/* Main Content Area */}
             <Grid container spacing={3}>
                 {/* Left Column: Progress & Current Activity */}
-                <Grid item xs={12} md={7}>
+                <Grid size={{ xs: 12, md: 7 }}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
 
                         {/* Top Stats Cards (Restored - Small & Wide) */}
                         <Grid container spacing={2}>
-                            <Grid item xs={12} sm={6}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
                                 <StatsCard
                                     title="Fase Actual"
                                     value={studentData.currentPhase}
@@ -206,7 +229,7 @@ function StudentDashboard() {
                                     color="primary"
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={6}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
                                 <StatsCard
                                     title="Tutor Asignado"
                                     value={studentData.tutor}
@@ -270,7 +293,7 @@ function StudentDashboard() {
                                 <Box sx={{ mt: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
                                     <Button
                                         variant="contained"
-                                        onClick={() => navigate('/student/avances')}
+                                        onClick={() => navigate('/student/progress')}
                                         sx={{
                                             backgroundColor: '#667eea',
                                             fontWeight: 'bold',
@@ -292,7 +315,7 @@ function StudentDashboard() {
                 </Grid>
 
                 {/* Right Column: Upcoming Dates */}
-                <Grid item xs={12} md={5}>
+                <Grid size={{ xs: 12, md: 5 }}>
                     <UpcomingDates activities={activities} />
                 </Grid>
             </Grid>

@@ -54,7 +54,8 @@ export const ProposalService = {
      */
     async getById(id) {
         try {
-            const response = await apiFetch(`/api/v1/propuestas/${id}`);
+            const cleanId = String(id).replace(':', '');
+            const response = await apiFetch(`/api/v1/propuestas/${cleanId}`);
             if (!response.ok) return null;
             return await response.json();
         } catch (error) {
@@ -87,6 +88,10 @@ export const ProposalService = {
             if (token) {
                 headers['Authorization'] = `Bearer ${token}`;
             }
+            const activeRole = sessionStorage.getItem('activeRole');
+            if (activeRole) {
+                headers['x-active-role'] = activeRole;
+            }
 
             const response = await fetch('/api/v1/propuestas/', {
                 method: 'POST',
@@ -107,12 +112,20 @@ export const ProposalService = {
     async updateStatus(id, status, feedback) {
         try {
             const token = localStorage.getItem('token');
+            const headers = {
+                'Content-Type': 'application/json',
+            };
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            const activeRole = sessionStorage.getItem('activeRole');
+            if (activeRole) {
+                headers['x-active-role'] = activeRole;
+            }
+
             const response = await fetch(`/api/v1/propuestas/${id}/revision`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
+                headers: headers,
                 body: JSON.stringify({
                     estadoRevision: status,
                     comentariosRevision: feedback
@@ -154,8 +167,15 @@ export const ProposalService = {
             if (token) {
                 headers['Authorization'] = `Bearer ${token}`;
             }
+            const activeRole = sessionStorage.getItem('activeRole');
+            if (activeRole) {
+                headers['x-active-role'] = activeRole;
+            }
 
-            const response = await fetch(`/api/v1/propuestas/${id}`, {
+            // Limpiar ID por si viene con dos puntos (:1 -> 1)
+            const cleanId = String(id).replace(':', '');
+
+            const response = await fetch(`/api/v1/propuestas/${cleanId}`, {
                 method: 'PUT',
                 body: formData,
                 headers: headers

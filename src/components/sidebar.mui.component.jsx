@@ -31,35 +31,37 @@ import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
 import HistoryIcon from "@mui/icons-material/History";
 import GradeIcon from "@mui/icons-material/Grade";
 import { useState, useEffect } from "react";
-import { getDataUser } from "../storage/user.model.jsx";
+import { getDataUser, getActiveRole } from "../storage/user.model.jsx";
 import { useUserProgress } from "../contexts/UserProgressContext";
 import { UserService } from "../services/user.service";
 import uideImage from "../assets/uide3.svg";
 
-// Mapeo de roles a rutas base
+// Mapeo de roles a rutas base (Normalizado a mayúsculas)
 const roleToRoute = {
-    admin: 'director', // Temporal redirect
-    director: 'director',
-    student: 'student',
-    tutor: 'tutor',
-    reviewer: 'reviewer',
-    coordinador: 'coordinador',
-    docente_integracion: 'docente-integracion'
+    ADMIN: 'director',
+    DIRECTOR: 'director',
+    ESTUDIANTE: 'student',
+    STUDENT: 'student',
+    TUTOR: 'tutor',
+    REVIEWER: 'reviewer',
+    COORDINADOR: 'coordinador',
+    DOCENTE_INTEGRACION: 'docente-integracion'
 };
 
 const roleLabels = {
-    admin: 'Administrador',
-    director: 'Director de Carrera',
-    student: 'Estudiante',
-    tutor: 'Tutor',
-    reviewer: 'Revisor',
-    coordinador: 'Coordinador',
-    docente_integracion: 'Docente Integración'
+    ADMIN: 'Administrador',
+    DIRECTOR: 'Director de Carrera',
+    ESTUDIANTE: 'Estudiante',
+    STUDENT: 'Estudiante',
+    TUTOR: 'Tutor',
+    REVIEWER: 'Revisor',
+    COORDINADOR: 'Coordinador',
+    DOCENTE_INTEGRACION: 'Docente Integración'
 };
 
 // Configuración de menús por rol
 const MENU_BY_ROLE = {
-    director: [
+    DIRECTOR: [
         { icon: DashboardIcon, label: "Dashboard", path: "/director/dashboard" },
         { icon: PeopleIcon, label: "Estudiantes", path: "/director/students" },
         { icon: ChecklistIcon, label: "Prerrequisitos", path: "/director/prerequisites" },
@@ -70,7 +72,7 @@ const MENU_BY_ROLE = {
         { icon: GavelIcon, label: "Defensas", path: "/director/defenses" },
         { icon: RateReviewIcon, label: "Calificación", path: "/director/defense-grading" },
     ],
-    student: [
+    ESTUDIANTE: [
         { icon: DashboardIcon, label: "Dashboard", path: "/student/dashboard" },
         { icon: ChecklistIcon, label: "Prerrequisitos", path: "/student/prerequisites" },
         { icon: AssignmentIcon, label: "Propuestas", path: "/student/proposals" },
@@ -78,7 +80,15 @@ const MENU_BY_ROLE = {
         { icon: SchoolIcon, label: "Proyecto", path: "/student/proyecto" },
         { icon: GavelIcon, label: "Defensa", path: "/student/defense" },
     ],
-    tutor: [
+    STUDENT: [
+        { icon: DashboardIcon, label: "Dashboard", path: "/student/dashboard" },
+        { icon: ChecklistIcon, label: "Prerrequisitos", path: "/student/prerequisites" },
+        { icon: AssignmentIcon, label: "Propuestas", path: "/student/proposals" },
+        { icon: RateReviewIcon, label: "Avances", path: "/student/progress" },
+        { icon: SchoolIcon, label: "Proyecto", path: "/student/proyecto" },
+        { icon: GavelIcon, label: "Defensa", path: "/student/defense" },
+    ],
+    TUTOR: [
         { icon: DashboardIcon, label: "Dashboard", path: "/tutor/dashboard" },
         { icon: PeopleIcon, label: "Estudiantes", path: "/tutor/students" },
         { icon: SchoolIcon, label: "Propuestas", path: "/tutor/proposals" },
@@ -87,9 +97,8 @@ const MENU_BY_ROLE = {
         { icon: GradeIcon, label: "Notas", path: "/tutor/grades" },
         { icon: EventNoteIcon, label: "Reuniones", path: "/tutor/meetings" },
         { icon: GavelIcon, label: "Defensas", path: "/tutor/defenses" },
-
     ],
-    coordinador: [
+    COORDINADOR: [
         { icon: DashboardIcon, label: "Dashboard", path: "/coordinador/dashboard" },
         { icon: PeopleIcon, label: "Estudiantes", path: "/coordinador/students" },
         { icon: ChecklistIcon, label: "Prerrequisitos", path: "/coordinador/prerequisites" },
@@ -99,19 +108,19 @@ const MENU_BY_ROLE = {
         { icon: GavelIcon, label: "Defensa", path: "/coordinador/defense" },
         { icon: RateReviewIcon, label: "Calificación", path: "/coordinador/defenses" },
     ],
-    reviewer: [
+    REVIEWER: [
         { icon: DashboardIcon, label: "Dashboard", path: "/reviewer/dashboard" },
         { icon: AssignmentIcon, label: "Avances", path: "/reviewer/proposals" },
         { icon: GavelIcon, label: "Defensas", path: "/reviewer/defenses" },
     ],
-    docente_integracion: [
+    DOCENTE_INTEGRACION: [
         { icon: DashboardIcon, label: "Dashboard", path: "/docente-integracion/dashboard" },
         { icon: PeopleIcon, label: "Estudiantes", path: "/docente-integracion/students" },
         { icon: AssignmentIcon, label: "Planificación", path: "/docente-integracion/planning" },
         { icon: RateReviewIcon, label: "Revisar Avances", path: "/docente-integracion/advances" },
         { icon: GradeIcon, label: "Control de Notas", path: "/docente-integracion/grades" },
     ],
-    admin: [
+    ADMIN: [
         { icon: DashboardIcon, label: "Dashboard", path: "/director/dashboard" },
         { icon: PeopleIcon, label: "Estudiantes", path: "/director/students" },
         { icon: ChecklistIcon, label: "Prerrequisitos", path: "/director/prerequisites" },
@@ -129,9 +138,11 @@ function getMenuByRole(role) {
 
 function SidebarMui({ onNavigate, currentPage, isExpanded, toggleSidebar }) {
     const user = getDataUser();
-    const userRole = user?.role || "user";
-    const userRouteBase = roleToRoute[userRole] || userRole;
-    const menuItems = getMenuByRole(userRole);
+    const activeRole = getActiveRole();
+    const effectiveRole = (activeRole || user?.rol || "ESTUDIANTE").toUpperCase();
+
+    const userRouteBase = roleToRoute[effectiveRole] || 'student';
+    const menuItems = getMenuByRole(effectiveRole);
 
     // State for user display name to allow updates from ID fetch
     const [userData, setUserData] = useState({
@@ -170,10 +181,11 @@ function SidebarMui({ onNavigate, currentPage, isExpanded, toggleSidebar }) {
     }, [user?.id]);
 
     // Solo para estudiantes, verificar permisos
-    const progressContext = userRole === 'student' ? useUserProgress() : null;
+    const isStudent = effectiveRole === 'ESTUDIANTE' || effectiveRole === 'STUDENT';
+    const progressContext = isStudent ? useUserProgress() : null;
 
     const canAccessItem = (item) => {
-        if (userRole !== 'student' || !progressContext) return true;
+        if (!isStudent || !progressContext) return true;
 
         // Extraer el nombre de la sección del path
         const sectionName = item.path.split('/').pop();
@@ -181,7 +193,7 @@ function SidebarMui({ onNavigate, currentPage, isExpanded, toggleSidebar }) {
     };
 
     const getBlockReasonForItem = (item) => {
-        if (userRole !== 'student' || !progressContext) return null;
+        if (!isStudent || !progressContext) return null;
 
         const sectionName = item.path.split('/').pop();
         return progressContext.getBlockReason(sectionName);
@@ -307,7 +319,7 @@ function SidebarMui({ onNavigate, currentPage, isExpanded, toggleSidebar }) {
                                 {userData.lastName}
                             </Typography>
                             <Chip
-                                label={roleLabels[user?.role] || 'Usuario'}
+                                label={roleLabels[effectiveRole] || effectiveRole}
                                 size="small"
                                 sx={{
                                     height: 18,
@@ -349,6 +361,16 @@ function SidebarMui({ onNavigate, currentPage, isExpanded, toggleSidebar }) {
                             {userData.initials}
                         </Avatar>
                     </Box>
+                )}
+
+                {/* Botón Cambiar de Rol (Si aplica) */}
+                {user?.roles?.length > 1 && (
+                    <MenuItem
+                        item={{ icon: HistoryIcon, label: "Cambiar de Rol", path: "/select-role" }}
+                        isExpanded={isExpanded}
+                        currentPage={currentPage}
+                        onNavigate={onNavigate}
+                    />
                 )}
 
                 {/* Botón de cerrar sesión */}

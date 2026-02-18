@@ -12,9 +12,18 @@ export const setUserData = (data) => {
 
 export const rmDataUser = () => {
     sessionStorage.removeItem("sessionUser");
+    sessionStorage.removeItem("activeRole");
 }
 
 export const getDataUser = () => {
     const dataUser = sessionStorage.getItem("sessionUser");
     return dataUser ? JSON.parse(dataUser) : null;
+}
+
+export const setActiveRole = (role) => {
+    sessionStorage.setItem("activeRole", role);
+}
+
+export const getActiveRole = () => {
+    return sessionStorage.getItem("activeRole");
 }

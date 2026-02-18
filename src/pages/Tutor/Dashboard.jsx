@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { TutorService } from '../../services/tutor.service';
 import LinearProgress from '@mui/material/LinearProgress';
-import { usuarioService } from '../../services/usuario.service';
+import usuarioService from '../../services/usuario.service';
 
 function TutorDashboard() {
     const user = getDataUser();
@@ -122,7 +122,7 @@ function TutorDashboard() {
 
             {/* Estadísticas principales */}
             <Grid container spacing={3} sx={{ mb: 3 }}>
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                     <Card sx={{
                         borderRadius: 3,
                         boxShadow: 2,
@@ -141,7 +141,7 @@ function TutorDashboard() {
                     </Card>
                 </Grid>
 
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                     <Card sx={{
                         borderRadius: 3,
                         boxShadow: 2,
@@ -160,7 +160,7 @@ function TutorDashboard() {
                     </Card>
                 </Grid>
 
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                     <Card sx={{
                         borderRadius: 3,
                         boxShadow: 2,
@@ -179,7 +179,7 @@ function TutorDashboard() {
                     </Card>
                 </Grid>
 
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                     <Card sx={{
                         borderRadius: 3,
                         boxShadow: 2,
@@ -198,7 +198,7 @@ function TutorDashboard() {
                     </Card>
                 </Grid>
 
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                     <Card
                         onClick={() => navigate('/tutor/proposals')}
                         sx={{
@@ -235,7 +235,7 @@ function TutorDashboard() {
 
                 <Grid container spacing={3}>
                     {students.map((student) => (
-                        <Grid item xs={12} md={6} lg={4} key={student.id}>
+                        <Grid size={{ xs: 12, md: 6, lg: 4 }} key={student.id}>
                             <StudentCard
                                 student={student}
                                 onView={handleViewStudent}

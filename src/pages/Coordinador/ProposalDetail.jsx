@@ -260,7 +260,7 @@ function CoordinatorProposalDetail() {
 
             <Grid container spacing={4}>
                 {proposals.map((prop, index) => (
-                    <Grid item xs={12} key={prop.id}>
+                    <Grid size={{ xs: 12 }} key={prop.id}>
                         <Card
                             elevation={3}
                             sx={{
@@ -273,7 +273,7 @@ function CoordinatorProposalDetail() {
                         >
                             <Box sx={{ p: 4 }}>
                                 <Grid container spacing={4}>
-                                    <Grid item xs={12}>
+                                    <Grid size={{ xs: 12 }}>
                                         <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
                                             <Chip
                                                 label={`Propuesta ${index + 1}`}
@@ -346,9 +346,9 @@ function CoordinatorProposalDetail() {
                                         )}
                                     </Grid>
 
-                                    <Grid item xs={12}>
+                                    <Grid size={{ xs: 12 }}>
                                         <Grid container spacing={4}>
-                                            <Grid item xs={12} md={6}>
+                                            <Grid size={{ xs: 12, md: 6 }}>
                                                 <Box sx={{
                                                     p: 3,
                                                     bgcolor: '#f8f9fa',
@@ -415,7 +415,7 @@ function CoordinatorProposalDetail() {
                                                 </Box>
                                             </Grid>
 
-                                            <Grid item xs={12} md={6}>
+                                            <Grid size={{ xs: 12, md: 6 }}>
                                                 <Box sx={{
                                                     p: 3,
                                                     bgcolor: '#ffffff',

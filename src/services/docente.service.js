@@ -12,33 +12,24 @@ export const DocenteService = {
         try {
             const propuestas = await ProposalService.getAll();
 
-            // Ordenar propuestas para elegir la más relevante para cada estudiante
-            // (APROBADA > PENDIENTE > otras, y por ID más reciente)
-            const sortedPropuestas = [...propuestas].sort((a, b) => {
-                const statusOrder = { 'APROBADA': 3, 'PENDIENTE': 2, 'RECHAZADA': 1 };
-                const orderA = statusOrder[a.estado] || 0;
-                const orderB = statusOrder[b.estado] || 0;
-
-                if (orderA !== orderB) return orderA - orderB; // el de mayor orden queda al final para el Map
-                return Number(a.id) - Number(b.id); // el de ID mayor queda al final
-            });
+            // Solo mostrar estudiantes con propuesta APROBADA
+            const approvedPropuestas = propuestas.filter(p => p.estado === 'APROBADA');
 
             // Mapeamos a la estructura de estudiante
-            const allStudents = sortedPropuestas
+            const allStudents = approvedPropuestas
                 .filter(p => p.estudiante && p.id)
                 .map(p => ({
-                    id: p.estudiante.id,
+                    id: p.estudiante.id || p.fkEstudiante,
                     nombres: p.estudiante.nombres,
                     apellidos: p.estudiante.apellidos,
                     correo: p.estudiante.correoInstitucional,
                     propuestaId: p.id,
                     propuesta: p,
-                    // Datos adicionales para la tarjeta
                     semanaActual: p.actividadResumen?.totalEvidencias || 0,
                     perfil: p.estudiante.estudiantePerfil
                 }));
 
-            // Deduplicate by student ID - El Map mantiene la última entrada encontrada (la de mayor prioridad)
+            // Deduplicate by student ID
             const uniqueStudents = Array.from(new Map(allStudents.map(item => [item.id, item])).values());
 
             return uniqueStudents;

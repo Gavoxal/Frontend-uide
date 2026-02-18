@@ -12,6 +12,7 @@ import {
 import { useState, useEffect } from "react";
 import { getDataUser } from "../../storage/user.model.jsx";
 import { TutorService } from "../../services/tutor.service";
+import usuarioService from "../../services/usuario.service";
 import ProfileHeader from "../../components/Profile/tutor/ProfileHeader";
 import InfoCardModern from "../../components/Profile/tutor/InfoCardModern";
 import ChangePasswordDialog from "../../components/Profile/ChangePasswordDialog";
@@ -66,6 +67,7 @@ function TutorProfile() {
                 titulo: perfil.titulo || "Docente",
                 status: "Activo", // El usuario siempre está activo si puede loguearse
                 celular: perfil.celular || "No registrado",
+                designacion: data.designacion || "No registrada",
                 fechaIngreso: new Date(data.createdAt).toLocaleDateString()
             });
         } catch (error) {
@@ -83,7 +85,8 @@ function TutorProfile() {
             sede: tutorData.sede === "No registrado" ? "" : tutorData.sede,
             departamento: tutorData.departamento === "No registrado" ? "" : tutorData.departamento,
             especialidad: tutorData.especialidad === "Docente Titulación" ? "" : tutorData.especialidad,
-            cedula: tutorData.cedula || ""
+            cedula: tutorData.cedula || "",
+            designacion: tutorData.designacion === "No registrada" ? "" : tutorData.designacion
         });
         setEditDialogOpen(true);
     };
@@ -116,6 +119,7 @@ function TutorProfile() {
         { icon: <WorkIcon color="primary" />, label: "Especialidad", value: tutorData.especialidad },
         { icon: <SchoolIcon color="primary" />, label: "Título", value: tutorData.titulo },
         { icon: <WorkIcon color="primary" />, label: "Departamento", value: tutorData.departamento },
+        { icon: <AssignmentIcon color="primary" />, label: "Designación", value: tutorData.designacion },
         { icon: <DateRangeIcon color="primary" />, label: "Ingreso", value: tutorData.fechaIngreso }
     ];
 
@@ -173,7 +177,7 @@ function TutorProfile() {
             {/* Main Content Grid */}
             <Grid container spacing={3}>
                 {/* Professional Information */}
-                <Grid item xs={12} md={12}>
+                <Grid size={{ xs: 12, md: 12 }}>
                     <InfoCardModern
                         title="Información Profesional"
                         items={professionalInfoItems}
@@ -226,6 +230,13 @@ function TutorProfile() {
                             label="Teléfono Celular"
                             name="celular"
                             value={editFormData.celular || ''}
+                            onChange={handleEditChange}
+                            fullWidth
+                        />
+                        <TextField
+                            label="Designación (ej: Director de Carrera)"
+                            name="designacion"
+                            value={editFormData.designacion || ''}
                             onChange={handleEditChange}
                             fullWidth
                         />

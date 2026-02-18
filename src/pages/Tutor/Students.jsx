@@ -87,7 +87,7 @@ function TutorStudents() {
             {filteredStudents.length > 0 ? (
                 <Grid container spacing={3}>
                     {filteredStudents.map((student) => (
-                        <Grid item xs={12} md={6} lg={4} key={student.id}>
+                        <Grid size={{ xs: 12, md: 6, lg: 4 }} key={student.id}>
                             <StudentCard
                                 student={student}
                                 onPlan={handlePlanActivity}

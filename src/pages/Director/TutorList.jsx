@@ -65,19 +65,19 @@ function DirectorTutorList() {
 
             <Grid container spacing={3}>
                 {loading ? (
-                    <Grid item xs={12}>
+                    <Grid size={{ xs: 12 }}>
                         <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}>
                             <CircularProgress sx={{ color: '#667eea' }} />
                         </Box>
                     </Grid>
                 ) : filteredTutors.length > 0 ? (
                     filteredTutors.map((tutor) => (
-                        <Grid item xs={12} sm={6} md={4} lg={3} key={tutor.id}>
+                        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={tutor.id}>
                             <TutorCard tutor={tutor} />
                         </Grid>
                     ))
                 ) : (
-                    <Grid item xs={12}>
+                    <Grid size={{ xs: 12 }}>
                         <Box sx={{ textAlign: 'center', mt: 4 }}>
                             <TextMui value="No se encontraron tutores" variant="h6" color="text.secondary" />
                         </Box>

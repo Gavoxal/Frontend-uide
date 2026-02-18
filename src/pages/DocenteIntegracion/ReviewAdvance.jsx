@@ -167,7 +167,7 @@ function DocenteReviewAdvance() {
                 </IconButton>
                 <Box>
                     <Typography variant="h4" fontWeight="bold">
-                        Revisión de Avances (Docencia)
+                        Revisión de Avances
                     </Typography>
                     <Typography variant="body1" color="text.secondary">
                         Estudiante: <strong>{student.name}</strong> - {student.thesis}

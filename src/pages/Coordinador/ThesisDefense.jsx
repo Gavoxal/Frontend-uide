@@ -125,10 +125,18 @@ function CoordinatorThesisDefense() {
     };
 
     const handleDownload = async (urlArchivo, fileName) => {
+        if (!urlArchivo) {
+            setErrorMsg("No hay un archivo disponible para descargar.");
+            return;
+        }
+
         try {
             const fileNameFromUrl = urlArchivo.split('/').pop();
             const res = await apiFetch(`/api/v1/entregables/file/${fileNameFromUrl}`);
-            if (!res.ok) throw new Error('Error al descargar archivo');
+            if (!res.ok) {
+                if (res.status === 404) throw new Error('Archivo no encontrado físicamente en el servidor');
+                throw new Error('Error al descargar archivo');
+            }
 
             const blob = await res.blob();
             const url = window.URL.createObjectURL(blob);
@@ -141,7 +149,9 @@ function CoordinatorThesisDefense() {
             document.body.removeChild(a);
         } catch (error) {
             console.error("Error downloading file:", error);
-            setErrorMsg("No se pudo descargar el archivo.");
+            setErrorMsg(error.message === 'Archivo no encontrado físicamente en el servidor'
+                ? "Lo sentimos, el archivo solicitado no se encuentra disponible en el servidor."
+                : "No se pudo descargar el archivo. Por favor intente más tarde.");
         }
     };
 
@@ -281,7 +291,7 @@ function CoordinatorThesisDefense() {
                             {[{ icon: <ArticleIcon />, label: 'Tesis', doc: docs.tesis },
                             { icon: <DescriptionIcon />, label: 'Man.', doc: docs.userManual },
                             { icon: <SchoolIcon />, label: 'Art.', doc: docs.scientificArticle }].map((item, idx) => (
-                                <Grid item xs={4} key={idx} sx={{ textAlign: 'center' }}>
+                                <Grid size={{ xs: 4 }} key={idx} sx={{ textAlign: 'center' }}>
                                     <Box onClick={(e) => { e.stopPropagation(); if (item.doc) handleDownload(item.doc.urlArchivo, item.label); }}
                                         sx={{ color: item.doc ? 'success.main' : 'text.disabled', cursor: item.doc ? 'pointer' : 'default' }}>
                                         {item.icon}
@@ -314,8 +324,8 @@ function CoordinatorThesisDefense() {
             </Box>
 
             <Grid container spacing={3} sx={{ mb: 5 }}>
-                <Grid item xs={6}><StatsCard title="Pendientes" value={currentStats.pending} icon={<HourglassEmptyIcon />} color="warning" /></Grid>
-                <Grid item xs={6}><StatsCard title="Programadas" value={currentStats.assigned} icon={<AssignmentIndIcon />} color="success" /></Grid>
+                <Grid size={{ xs: 6 }}><StatsCard title="Pendientes" value={currentStats.pending} icon={<HourglassEmptyIcon />} color="warning" /></Grid>
+                <Grid size={{ xs: 6 }}><StatsCard title="Programadas" value={currentStats.assigned} icon={<AssignmentIndIcon />} color="success" /></Grid>
             </Grid>
 
             <SearchBar value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Buscar estudiante..." title="" />
@@ -323,12 +333,12 @@ function CoordinatorThesisDefense() {
             <Grid container spacing={2} sx={{ mt: 2 }}>
                 {filteredStudents.length > 0 ? (
                     filteredStudents.map((student) => (
-                        <Grid item xs={12} sm={6} md={4} lg={3} key={student.id}>
+                        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={student.id}>
                             <ThesisDefenseCard student={student} isSelected={selectedStudent?.id === student.id} onClick={handleCardClick} />
                         </Grid>
                     ))
                 ) : (
-                    <Grid item xs={12} textAlign="center"><Typography color="text.secondary">No hay estudiantes en esta fase.</Typography></Grid>
+                    <Grid size={{ xs: 12 }} textAlign="center"><Typography color="text.secondary">No hay estudiantes en esta fase.</Typography></Grid>
                 )}
             </Grid>
 

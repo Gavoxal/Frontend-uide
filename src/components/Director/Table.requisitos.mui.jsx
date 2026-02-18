@@ -19,7 +19,7 @@ import VpnKeyIcon from "@mui/icons-material/VpnKey";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import StatusBadge from "../common/StatusBadge";
 
-function TableRequisitosMui({ students, onVerify, onGrantAccess }) {
+function TableRequisitosMui({ students, onVerify, onGrantAccess, onDownload = () => { } }) {
     return (
         <TableContainer component={Paper} variant="outlined">
             <Table>
@@ -38,10 +38,13 @@ function TableRequisitosMui({ students, onVerify, onGrantAccess }) {
                 </TableHead>
                 <TableBody>
                     {students.map((student) => {
+                        const english = student.english || { completed: false, verified: false, file: null };
+                        const internship = student.internship || { completed: false, verified: false, file: null };
+                        const community = student.community || { completed: false, verified: false, file: null };
                         const allVerified =
-                            student.english.verified &&
-                            student.internship.verified &&
-                            student.community.verified;
+                            english.verified &&
+                            internship.verified &&
+                            community.verified;
 
                         return (
                             <TableRow key={student.id} hover>
@@ -55,21 +58,21 @@ function TableRequisitosMui({ students, onVerify, onGrantAccess }) {
                                     <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0.5 }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                             <Checkbox
-                                                checked={student.english.verified}
+                                                checked={english.verified}
                                                 onChange={() => onVerify(student.id, "english")}
-                                                disabled={!student.english.completed}
+                                                disabled={!english.completed}
                                                 color="success"
                                             />
-                                            {student.english.file && (
+                                            {english.file && (
                                                 <Tooltip title="Ver archivo">
-                                                    <IconButton size="small" onClick={() => window.open(student.english.file, '_blank')}>
+                                                    <IconButton size="small" onClick={() => onDownload(english.file, "Certificado de Inglés")}>
                                                         <VisibilityIcon fontSize="small" />
                                                     </IconButton>
                                                 </Tooltip>
                                             )}
                                         </Box>
-                                        <Typography variant="caption" color={student.english.completed ? (student.english.verified ? "success" : "error") : "error"}>
-                                            {student.english.completed ? (student.english.verified ? "Verificado" : "Por verificar") : "Pendiente"}
+                                        <Typography variant="caption" color={english.completed ? (english.verified ? "success" : "error") : "error"}>
+                                            {english.completed ? (english.verified ? "Verificado" : "Por verificar") : "Pendiente"}
                                         </Typography>
                                     </Box>
                                 </TableCell>
@@ -79,21 +82,21 @@ function TableRequisitosMui({ students, onVerify, onGrantAccess }) {
                                     <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0.5 }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                             <Checkbox
-                                                checked={student.internship.verified}
+                                                checked={internship.verified}
                                                 onChange={() => onVerify(student.id, "internship")}
-                                                disabled={!student.internship.completed}
+                                                disabled={!internship.completed}
                                                 color="success"
                                             />
-                                            {student.internship.file && (
+                                            {internship.file && (
                                                 <Tooltip title="Ver archivo">
-                                                    <IconButton size="small" onClick={() => window.open(student.internship.file, '_blank')}>
+                                                    <IconButton size="small" onClick={() => onDownload(internship.file, "Certificado de Prácticas")}>
                                                         <VisibilityIcon fontSize="small" />
                                                     </IconButton>
                                                 </Tooltip>
                                             )}
                                         </Box>
-                                        <Typography variant="caption" color={student.internship.completed ? (student.internship.verified ? "success" : "error") : "error"}>
-                                            {student.internship.completed ? (student.internship.verified ? "Verificado" : "Por verificar") : "Pendiente"}
+                                        <Typography variant="caption" color={internship.completed ? (internship.verified ? "success" : "error") : "error"}>
+                                            {internship.completed ? (internship.verified ? "Verificado" : "Por verificar") : "Pendiente"}
                                         </Typography>
                                     </Box>
                                 </TableCell>
@@ -103,21 +106,21 @@ function TableRequisitosMui({ students, onVerify, onGrantAccess }) {
                                     <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0.5 }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                             <Checkbox
-                                                checked={student.community.verified}
+                                                checked={community.verified}
                                                 onChange={() => onVerify(student.id, "community")}
-                                                disabled={!student.community.completed}
+                                                disabled={!community.completed}
                                                 color="success"
                                             />
-                                            {student.community.file && (
+                                            {community.file && (
                                                 <Tooltip title="Ver archivo">
-                                                    <IconButton size="small" onClick={() => window.open(student.community.file, '_blank')}>
+                                                    <IconButton size="small" onClick={() => onDownload(community.file, "Certificado de Vinculación")}>
                                                         <VisibilityIcon fontSize="small" />
                                                     </IconButton>
                                                 </Tooltip>
                                             )}
                                         </Box>
-                                        <Typography variant="caption" color={student.community.completed ? (student.community.verified ? "success" : "error") : "error"}>
-                                            {student.community.completed ? (student.community.verified ? "Verificado" : "Por verificar") : "Pendiente"}
+                                        <Typography variant="caption" color={community.completed ? (community.verified ? "success" : "error") : "error"}>
+                                            {community.completed ? (community.verified ? "Verificado" : "Por verificar") : "Pendiente"}
                                         </Typography>
                                     </Box>
                                 </TableCell>

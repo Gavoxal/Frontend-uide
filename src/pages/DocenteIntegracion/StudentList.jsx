@@ -66,7 +66,7 @@ function DocenteStudents() {
             <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
                 <Box>
                     <Typography variant="h4" fontWeight="bold" gutterBottom>
-                        Estudiantes 👥
+                        Estudiantes
                     </Typography>
                     <Typography variant="body1" color="text.secondary">
                         Gestión de integración y seguimiento de propuestas

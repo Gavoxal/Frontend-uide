@@ -64,7 +64,7 @@ function StudentAnteproyecto() {
             </Box>
 
             <Grid container spacing={3}>
-                <Grid item xs={12} md={8}>
+                <Grid size={{ xs: 12, md: 8 }}>
                     <Card>
                         <CardContent>
                             <Typography variant="h6" fontWeight="bold" gutterBottom>
@@ -114,7 +114,7 @@ function StudentAnteproyecto() {
                     </Card>
                 </Grid>
 
-                <Grid item xs={12} md={4}>
+                <Grid size={{ xs: 12, md: 4 }}>
                     <Card sx={{ height: '100%' }}>
                         <CardContent>
                             <Typography variant="h6" fontWeight="bold" gutterBottom>
@@ -150,7 +150,7 @@ function StudentAnteproyecto() {
                     </Card>
                 </Grid>
 
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
                         <Button
                             variant="contained"

@@ -12,7 +12,7 @@ import {
 import { useState, useEffect } from "react";
 import { getDataUser } from "../../storage/user.model.jsx";
 import { CoordinadorService } from "../../services/coordinador.service";
-import { usuarioService } from "../../services/usuario.service";
+import usuarioService from "../../services/usuario.service";
 import ProfileHeader from "../../components/Profile/tutor/ProfileHeader";
 import InfoCardModern from "../../components/Profile/tutor/InfoCardModern";
 import ChangePasswordDialog from "../../components/Profile/ChangePasswordDialog";
@@ -66,6 +66,7 @@ function CoordinadorProfile() {
                 titulo: perfil.titulo || "Coordinador",
                 status: "Activo",
                 celular: perfil.celular || "No registrado",
+                designacion: data.designacion || "No registrada",
                 fechaIngreso: new Date(data.createdAt).toLocaleDateString()
             });
         } catch (error) {
@@ -83,7 +84,8 @@ function CoordinadorProfile() {
             sede: coordinadorData.sede === "No registrado" ? "" : coordinadorData.sede,
             departamento: coordinadorData.departamento === "No registrado" ? "" : coordinadorData.departamento,
             especialidad: coordinadorData.especialidad === "Coordinador" ? "" : coordinadorData.especialidad,
-            cedula: coordinadorData.cedula || ""
+            cedula: coordinadorData.cedula || "",
+            designacion: coordinadorData.designacion === "No registrada" ? "" : coordinadorData.designacion
         });
         setEditDialogOpen(true);
     };
@@ -116,6 +118,7 @@ function CoordinadorProfile() {
         { icon: <WorkIcon color="primary" />, label: "Especialidad", value: coordinadorData.especialidad },
         { icon: <SchoolIcon color="primary" />, label: "Título", value: coordinadorData.titulo },
         { icon: <WorkIcon color="primary" />, label: "Departamento", value: coordinadorData.departamento },
+        { icon: <AssignmentIcon color="primary" />, label: "Designación", value: coordinadorData.designacion },
         { icon: <DateRangeIcon color="primary" />, label: "Ingreso", value: coordinadorData.fechaIngreso }
     ];
 
@@ -172,7 +175,7 @@ function CoordinadorProfile() {
             {/* Main Content Grid */}
             <Grid container spacing={3}>
                 {/* Professional Information */}
-                <Grid item xs={12} md={12}>
+                <Grid size={{ xs: 12, md: 12 }}>
                     <InfoCardModern
                         title="Información Profesional"
                         items={professionalInfoItems}
@@ -225,6 +228,13 @@ function CoordinadorProfile() {
                             label="Teléfono Celular"
                             name="celular"
                             value={editFormData.celular || ''}
+                            onChange={handleEditChange}
+                            fullWidth
+                        />
+                        <TextField
+                            label="Designación (ej: Director de Carrera)"
+                            name="designacion"
+                            value={editFormData.designacion || ''}
                             onChange={handleEditChange}
                             fullWidth
                         />

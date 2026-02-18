@@ -95,7 +95,7 @@ function DocenteDashboard() {
             {/* Encabezado */}
             <Box sx={{ mb: 4 }}>
                 <Typography variant="h4" fontWeight="bold" gutterBottom>
-                    ¡Hola, {tutorName}! 👨‍🏫
+                    ¡Hola, {tutorName}!
                 </Typography>
                 <Typography variant="body1" color="text.secondary">
                     Panel de control - Docente de Integración
@@ -104,7 +104,7 @@ function DocenteDashboard() {
 
             {/* Estadísticas principales */}
             <Grid container spacing={3} sx={{ mb: 3 }}>
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                     <Card sx={{
                         borderRadius: 3,
                         boxShadow: 2,
@@ -122,7 +122,7 @@ function DocenteDashboard() {
                     </Card>
                 </Grid>
 
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                     <Card sx={{
                         borderRadius: 3,
                         boxShadow: 2,
@@ -140,7 +140,7 @@ function DocenteDashboard() {
                     </Card>
                 </Grid>
 
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                     <Card sx={{
                         borderRadius: 3,
                         boxShadow: 2,
@@ -158,7 +158,7 @@ function DocenteDashboard() {
                     </Card>
                 </Grid>
 
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                     <Card sx={{
                         borderRadius: 3,
                         boxShadow: 2,
@@ -188,7 +188,7 @@ function DocenteDashboard() {
 
                 <Grid container spacing={3}>
                     {students.map((student, index) => (
-                        <Grid item xs={12} md={6} lg={4} key={student.id || index}>
+                        <Grid size={{ xs: 12, md: 6, lg: 4 }} key={student.id || index}>
                             <StudentCard
                                 student={student}
                                 onView={handleViewStudent}

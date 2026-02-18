@@ -228,7 +228,7 @@ const StudentDefense = () => {
         <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
             <Box sx={{ mb: 4 }}>
                 <Typography variant="h4" fontWeight="bold" color="primary" gutterBottom>
-                    Mi Proceso de Defensa 🎓
+                    Mi Proceso de Defensa
                 </Typography>
                 <Typography variant="h6" color="text.secondary">
                     {proposal?.titulo || "Título de Tesis"}
@@ -236,14 +236,14 @@ const StudentDefense = () => {
             </Box>
 
             <Grid container spacing={4}>
-                <Grid item xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                     <DefenseCard
                         title="Defensa Privada"
                         defense={privateDefense}
                         proposalTitle={proposal?.titulo}
                     />
                 </Grid>
-                <Grid item xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                     <DefenseCard
                         title="Defensa Pública"
                         defense={publicDefense}

@@ -132,7 +132,7 @@ const Grades = () => {
             <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Box>
                     <Typography variant="h4" fontWeight="bold" gutterBottom>
-                        Control de Calificaciones (Docente)
+                        Control de Calificaciones
                     </Typography>
                     <Typography variant="body1" color="text.secondary">
                         Registro semanal de avances (60%) y promedio final de docencia.

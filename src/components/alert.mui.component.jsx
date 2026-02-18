@@ -210,7 +210,8 @@ function AlertMui({
                         <Button
                             name={btnNameL}
                             onClick={actionBtnL}
-                            backgroundColor={status === 'error' ? 'red' : 'blue'}
+                            // Usar el color del estado o el default
+                            backgroundColor={config.color}
                         />
                     )}
                 </DialogActions>

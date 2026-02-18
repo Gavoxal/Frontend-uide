@@ -12,7 +12,7 @@ import {
 import { useState, useEffect } from "react";
 import { getDataUser } from "../../storage/user.model.jsx";
 import { DocenteService } from "../../services/docente.service";
-import { usuarioService } from "../../services/usuario.service";
+import usuarioService from "../../services/usuario.service";
 import ProfileHeader from "../../components/Profile/tutor/ProfileHeader";
 import InfoCardModern from "../../components/Profile/tutor/InfoCardModern";
 import ChangePasswordDialog from "../../components/Profile/ChangePasswordDialog";
@@ -66,6 +66,7 @@ function DocenteIntegracionProfile() {
                 titulo: perfil.titulo || "Docente",
                 status: "Activo",
                 celular: perfil.celular || "No registrado",
+                designacion: data.designacion || "No registrada",
                 fechaIngreso: new Date(data.createdAt).toLocaleDateString()
             });
         } catch (error) {
@@ -83,7 +84,8 @@ function DocenteIntegracionProfile() {
             sede: docenteData.sede === "No registrado" ? "" : docenteData.sede,
             departamento: docenteData.departamento === "No registrado" ? "" : docenteData.departamento,
             especialidad: docenteData.especialidad === "Docente Integración" ? "" : docenteData.especialidad,
-            cedula: docenteData.cedula || ""
+            cedula: docenteData.cedula || "",
+            designacion: docenteData.designacion === "No registrada" ? "" : docenteData.designacion
         });
         setEditDialogOpen(true);
     };
@@ -116,6 +118,7 @@ function DocenteIntegracionProfile() {
         { icon: <WorkIcon color="primary" />, label: "Especialidad", value: docenteData.especialidad },
         { icon: <SchoolIcon color="primary" />, label: "Título", value: docenteData.titulo },
         { icon: <WorkIcon color="primary" />, label: "Departamento", value: docenteData.departamento },
+        { icon: <AssignmentIcon color="primary" />, label: "Designación", value: docenteData.designacion },
         { icon: <DateRangeIcon color="primary" />, label: "Ingreso", value: docenteData.fechaIngreso }
     ];
 
@@ -151,7 +154,7 @@ function DocenteIntegracionProfile() {
             <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Box>
                     <Typography variant="h4" fontWeight="bold" gutterBottom>
-                        Perfil de Docente Integración
+                        Perfil de Docente
                     </Typography>
                     <Typography variant="body1" color="text.secondary">
                         Gestiona tu información académica y configuración
@@ -172,7 +175,7 @@ function DocenteIntegracionProfile() {
             {/* Main Content Grid */}
             <Grid container spacing={3}>
                 {/* Professional Information */}
-                <Grid item xs={12} md={12}>
+                <Grid size={{ xs: 12, md: 12 }}>
                     <InfoCardModern
                         title="Información Profesional"
                         items={professionalInfoItems}
@@ -225,6 +228,13 @@ function DocenteIntegracionProfile() {
                             label="Teléfono Celular"
                             name="celular"
                             value={editFormData.celular || ''}
+                            onChange={handleEditChange}
+                            fullWidth
+                        />
+                        <TextField
+                            label="Designación (ej: Docente Integración)"
+                            name="designacion"
+                            value={editFormData.designacion || ''}
                             onChange={handleEditChange}
                             fullWidth
                         />

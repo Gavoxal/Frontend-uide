@@ -291,7 +291,7 @@ function StudentProyecto() {
 
             <Grid container spacing={3}>
                 {/* Instrucciones en la parte superior para balancear el layout */}
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                     <Card sx={{ borderRadius: 3, bgcolor: '#EEF2FF', border: '1px solid #C7D2FE', mb: 1 }}>
                         <CardContent sx={{ p: 3, display: 'flex', flexDirection: { xs: 'column', md: 'row' }, alignItems: 'center', gap: 4 }}>
                             <Box sx={{ flex: 1 }}>
@@ -315,13 +315,13 @@ function StudentProyecto() {
                 </Grid>
 
                 {/* Grid Simétrico de Documentos */}
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                     {renderDocumentSection('TESIS', 'Documento de Tesis (PDF)', 'Archivo principal de tu trabajo de titulación.')}
                 </Grid>
-                <Grid item xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                     {renderDocumentSection('MANUAL_USUARIO', 'Manual de Usuario / Técnico', 'Documentación sobre el uso y configuración del sistema.')}
                 </Grid>
-                <Grid item xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                     {renderDocumentSection('ARTICULO', 'Artículo Científicio', 'Resumen técnico para publicación institucional.')}
                 </Grid>
             </Grid>

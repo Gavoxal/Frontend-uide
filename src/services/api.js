@@ -20,6 +20,11 @@ apiClient.interceptors.request.use((config) => {
         config.headers.Authorization = `Bearer ${token}`;
     }
 
+    const activeRole = sessionStorage.getItem('activeRole');
+    if (activeRole) {
+        config.headers['x-active-role'] = activeRole;
+    }
+
     // Normalizar URL para evitar doble prefijo /api/v1
     // Si la URL empieza con /api/v1 o api/v1, quitarlo ya que baseURL ya lo incluye
     if (config.url) {
@@ -69,12 +74,20 @@ export const apiFetch = async (endpoint, options = {}) => {
     const url = cleanEndpoint.startsWith('http') ? cleanEndpoint :
         (cleanEndpoint.startsWith('/') ? `${API_BASE_URL}${cleanEndpoint}` : `${API_BASE_URL}/${cleanEndpoint}`);
 
-    const defaultHeaders = {
-        'Content-Type': 'application/json',
-    };
+    const defaultHeaders = {};
+
+    // Si no es FormData, ponemos el default de JSON
+    if (!(options.body instanceof FormData)) {
+        defaultHeaders['Content-Type'] = 'application/json';
+    }
 
     if (token && token !== 'null' && token !== 'undefined') {
         defaultHeaders['Authorization'] = `Bearer ${token}`;
+    }
+
+    const activeRole = sessionStorage.getItem('activeRole');
+    if (activeRole) {
+        defaultHeaders['x-active-role'] = activeRole;
     }
 
     const config = {

@@ -111,6 +111,17 @@ function ThesisProposal() {
     };
 
     const handleFileSelect = (file) => {
+        const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+        if (file.size > MAX_FILE_SIZE) {
+            setAlertState({
+                open: true,
+                title: 'Archivo demasiado grande',
+                message: `El archivo seleccionado (${(file.size / (1024 * 1024)).toFixed(2)}MB) excede el límite permitido de 5MB. Por favor, comprima el archivo o seleccione uno más ligero.`,
+                status: 'warning'
+            });
+            return;
+        }
+
         setProposals((prev) => {
             const updated = [...prev];
             updated[currentTab] = {
@@ -174,11 +185,11 @@ function ThesisProposal() {
         ];
 
         for (const field of validateFields) {
-            if (field.value.length < 200 && field.value.length > 0) {
+            if (field.value.length < 100 && field.value.length > 0) {
                 setAlertState({
                     open: true,
                     title: 'Contenido Insuficiente',
-                    message: `El campo "${field.name}" debe tener al menos 200 caracteres para ser válido.`,
+                    message: `El campo "${field.name}" debe tener al menos 100 caracteres para ser válido.`,
                     status: 'warning'
                 });
                 return;
@@ -251,10 +262,18 @@ function ThesisProposal() {
                 status: 'success'
             });
         } catch (error) {
+            let errorMsg = error.message || 'Ocurrió un error al procesar tu propuesta. Por favor intenta de nuevo.';
+            let errorTitle = 'Error al procesar';
+
+            if (errorMsg.includes('Entity Too Large') || errorMsg.includes('413')) {
+                errorTitle = 'Archivo demasiado grande';
+                errorMsg = 'El archivo adjunto excede el tamaño máximo permitido de 5MB. Por favor, comprima el archivo o seleccione uno más ligero e intente de nuevo.';
+            }
+
             setAlertState({
                 open: true,
-                title: 'Error al procesar',
-                message: error.message || 'Ocurrió un error al procesar tu propuesta. Por favor intenta de nuevo.',
+                title: errorTitle,
+                message: errorMsg,
                 status: 'error'
             });
         } finally {
@@ -331,9 +350,6 @@ function ThesisProposal() {
                                     Estado: <span style={{ color: '#10B981' }}>Abierto</span>
                                 </Typography>
                             </Box>
-                            <Typography variant="body1" fontWeight="500">
-                                Fecha límite: <span style={{ color: '#667eea' }}>15 de Marzo, 2026</span>
-                            </Typography>
                         </Box>
                     </CardContent>
                 </Card>
@@ -387,7 +403,7 @@ function ThesisProposal() {
 
                 <Grid container spacing={3}>
                     {/* Formulario / Propuesta enviada */}
-                    <Grid item xs={12} md={currentProposal.status === 'draft' ? 12 : 7}>
+                    <Grid size={{ xs: 12, md: currentProposal.status === 'draft' ? 12 : 7 }}>
                         {currentProposal.status === 'draft' ? (
                             /* Formulario para crear/editar propuesta */
                             <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
@@ -454,18 +470,18 @@ function ThesisProposal() {
                                             value={currentProposal.objetivo}
                                             onChange={(e) => handleInputChange('objetivo', e.target.value)}
                                             sx={{ '& .MuiOutlinedInput-root': { backgroundColor: '#F9FAFB' } }}
-                                            error={caracteresObjetivo > 2000 || (caracteresObjetivo > 0 && caracteresObjetivo < 200)}
+                                            error={caracteresObjetivo > 2000 || (caracteresObjetivo > 0 && caracteresObjetivo < 100)}
                                         />
                                         <Typography
                                             variant="caption"
                                             sx={{
-                                                color: (caracteresObjetivo > 2000 || (caracteresObjetivo > 0 && caracteresObjetivo < 200)) ? '#EF4444' : 'text.secondary',
+                                                color: (caracteresObjetivo > 2000 || (caracteresObjetivo > 0 && caracteresObjetivo < 100)) ? '#EF4444' : 'text.secondary',
                                                 mt: 0.5,
                                                 display: 'block',
-                                                fontWeight: (caracteresObjetivo > 2000 || (caracteresObjetivo > 0 && caracteresObjetivo < 200)) ? 600 : 400
+                                                fontWeight: (caracteresObjetivo > 2000 || (caracteresObjetivo > 0 && caracteresObjetivo < 100)) ? 600 : 400
                                             }}
                                         >
-                                            Mínimo 200, Máximo 2000 caracteres | Actual: {caracteresObjetivo} caracteres
+                                            Mínimo 100, Máximo 2000 caracteres | Actual: {caracteresObjetivo} caracteres
                                         </Typography>
                                     </Box>
 
@@ -483,18 +499,18 @@ function ThesisProposal() {
                                                 value={currentProposal.problematica}
                                                 onChange={(e) => handleInputChange('problematica', e.target.value)}
                                                 sx={{ '& .MuiOutlinedInput-root': { backgroundColor: '#F9FAFB' } }}
-                                                error={caracteresProblematica > 2000 || (caracteresProblematica > 0 && caracteresProblematica < 200)}
+                                                error={caracteresProblematica > 2000 || (caracteresProblematica > 0 && caracteresProblematica < 100)}
                                             />
                                             <Typography
                                                 variant="caption"
                                                 sx={{
-                                                    color: (caracteresProblematica > 2000 || (caracteresProblematica > 0 && caracteresProblematica < 200)) ? '#EF4444' : 'text.secondary',
+                                                    color: (caracteresProblematica > 2000 || (caracteresProblematica > 0 && caracteresProblematica < 100)) ? '#EF4444' : 'text.secondary',
                                                     mt: 0.5,
                                                     display: 'block',
-                                                    fontWeight: (caracteresProblematica > 2000 || (caracteresProblematica > 0 && caracteresProblematica < 200)) ? 600 : 400
+                                                    fontWeight: (caracteresProblematica > 2000 || (caracteresProblematica > 0 && caracteresProblematica < 100)) ? 600 : 400
                                                 }}
                                             >
-                                                Min 200, Max 2000 | Actual: {caracteresProblematica}
+                                                Min 100, Max 2000 | Actual: {caracteresProblematica}
                                             </Typography>
                                         </Box>
 
@@ -510,18 +526,18 @@ function ThesisProposal() {
                                                 value={currentProposal.alcance}
                                                 onChange={(e) => handleInputChange('alcance', e.target.value)}
                                                 sx={{ '& .MuiOutlinedInput-root': { backgroundColor: '#F9FAFB' } }}
-                                                error={caracteresAlcance > 2000 || (caracteresAlcance > 0 && caracteresAlcance < 200)}
+                                                error={caracteresAlcance > 2000 || (caracteresAlcance > 0 && caracteresAlcance < 100)}
                                             />
                                             <Typography
                                                 variant="caption"
                                                 sx={{
-                                                    color: (caracteresAlcance > 2000 || (caracteresAlcance > 0 && caracteresAlcance < 200)) ? '#EF4444' : 'text.secondary',
+                                                    color: (caracteresAlcance > 2000 || (caracteresAlcance > 0 && caracteresAlcance < 100)) ? '#EF4444' : 'text.secondary',
                                                     mt: 0.5,
                                                     display: 'block',
-                                                    fontWeight: (caracteresAlcance > 2000 || (caracteresAlcance > 0 && caracteresAlcance < 200)) ? 600 : 400
+                                                    fontWeight: (caracteresAlcance > 2000 || (caracteresAlcance > 0 && caracteresAlcance < 100)) ? 600 : 400
                                                 }}
                                             >
-                                                Min 200, Max 2000 | Actual: {caracteresAlcance}
+                                                Min 100, Max 2000 | Actual: {caracteresAlcance}
                                             </Typography>
                                         </Box>
                                     </Box>
@@ -690,7 +706,7 @@ function ThesisProposal() {
 
                     {/* Sección de comentarios (solo visible cuando la propuesta está enviada) */}
                     {currentProposal.status !== 'draft' && (
-                        <Grid item xs={12} md={5}>
+                        <Grid size={{ xs: 12, md: 5 }}>
                             <Card sx={{ borderRadius: 3, boxShadow: 2, position: 'sticky', top: 20 }}>
                                 <CardContent sx={{ p: 3 }}>
                                     <CommentSection proposalId={currentProposal.id} revisionComment={currentProposal.comentarioRevision} />

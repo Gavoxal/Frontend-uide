@@ -25,6 +25,7 @@ import StatusBadge from "../../components/common/StatusBadge";
 import FileUpload from "../../components/file.mui.component";
 import AlertMui from "../../components/alert.mui.component";
 import { PrerequisiteService } from "../../services/prerequisites.service";
+import { apiFetch } from "../../services/api";
 
 function StudentPrerequisites() {
     const user = getDataUser();
@@ -118,8 +119,8 @@ function StudentPrerequisites() {
     }, [user?.id]);
 
     const handleCheck = (field) => {
-        // Si ya está guardado en BD (tiene ID), no permitir desmarcar fácilmente (o requerir borrado)
-        if (prerequisites[field].id) {
+        // Permitir cambios si no está verificado aún
+        if (prerequisites[field].verified) {
             return;
         }
 
@@ -135,12 +136,13 @@ function StudentPrerequisites() {
 
     const handleSave = async () => {
         let successCount = 0;
-        let errorOccurred = false;
+        const errorMessages = [];
 
         const promises = Object.keys(prerequisites).map(async (key) => {
             const item = prerequisites[key];
-            // Solo guardar si está completado, tiene archivo nuevo (raw) y NO tiene ID (no guardado aun)
-            if (item.completed && item.file && item.file.raw && !item.id) {
+            // Guardar si está completado y tiene un archivo nuevo (raw)
+            // Ya no bloqueamos por item.id para permitir la re-subida
+            if (item.completed && item.file && item.file.raw) {
                 try {
                     await PrerequisiteService.upload({
                         id: item.catalogoId, // ID del catálogo para crear la relación
@@ -151,14 +153,14 @@ function StudentPrerequisites() {
                     successCount++;
                 } catch (error) {
                     console.error(`Error guardando ${key}:`, error);
-                    errorOccurred = true;
+                    errorMessages.push(`${viewNameMapping[key]}: ${error.message}`);
                 }
             }
         });
 
         await Promise.all(promises);
 
-        if (!errorOccurred && successCount > 0) {
+        if (errorMessages.length === 0 && successCount > 0) {
             await fetchPrerequisites(); // Recargar datos reales del backend
             setHasChanges(false);
             setAlertState({
@@ -167,7 +169,7 @@ function StudentPrerequisites() {
                 message: '¡Guardado Exitoso! Tus documentos han sido enviados correctamente para revisión.',
                 status: 'success'
             });
-        } else if (successCount === 0 && !errorOccurred) {
+        } else if (successCount === 0 && errorMessages.length === 0) {
             setAlertState({
                 open: true,
                 title: 'Sin Cambios Nuevos',
@@ -177,8 +179,8 @@ function StudentPrerequisites() {
         } else {
             setAlertState({
                 open: true,
-                title: 'Error Parcial o Total',
-                message: 'Hubo un problema al subir algunos archivos. Verifique la consola.',
+                title: 'Error al Subir Archivo',
+                message: errorMessages.join('\n'),
                 status: 'error'
             });
         }
@@ -201,7 +203,7 @@ function StudentPrerequisites() {
     };
 
     const handleFileRemove = (field) => {
-        if (prerequisites[field].id) return;
+        if (prerequisites[field].verified) return;
 
         setPrerequisites((prev) => ({
             ...prev,
@@ -213,6 +215,47 @@ function StudentPrerequisites() {
             },
         }));
         setHasChanges(true);
+    };
+
+    const handleDownload = async (fileData) => {
+        if (!fileData || !fileData.url) {
+            setAlertState({
+                open: true,
+                title: 'Error de Archivo',
+                message: 'No hay un archivo disponible para descargar.',
+                status: 'error'
+            });
+            return;
+        }
+
+        try {
+            const fileNameFromUrl = fileData.url.split('/').pop();
+            const res = await apiFetch(`/api/v1/prerequisitos/file/${fileNameFromUrl}`);
+            if (!res.ok) {
+                if (res.status === 404) throw new Error('Archivo no encontrado físicamente en el servidor');
+                throw new Error('Error al descargar archivo');
+            }
+
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileNameFromUrl;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        } catch (error) {
+            console.error("Error downloading file:", error);
+            setAlertState({
+                open: true,
+                title: 'Error de Descarga',
+                message: error.message === 'Archivo no encontrado físicamente en el servidor'
+                    ? "Lo sentimos, el archivo solicitado no se encuentra disponible en el servidor."
+                    : "No se pudo descargar el archivo. Por favor intente más tarde.",
+                status: 'error'
+            });
+        }
     };
 
     const totalCompleted = Object.values(prerequisites).filter((p) => p.completed).length;
@@ -242,7 +285,7 @@ function StudentPrerequisites() {
 
                 {/* Estadísticas */}
                 <Grid container spacing={3} sx={{ mb: 4 }}>
-                    <Grid item xs={12} sm={4}>
+                    <Grid size={{ xs: 12, sm: 4 }}>
                         <StatsCard
                             title="Completados"
                             value={`${totalCompleted}/3`}
@@ -250,7 +293,7 @@ function StudentPrerequisites() {
                             color="info"
                         />
                     </Grid>
-                    <Grid item xs={12} sm={4}>
+                    <Grid size={{ xs: 12, sm: 4 }}>
                         <StatsCard
                             title="Verificados"
                             value={`${totalVerified}/3`}
@@ -258,7 +301,7 @@ function StudentPrerequisites() {
                             color="success"
                         />
                     </Grid>
-                    <Grid item xs={12} sm={4}>
+                    <Grid size={{ xs: 12, sm: 4 }}>
                         <StatsCard
                             title="Pendientes"
                             value={`${3 - totalVerified}/3`}
@@ -296,7 +339,7 @@ function StudentPrerequisites() {
 
                         <Grid container spacing={3} sx={{ mt: 3 }}>
                             {/* Inglés */}
-                            <Grid item xs={12} md={4}>
+                            <Grid size={{ xs: 12, md: 4 }}>
                                 <Box
                                     sx={{
                                         p: 2,
@@ -357,10 +400,14 @@ function StudentPrerequisites() {
                                                     variant="body2"
                                                     fontWeight="600"
                                                     noWrap
-                                                    component="a"
-                                                    href={prerequisites.english.file.url}
-                                                    target="_blank"
-                                                    sx={{ textDecoration: 'none', color: 'inherit', '&:hover': { textDecoration: 'underline', color: 'primary.main' } }}
+                                                    component="span"
+                                                    onClick={() => handleDownload(prerequisites.english.file)}
+                                                    sx={{
+                                                        cursor: 'pointer',
+                                                        textDecoration: 'none',
+                                                        color: 'inherit',
+                                                        '&:hover': { textDecoration: 'underline', color: 'primary.main' }
+                                                    }}
                                                 >
                                                     {prerequisites.english.file.name}
                                                 </Typography>
@@ -399,7 +446,7 @@ function StudentPrerequisites() {
                             </Grid>
 
                             {/* Prácticas Laborales */}
-                            <Grid item xs={12} md={4}>
+                            <Grid size={{ xs: 12, md: 4 }}>
                                 <Box
                                     sx={{
                                         p: 2,
@@ -460,10 +507,14 @@ function StudentPrerequisites() {
                                                     variant="body2"
                                                     fontWeight="600"
                                                     noWrap
-                                                    component="a"
-                                                    href={prerequisites.internship.file.url}
-                                                    target="_blank"
-                                                    sx={{ textDecoration: 'none', color: 'inherit', '&:hover': { textDecoration: 'underline', color: 'primary.main' } }}
+                                                    component="span"
+                                                    onClick={() => handleDownload(prerequisites.internship.file)}
+                                                    sx={{
+                                                        cursor: 'pointer',
+                                                        textDecoration: 'none',
+                                                        color: 'inherit',
+                                                        '&:hover': { textDecoration: 'underline', color: 'primary.main' }
+                                                    }}
                                                 >
                                                     {prerequisites.internship.file.name}
                                                 </Typography>
@@ -502,7 +553,7 @@ function StudentPrerequisites() {
                             </Grid>
 
                             {/* Vinculación con la Comunidad */}
-                            <Grid item xs={12} md={4}>
+                            <Grid size={{ xs: 12, md: 4 }}>
                                 <Box
                                     sx={{
                                         p: 2,
@@ -563,10 +614,14 @@ function StudentPrerequisites() {
                                                     variant="body2"
                                                     fontWeight="600"
                                                     noWrap
-                                                    component="a"
-                                                    href={prerequisites.community.file.url}
-                                                    target="_blank"
-                                                    sx={{ textDecoration: 'none', color: 'inherit', '&:hover': { textDecoration: 'underline', color: 'primary.main' } }}
+                                                    component="span"
+                                                    onClick={() => handleDownload(prerequisites.community.file)}
+                                                    sx={{
+                                                        cursor: 'pointer',
+                                                        textDecoration: 'none',
+                                                        color: 'inherit',
+                                                        '&:hover': { textDecoration: 'underline', color: 'primary.main' }
+                                                    }}
                                                 >
                                                     {prerequisites.community.file.name}
                                                 </Typography>

@@ -50,7 +50,7 @@ const CoordinatorDashboard = () => {
             <Grid container spacing={3}>
 
                 {/* Gestión de Estudiantes */}
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                     <Box onClick={() => navigate('/coordinador/students')} sx={{ cursor: 'pointer', height: '100%' }}>
                         <StatsCard
                             title="Estudiantes"
@@ -63,7 +63,7 @@ const CoordinatorDashboard = () => {
                 </Grid>
 
                 {/* Revisión de Propuestas */}
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                     <Box onClick={() => navigate('/coordinador/proposals')} sx={{ cursor: 'pointer', height: '100%' }}>
                         <StatsCard
                             title="Propuestas"
@@ -76,7 +76,7 @@ const CoordinatorDashboard = () => {
                 </Grid>
 
                 {/* Defensas y Tribunales */}
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                     <Box onClick={() => navigate('/coordinador/defense')} sx={{ cursor: 'pointer', height: '100%' }}>
                         <StatsCard
                             title="Defensas"
@@ -88,20 +88,6 @@ const CoordinatorDashboard = () => {
                     </Box>
                 </Grid>
             </Grid>
-
-            {/* Sección Informativa Adicional - Ejemplo: Próximas actividades */}
-            <Box sx={{ mt: 4 }}>
-                <Typography variant="h6" fontWeight="bold" gutterBottom>
-                    Actividad Reciente
-                </Typography>
-                <Card>
-                    <CardContent>
-                        <Typography variant="body2" color="text.secondary">
-                            No hay actividad reciente registrada en el sistema.
-                        </Typography>
-                    </CardContent>
-                </Card>
-            </Box>
         </Box>
     );
 };
