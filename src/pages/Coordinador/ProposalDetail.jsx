@@ -25,6 +25,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import ButtonMui from '../../components/button.mui.component';
 import AlertMui from '../../components/alert.mui.component';
 import CommentSection from '../../components/comment.mui.component';
+import { getDataUser, getActiveRole } from '../../storage/user.model.jsx';
 
 import { ProposalService } from '../../services/proposal.service';
 
@@ -36,6 +37,11 @@ function CoordinatorProposalDetail() {
     const [proposals, setProposals] = useState([]);
     const [studentInfo, setStudentInfo] = useState({ name: '', career: '', period: '' });
     const [pendingChanges, setPendingChanges] = useState({});
+
+    const dataUser = getDataUser();
+    const activeRole = getActiveRole();
+    const normalizedRole = (activeRole || dataUser?.rol || "").toLowerCase();
+    const isAuthority = normalizedRole === 'director' || normalizedRole === 'admin' || normalizedRole === 'coordinador';
 
     useEffect(() => {
         loadStudentProposals();
@@ -356,61 +362,72 @@ function CoordinatorProposalDetail() {
                                                     border: '1px solid rgba(0,0,0,0.05)',
                                                     height: '100%'
                                                 }}>
-                                                    <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ mb: 2 }}>
-                                                        Dictamen
-                                                    </Typography>
+                                                    {isAuthority && (
+                                                        <>
+                                                            <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ mb: 2 }}>
+                                                                Dictamen
+                                                            </Typography>
 
-                                                    <Stack direction="column" spacing={2} sx={{ mb: 3 }}>
-                                                        <Button
-                                                            variant={prop.status === 'approved' ? "contained" : "outlined"}
-                                                            color="success"
-                                                            startIcon={<CheckCircleIcon />}
-                                                            onClick={() => handleStatusChange(prop.id, 'approved')}
-                                                            fullWidth
-                                                            sx={{ justifyContent: 'flex-start', py: 1.5 }}
-                                                        >
-                                                            Aprobar
-                                                        </Button>
-                                                        <Button
-                                                            variant={prop.status === 'approved_with_obs' ? "contained" : "outlined"}
-                                                            color="warning"
-                                                            startIcon={<WarningIcon />}
-                                                            onClick={() => handleStatusChange(prop.id, 'approved_with_obs')}
-                                                            fullWidth
-                                                            sx={{ justifyContent: 'flex-start', py: 1.5 }}
-                                                        >
-                                                            Observar
-                                                        </Button>
-                                                        <Button
-                                                            variant={prop.status === 'rejected' ? "contained" : "outlined"}
-                                                            color="error"
-                                                            startIcon={<CancelIcon />}
-                                                            onClick={() => handleStatusChange(prop.id, 'rejected')}
-                                                            fullWidth
-                                                            sx={{ justifyContent: 'flex-start', py: 1.5 }}
-                                                        >
-                                                            Rechazar
-                                                        </Button>
-                                                    </Stack>
+                                                            <Stack direction="column" spacing={2} sx={{ mb: 3 }}>
+                                                                <Button
+                                                                    variant={prop.status === 'approved' ? "contained" : "outlined"}
+                                                                    color="success"
+                                                                    startIcon={<CheckCircleIcon />}
+                                                                    onClick={() => handleStatusChange(prop.id, 'approved')}
+                                                                    fullWidth
+                                                                    sx={{ justifyContent: 'flex-start', py: 1.5 }}
+                                                                >
+                                                                    Aprobar
+                                                                </Button>
+                                                                <Button
+                                                                    variant={prop.status === 'approved_with_obs' ? "contained" : "outlined"}
+                                                                    color="warning"
+                                                                    startIcon={<WarningIcon />}
+                                                                    onClick={() => handleStatusChange(prop.id, 'approved_with_obs')}
+                                                                    fullWidth
+                                                                    sx={{ justifyContent: 'flex-start', py: 1.5 }}
+                                                                >
+                                                                    Observar
+                                                                </Button>
+                                                                <Button
+                                                                    variant={prop.status === 'rejected' ? "contained" : "outlined"}
+                                                                    color="error"
+                                                                    startIcon={<CancelIcon />}
+                                                                    onClick={() => handleStatusChange(prop.id, 'rejected')}
+                                                                    fullWidth
+                                                                    sx={{ justifyContent: 'flex-start', py: 1.5 }}
+                                                                >
+                                                                    Rechazar
+                                                                </Button>
+                                                            </Stack>
 
-                                                    <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-                                                        {prop.status === 'rejected' ? "Motivo del rechazo:" : "Observaciones Oficiales:"}
-                                                    </Typography>
-                                                    <TextField
-                                                        multiline
-                                                        rows={4}
-                                                        fullWidth
-                                                        placeholder="Escribe aquí las observaciones oficiales..."
-                                                        value={prop.observation}
-                                                        onChange={(e) => handleObservationChange(prop.id, e.target.value)}
-                                                        variant="outlined"
-                                                        sx={{ bgcolor: 'white' }}
-                                                    />
+                                                            <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                                                                {prop.status === 'rejected' ? "Motivo del rechazo:" : "Observaciones Oficiales:"}
+                                                            </Typography>
+                                                            <TextField
+                                                                multiline
+                                                                rows={4}
+                                                                fullWidth
+                                                                placeholder="Escribe aquí las observaciones oficiales..."
+                                                                value={prop.observation}
+                                                                onChange={(e) => handleObservationChange(prop.id, e.target.value)}
+                                                                variant="outlined"
+                                                                sx={{ bgcolor: 'white' }}
+                                                            />
 
-                                                    {prop.status === 'approved' && (
-                                                        <Alert severity="success" sx={{ mt: 2, fontSize: '0.85rem' }}>
-                                                            Propuesta definitiva.
-                                                        </Alert>
+                                                            {prop.status === 'approved' && (
+                                                                <Alert severity="success" sx={{ mt: 2, fontSize: '0.85rem' }}>
+                                                                    Propuesta definitiva.
+                                                                </Alert>
+                                                            )}
+                                                        </>
+                                                    )}
+                                                    {!isAuthority && (
+                                                        <Box sx={{ py: 4, textAlign: 'center' }}>
+                                                            <Typography variant="body2" color="text.secondary">
+                                                                Solo los coordinadores y directores pueden emitir un dictamen.
+                                                            </Typography>
+                                                        </Box>
                                                     )}
                                                 </Box>
                                             </Grid>

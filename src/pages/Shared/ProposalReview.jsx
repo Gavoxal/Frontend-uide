@@ -1,23 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button, TextField, Divider, Paper, Avatar, Chip, List, ListItem, ListItemAvatar, ListItemText, Snackbar, Alert } from '@mui/material';
+import { Box, Typography, Button, TextField, Paper, Avatar, Chip, Snackbar, Alert } from '@mui/material';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import SaveIcon from '@mui/icons-material/Save';
-import DescriptionIcon from '@mui/icons-material/Description';
-import PersonIcon from '@mui/icons-material/Person';
 import SendIcon from '@mui/icons-material/Send';
-import LoadingScreen from '../../components/load.mui.component.jsx';
-import { getDataUser } from '../../storage/user.model';
+import { getDataUser, getActiveRole } from '../../storage/user.model.jsx';
 import { ProposalService } from '../../services/proposal.service.js';
 import { BASE_URL } from '../../utils/constants.js';
-import uideLogo from '../../assets/uide3.svg';
 
-function ProposalReview() {
+function ProposalReviewComponent() {
+    console.log("ProposalReviewComponent mounted");
     const { id } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
-    const user = getDataUser();
-    const userRole = user?.role;
 
     const [proposal, setProposal] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -90,8 +84,6 @@ function ProposalReview() {
 
     if (loading) return <Box p={3}>Cargando...</Box>;
     if (!proposal) return <Box p={3}>Propuesta no encontrada.</Box>;
-
-    const isDirector = userRole === 'director' || userRole === 'admin' || userRole === 'coordinador';
 
     return (
         <Box sx={{ height: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column', bgcolor: '#f5f7fa', overflow: 'hidden' }}>
@@ -187,35 +179,14 @@ function ProposalReview() {
                                 * Esto notificará al estudiante
                             </Typography>
                             <Box sx={{ display: 'flex', gap: 1 }}>
-                                {isDirector ? (
-                                    <>
-                                        <Button
-                                            variant="outlined"
-                                            color="error"
-                                            onClick={() => handleSaveEvaluation('RECHAZADA')}
-                                            disabled={submitting}
-                                        >
-                                            Rechazar
-                                        </Button>
-                                        <Button
-                                            variant="contained"
-                                            color="success"
-                                            onClick={() => handleSaveEvaluation('APROBADA')}
-                                            disabled={submitting}
-                                        >
-                                            Aprobar
-                                        </Button>
-                                    </>
-                                ) : (
-                                    <Button
-                                        variant="contained"
-                                        endIcon={<SendIcon />}
-                                        onClick={() => handleSaveEvaluation('APROBADA_CON_COMENTARIOS')}
-                                        disabled={submitting}
-                                    >
-                                        Enviar Comentario
-                                    </Button>
-                                )}
+                                <Button
+                                    variant="contained"
+                                    endIcon={<SendIcon />}
+                                    onClick={() => handleSaveEvaluation(proposal.status)}
+                                    disabled={submitting}
+                                >
+                                    Enviar Comentario
+                                </Button>
                             </Box>
                         </Box>
                     </Box>
@@ -232,4 +203,4 @@ function ProposalReview() {
     );
 }
 
-export default ProposalReview;
+export default ProposalReviewComponent;
